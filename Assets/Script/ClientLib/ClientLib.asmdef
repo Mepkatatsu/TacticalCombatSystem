@@ -1,0 +1,4 @@
+{
+	"name": "ClientLib",
+	"references":[ "GUID:bdb2ad8f57d43d74a98bf300bf2d5b74" ]
+}
