@@ -51,7 +51,7 @@ public class BattlePositionEditor : Editor
         
         var centerGridPos = battlePosition.GetGridPos();
         
-        Handles.DrawWireCube(new Vector3(centerGridPos.X, 0, centerGridPos.Y), new Vector3(1, 0, 1));
+        Handles.DrawWireCube(new Vector3(centerGridPos.x, 0, centerGridPos.y), new Vector3(1, 0, 1));
     }
     
     public override void OnInspectorGUI()

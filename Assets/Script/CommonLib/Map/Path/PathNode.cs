@@ -28,7 +28,7 @@ namespace Script.CommonLib.Map.Path
             if (other == null)
                 return false;
             
-            return GridPos.X == other.GridPos.X && GridPos.Y == other.GridPos.Y;
+            return GridPos.x == other.GridPos.x && GridPos.y == other.GridPos.y;
         }
 
         public override bool Equals(object obj)
@@ -54,11 +54,11 @@ namespace Script.CommonLib.Map.Path
                 return totalCostCompare;
 
             // TotalCost가 같은 경우 GridPos의 x, y 순서로 비교
-            var xCompare = node1.GridPos.X.CompareTo(node2.GridPos.X);
+            var xCompare = node1.GridPos.x.CompareTo(node2.GridPos.x);
             if (xCompare != 0)
                 return xCompare;
 
-            return node1.GridPos.Y.CompareTo(node2.GridPos.Y);
+            return node1.GridPos.y.CompareTo(node2.GridPos.y);
         }
     }
 }

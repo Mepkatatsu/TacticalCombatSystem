@@ -27,7 +27,7 @@ public class BattleMap : MonoBehaviour
 
     public GridPos GetCenterGridPos()
     {
-        var center = new GridPos((int)MathF.Truncate(transform.position.x) + offset.X, (int)MathF.Truncate(transform.position.z + offset.Y));
+        var center = new GridPos((int)MathF.Truncate(transform.position.x) + offset.x, (int)MathF.Truncate(transform.position.z + offset.y));
         return center;
     }
 
@@ -35,8 +35,8 @@ public class BattleMap : MonoBehaviour
     {
         var center = GetCenterGridPos();
         
-        var xPos = center.X - width / 2;
-        var zPos = center.Y - height / 2;
+        var xPos = center.x - width / 2;
+        var zPos = center.y - height / 2;
 
         var minPos = new GridPos(xPos, zPos);
         return minPos;
@@ -46,8 +46,8 @@ public class BattleMap : MonoBehaviour
     {
         var center = GetCenterGridPos();
         
-        var xPos = center.X + width / 2;
-        var zPos = center.Y + height / 2;
+        var xPos = center.x + width / 2;
+        var zPos = center.y + height / 2;
 
         var maxPos = new GridPos(xPos, zPos);
         return maxPos;

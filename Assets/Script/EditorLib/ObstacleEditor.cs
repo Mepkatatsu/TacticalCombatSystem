@@ -37,7 +37,7 @@ namespace Script.EditorLib
             for (var i = 0; i < blockedPoints.Count; i++)
             {
                 var waypoint = blockedPoints[i];
-                Handles.DrawWireCube(new Vector3(waypoint.X, 0, waypoint.Y), new Vector3(1, 0, 1));
+                Handles.DrawWireCube(new Vector3(waypoint.x, 0, waypoint.y), new Vector3(1, 0, 1));
             }
             
             DrawObstacleWaypoints(obstacle);
@@ -52,7 +52,7 @@ namespace Script.EditorLib
             for (var i = 0; i < waypoints.Count; i++)
             {
                 var waypoint = waypoints[i];
-                Handles.DrawWireCube(new Vector3(waypoint.X, 0, waypoint.Y), new Vector3(1, 0, 1));
+                Handles.DrawWireCube(new Vector3(waypoint.x, 0, waypoint.y), new Vector3(1, 0, 1));
             }
         }
 

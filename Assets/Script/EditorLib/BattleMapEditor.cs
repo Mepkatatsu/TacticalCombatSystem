@@ -63,8 +63,8 @@ namespace Script.EditorLib
             for (var x = 0; x <= width; x++)
             {
                 // 각 Position이 칸의 중심에 오도록 하기 위해 0.5f씩 조절하여 그림
-                var xPos = minGridPos.X + x - 0.5f;
-                var zPos = minGridPos.Y - 0.5f;
+                var xPos = minGridPos.x + x - 0.5f;
+                var zPos = minGridPos.y - 0.5f;
                 
                 var start = new Vector3(xPos, 0, zPos);
                 var end = new Vector3(xPos, 0, zPos + height);
@@ -75,8 +75,8 @@ namespace Script.EditorLib
             for (var z = 0; z <= height; z++)
             {
                 // 각 Position이 칸의 중심에 오도록 하기 위해 0.5f씩 조절하여 그림
-                var xPos = minGridPos.X - 0.5f;
-                var zPos = minGridPos.Y + z - 0.5f;
+                var xPos = minGridPos.x - 0.5f;
+                var zPos = minGridPos.y + z - 0.5f;
                 
                 var start = new Vector3(xPos, 0, zPos);
                 var end = new Vector3(xPos + width, 0, zPos);
@@ -195,7 +195,7 @@ namespace Script.EditorLib
         {
             var path = $"Assets/Data/MapData/{battleMap.name}_Data.json";
             var json = File.ReadAllText(path);
-            var battleMapData = JsonConvert.DeserializeObject<BattleMapData>(json);
+            var battleMapData = JsonSerialize.DeserializeObject<BattleMapData>(json);
 
             _battleMapPathFinder = new BattleMapPathFinder(battleMapData);
             
@@ -236,7 +236,7 @@ namespace Script.EditorLib
             for (var i = 0; i < _visitedAllGridPosList.Count; i++)
             {
                 var gridPos = _visitedAllGridPosList[i];
-                Handles.DrawWireCube(new Vector3(gridPos.X, 0, gridPos.Y), new Vector3(1, 0, 1));
+                Handles.DrawWireCube(new Vector3(gridPos.x, 0, gridPos.y), new Vector3(1, 0, 1));
             }
         }
     }

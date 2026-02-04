@@ -1,36 +1,43 @@
 using System;
-using UnityEngine;
 
 namespace Script.CommonLib
 {
     [Serializable]
     public struct GridPos : IEquatable<GridPos>
     {
-        public readonly int X;
-        public readonly int Y;
+        public int x;
+        public int y;
 
         private string _toString;
 
+        public GridPos(Vector3 pos)
+        {
+            x = (int)Math.Round(pos.x);
+            y = (int)Math.Round(pos.z);
+
+            _toString = string.Empty;
+        }
+
         public GridPos(int x, int y)
         {
-            X = x;
-            Y = y;
+            this.x = x;
+            this.y = y;
 
             _toString = string.Empty;
         }
 
         public readonly float GetDistance(GridPos pos)
         {
-            float dx = X - pos.X;
-            float dy = Y - pos.Y;
-            return Mathf.Sqrt(dx * dx + dy * dy);
+            float dx = x - pos.x;
+            float dy = y - pos.y;
+            return (float)Math.Sqrt(dx * dx + dy * dy);
         }
 
         public override string ToString()
         {
             if (string.IsNullOrEmpty(_toString))
             {
-                _toString = $"({X}, {Y})";
+                _toString = $"({x}, {y})";
             }
             
             return _toString;
@@ -48,7 +55,7 @@ namespace Script.CommonLib
 
         public bool Equals(GridPos other)
         {
-            return X == other.X && Y == other.Y;
+            return x == other.x && y == other.y;
         }
 
         public override bool Equals(object obj)
@@ -58,7 +65,7 @@ namespace Script.CommonLib
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(X, Y);
+            return HashCode.Combine(x, y);
         }
     }
 }

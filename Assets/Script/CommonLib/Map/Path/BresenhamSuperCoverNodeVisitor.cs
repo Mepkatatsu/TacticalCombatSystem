@@ -8,8 +8,8 @@ namespace Script.CommonLib
             if (breakablePointVisitor == null)
                 return true;
 
-            int x = startNode.X;
-            int y = startNode.Y;
+            int x = startNode.x;
+            int y = startNode.y;
             
             // for문과 계산 시 단위 통일을 위해 dx, dy 값을 절대값으로 사용
             CalculateStepAndAbsDelta(startNode, endNode, out int dx, out int dy, out int xStep, out int yStep);
@@ -26,8 +26,8 @@ namespace Script.CommonLib
 
         private static void CalculateStepAndAbsDelta(GridPos startNode, GridPos endNode, out int dx, out int dy, out int xStep, out int yStep)
         {
-            dx = endNode.X - startNode.X;
-            dy = endNode.Y - startNode.Y;
+            dx = endNode.x - startNode.x;
+            dy = endNode.y - startNode.y;
 
             xStep = 1;
             yStep = 1;

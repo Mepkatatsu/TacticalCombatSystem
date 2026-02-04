@@ -129,7 +129,7 @@ namespace Script.CommonLib.Map
 
         private static float GetHeuristicCost(GridPos gridPos1, GridPos gridPos2)
         {
-            return Mathf.Abs(gridPos1.X - gridPos2.X) + Mathf.Abs(gridPos1.Y - gridPos2.Y);
+            return Mathf.Abs(gridPos1.x - gridPos2.x) + Mathf.Abs(gridPos1.y - gridPos2.y);
         }
 
         private void AddNeighborNode(GridPos key, GridPos value)
