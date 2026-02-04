@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Script.CommonLib;
+using Script.CommonLib.Map;
 using UnityEngine;
 using Vector2 = Script.CommonLib.Vector2;
 using Vector3 = UnityEngine.Vector3;

@@ -1,7 +1,6 @@
 using System;
-using UnityEngine.Serialization;
 
-namespace Script.CommonLib
+namespace Script.CommonLib.Map
 {
     [Serializable]
     public class BattlePositionData

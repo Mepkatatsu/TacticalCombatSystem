@@ -2,6 +2,7 @@ using System;
 using Script.ClientLib;
 using Script.ClientLib.SaveData;
 using Script.CommonLib;
+using Script.CommonLib.Map;
 using Script.EditorLib;
 using Script.EditorLib.SaveData;
 using UnityEditor;

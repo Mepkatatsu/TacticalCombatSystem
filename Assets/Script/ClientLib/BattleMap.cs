@@ -1,5 +1,6 @@
 using System;
 using Script.CommonLib;
+using Script.CommonLib.Map;
 using UnityEngine;
 
 public class BattleMap : MonoBehaviour

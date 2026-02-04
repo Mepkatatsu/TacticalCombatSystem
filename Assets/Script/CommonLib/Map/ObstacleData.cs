@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Script.CommonLib
+namespace Script.CommonLib.Map
 {
     [Serializable]
     public class ObstacleData
