@@ -1,24 +1,30 @@
+using System;
+using Script.CommonLib.Map;
+
 namespace Script.CommonLib
 {
+    [Serializable]
     public class Entity : IMover
     {
+        private IBattleMapEventHandler _battleMapEventHandler;
         private MoveAgent _moveAgent;
-        
         private Vector3 _pos;
+        private Vector3 _dir;
 
         public string name;
         public string startPositionName;
         public string endPositionName;
         public Vector3 modelScale = new Vector3(3.5f, 3.5f, 3.5f);
 
-        public Entity()
+        public Entity(BattleMapPathFinder pathFinder)
         {
-            _moveAgent = new MoveAgent(this, 1);
+            _moveAgent = new MoveAgent(pathFinder, this, 5);
         }
 
-        public Entity(EntityData entityData)
+        public Entity(IBattleMapEventHandler battleMapEventHandler, BattleMapPathFinder pathFinder, EntityData entityData)
         {
-            _moveAgent = new MoveAgent(this, 1);
+            _battleMapEventHandler = battleMapEventHandler;
+            _moveAgent = new MoveAgent(pathFinder, this, 5);
             name = entityData.name;
             startPositionName = entityData.startPositionName;
             endPositionName = entityData.endPositionName;
@@ -34,10 +40,27 @@ namespace Script.CommonLib
         {
             return _pos;
         }
+        
+        public void SetPos(GridPos gridPos)
+        {
+            SetPos(new Vector3(gridPos.x, 0, gridPos.y));
+        }
 
         public void SetPos(Vector3 pos)
         {
             _pos = pos;
+            _battleMapEventHandler.OnEntityPositionChanged(this, pos);
+        }
+
+        public Vector3 GetDir()
+        {
+            return _dir;
+        }
+        
+        public void SetDir(Vector3 dir)
+        {
+            _dir = dir;
+            _battleMapEventHandler.OnEntityDirectionChanged(this, dir);
         }
 
         public void MoveTo(Vector3 pos)

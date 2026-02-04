@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using Script.CommonLib.Map;
 
 namespace Script.CommonLib
 {
@@ -6,27 +8,28 @@ namespace Script.CommonLib
     {
         public Vector3 GetPos();
         public void SetPos(Vector3 pos);
+        public Vector3 GetDir();
+        public void SetDir(Vector3 dir);
     }
 
     public class MoveAgent
     {
+        private BattleMapPathFinder _pathFinder;
         private IMover _mover;
     
         private Vector3 _destination;
     
-        private Queue<Vector3> _paths;
-
+        private List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
         private bool _isMoving;
 
         private float _moveSpeed;
 
-        public MoveAgent(IMover mover, float moveSpeed)
+        public MoveAgent(BattleMapPathFinder pathFinder, IMover mover, float moveSpeed)
         {
+            _pathFinder = pathFinder;
             _mover = mover;
             _moveSpeed = moveSpeed;
-            _paths = new Queue<Vector3>();
-        
-            _destination = Vector3.zero;
+            
             _isMoving = false;
         }
 
@@ -60,18 +63,22 @@ namespace Script.CommonLib
     
         private void FindPath()
         {
-            _paths ??= new Queue<Vector3>();
             _paths.Clear();
+
+            // GridPos가 아닌 곳으로 이동하고 싶을 수 있을 듯 하여 추후 수정이 필요할 것 같음.
+            var startPos = new GridPos(_mover.GetPos());
+            var endPos = new GridPos(_destination);
         
-            // TODO: FindPath
-        
-            _paths.Enqueue(_destination);
+            _pathFinder.FindWaypoints(startPos, endPos, _paths);
         }
 
         public void MovePath(Vector3 pos, float deltaTime)
         {
-            if (!_paths.TryPeek(out var nextPos))
+            if (_paths.Count == 0)
                 return;
+            
+            var nextGridPos = _paths.Last();
+            var nextPos = new Vector3(nextGridPos.x, 0, nextGridPos.y);
 
             var nextMoveVector = nextPos - pos;
 
@@ -81,14 +88,17 @@ namespace Script.CommonLib
 
             if (moveDistance > maxMoveDistance)
             {
-                _paths.Dequeue();
+                _paths.RemoveAt(_paths.Count - 1);
+                moveDistance = maxMoveDistance;
             }
-            else
-            {
-                nextPos = pos + dir * moveDistance;
-            }
+            
+            nextPos = pos + dir * moveDistance;
         
             _mover.SetPos(nextPos);
+            
+            var currentDir = _mover.GetDir();
+            var nextDir = Vector3.Lerp(currentDir, dir, deltaTime * _moveSpeed);
+            _mover.SetDir(nextDir);
         }
     }
 }

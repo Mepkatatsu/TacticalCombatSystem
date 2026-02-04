@@ -24,7 +24,7 @@ namespace Script.CommonLib.Map
         private readonly HashSet<PathNode> _closedSet = new();
         private readonly Dictionary<GridPos, PathNode> _nodeMap = new();
 
-        public void RefreshNeighborNodes()
+        private void RefreshNeighborNodes()
         {
             RefreshFullNeighborNodes();
         }
@@ -113,18 +113,12 @@ namespace Script.CommonLib.Map
             }
 
             resultWaypoints.Clear();
-
-            if (currentNode == null)
-                return;
             
-            resultWaypoints.Add(currentNode.GridPos);
-            while (currentNode.Parent != null)
+            while (currentNode != null)
             {
-                currentNode = currentNode.Parent;
                 resultWaypoints.Add(currentNode.GridPos);
+                currentNode = currentNode.Parent;
             }
-            
-            resultWaypoints.Reverse(); // start -> goal 순으로 재정렬
         }
 
         private static float GetHeuristicCost(GridPos gridPos1, GridPos gridPos2)
