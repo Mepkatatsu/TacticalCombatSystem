@@ -34,6 +34,7 @@ public class BattlePosition : MonoBehaviour
         
         var battlePositionData = new BattlePositionData
         {
+            name = name,
             gridPos = gridPos,
             positionType = positionType,
             index = index

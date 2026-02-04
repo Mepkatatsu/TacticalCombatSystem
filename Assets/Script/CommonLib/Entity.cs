@@ -6,9 +6,23 @@ namespace Script.CommonLib
         
         private Vector3 _pos;
 
+        public string name;
+        public string startPositionName;
+        public string endPositionName;
+        public Vector3 modelScale = new Vector3(3.5f, 3.5f, 3.5f);
+
         public Entity()
         {
             _moveAgent = new MoveAgent(this, 1);
+        }
+
+        public Entity(EntityData entityData)
+        {
+            _moveAgent = new MoveAgent(this, 1);
+            name = entityData.name;
+            startPositionName = entityData.startPositionName;
+            endPositionName = entityData.endPositionName;
+            modelScale = entityData.modelScale;
         }
 
         public void Update(float deltaTime)

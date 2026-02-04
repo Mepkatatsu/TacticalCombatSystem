@@ -43,6 +43,7 @@ namespace Script.EditorLib
                 maxGridPos = battleMap.GetMaxGridPos(),
                 battlePositions = SaveBattlePositions(battleMap),
                 obstacles = SaveObstacles(battleMap),
+                entities = SaveEntities(battleMap),
             };
 
             if (!CheckBattleMapData(battleMapData))
@@ -150,6 +151,23 @@ namespace Script.EditorLib
             }
 
             return obstacleDataList;
+        }
+        
+        private static List<EntityData> SaveEntities(BattleMap battleMap)
+        {
+            var entityComponents = battleMap.transform.GetComponentsInChildren<EntityComponent>();
+
+            if (entityComponents.IsEmpty())
+                return null;
+            
+            var entitiesDataList = new List<EntityData>();
+            
+            foreach (var entityComponent in entityComponents)
+            {
+                entitiesDataList.Add(entityComponent.entityData);
+            }
+
+            return entitiesDataList;
         }
     }
 }

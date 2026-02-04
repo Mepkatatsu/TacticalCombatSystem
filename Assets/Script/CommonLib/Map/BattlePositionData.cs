@@ -13,6 +13,8 @@ namespace Script.CommonLib
             EndPosition,
         }
 
+        public string name;
+
         public GridPos gridPos;
         
         public PositionType positionType;

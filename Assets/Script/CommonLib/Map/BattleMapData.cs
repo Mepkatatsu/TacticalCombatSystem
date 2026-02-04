@@ -13,6 +13,7 @@ public class BattleMapData
 
     public List<BattlePositionData> battlePositions;
     public List<ObstacleData> obstacles = new();
+    public List<EntityData> entities = new();
     
     private HashSet<GridPos> _blockedPoints = new();
     
@@ -61,5 +62,11 @@ public class BattleMapData
 
             return _waypoints;
         }
+    }
+
+    public BattlePositionData GetBattlePositionDataByName(string name)
+    {
+        // TODO: 성능 개선
+        return battlePositions.Find(e => e.name == name);
     }
 }
