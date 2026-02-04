@@ -223,5 +223,12 @@ namespace Script.CommonLib
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.negativeInfinityVector;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 Lerp(Vector3 a, Vector3 b, float t)
+        {
+            t = Math.Clamp(t, 0, 1);
+            return new Vector3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
+        }
     }
 }
