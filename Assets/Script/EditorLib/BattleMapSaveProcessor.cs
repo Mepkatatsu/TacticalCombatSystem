@@ -50,8 +50,9 @@ namespace Script.EditorLib
                 return;
             
             // TODO: Binary로 저장/읽어오도록 수정 (속도 향상)
-            var path = $"Assets/Data/MapData/{battleMap.name}_Data.json";
-            var json = JsonConvert.SerializeObject(battleMapData);
+            var scene = SceneManager.GetActiveScene();
+            var path = $"Assets/Data/MapData/{scene.name}_Data.json";
+            var json = battleMapData.SerializeToJson();
             
             File.WriteAllText(path, json);
             
