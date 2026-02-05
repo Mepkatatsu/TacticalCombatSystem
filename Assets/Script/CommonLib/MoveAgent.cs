@@ -10,6 +10,7 @@ namespace Script.CommonLib
         public void SetPos(Vector3 pos);
         public Vector3 GetDir();
         public void SetDir(Vector3 dir);
+        public void StopMove();
     }
 
     public class MoveAgent
@@ -51,7 +52,11 @@ namespace Script.CommonLib
             var pos = _mover.GetPos();
 
             if (pos == _destination)
+            {
+                _isMoving = false;
+                _mover.StopMove();
                 return;
+            }
 
             if (_paths.IsEmpty())
             {

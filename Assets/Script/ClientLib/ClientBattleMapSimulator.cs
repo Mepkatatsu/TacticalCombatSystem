@@ -11,6 +11,8 @@ namespace Script.ClientLib
 {
     public class ClientBattleMapSimulator : MonoBehaviour, IBattleMapEventHandler
     {
+        private static readonly int IsMoving = Animator.StringToHash("IsMoving");
+        
         private BattleMapSimulator _battleMapSimulator;
         private Dictionary<Entity, GameObject> _models = new();
         
@@ -74,6 +76,36 @@ namespace Script.ClientLib
                 return;
             
             obj.transform.rotation = Quaternion.LookRotation(new UnityEngine.Vector3(dir.x, dir.y, dir.z));
+        }
+
+        public void OnEntityStartMoving(Entity entity)
+        {
+            _models.TryGetValue(entity, out var obj);
+            
+            if (!obj)
+                return;
+
+            var animator = obj.GetComponent<Animator>();
+
+            if (!animator)
+                return;
+            
+            animator.SetBool(IsMoving, true);
+        }
+
+        public void OnEntityStopMoving(Entity entity)
+        {
+            _models.TryGetValue(entity, out var obj);
+            
+            if (!obj)
+                return;
+            
+            var animator = obj.GetComponent<Animator>();
+
+            if (!animator)
+                return;
+            
+            animator.SetBool(IsMoving, false);
         }
     }
 }

@@ -67,11 +67,12 @@ namespace Script.CommonLib
         {
             _moveAgent.SetDestination(pos);
             _moveAgent.SetIsMoving(true);
+            _battleMapEventHandler.OnEntityStartMoving(this);
         }
         
-        public void Stop()
+        public void StopMove()
         {
-            _moveAgent.SetIsMoving(false);
+            _battleMapEventHandler.OnEntityStopMoving(this);
         }
     }
 }

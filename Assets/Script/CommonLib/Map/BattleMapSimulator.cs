@@ -58,5 +58,15 @@ namespace Script.CommonLib.Map
         {
             _battleMapEventHandler.OnEntityDirectionChanged(entity, pos);
         }
+
+        public void OnEntityStartMoving(Entity entity)
+        {
+            _battleMapEventHandler.OnEntityStartMoving(entity);
+        }
+
+        public void OnEntityStopMoving(Entity entity)
+        {
+            _battleMapEventHandler.OnEntityStopMoving(entity);
+        }
     }
 }
