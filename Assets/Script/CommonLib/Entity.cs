@@ -13,6 +13,7 @@ namespace Script.CommonLib
         private Vector3 _pos;
         private Vector3 _dir;
 
+        private TeamFlag _teamFlag;
         public string name;
         public string startPositionName;
         public string endPositionName;
@@ -27,12 +28,17 @@ namespace Script.CommonLib
         public Entity(uint id, IBattleMapEventHandler battleMapEventHandler, BattleMapPathFinder pathFinder, EntityData entityData)
         {
             _id = id;
+            _teamFlag = entityData.teamFlag;
             _battleMapEventHandler = battleMapEventHandler;
             _moveAgent = new MoveAgent(pathFinder, this, _moveSpeed);
             name = entityData.name;
             startPositionName = entityData.startPositionName;
             endPositionName = entityData.endPositionName;
+
+            _hp = _maxHp;
         }
+        
+        public TeamFlag GetTeamFlag() => _teamFlag;
 
         public void Update(float deltaTime)
         {
