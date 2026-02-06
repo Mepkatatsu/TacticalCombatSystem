@@ -28,11 +28,12 @@ namespace Script.CommonLib
 
         private IEntityContext _mainTarget;
 
-        public Entity(uint id, IBattleMapEventHandler battleMapEventHandler, BattleMapPathFinder pathFinder, EntityData entityData)
+        public Entity(uint id, IBattleMapEventHandler battleMapEventHandler, IBattleMapContext battleMapContext, BattleMapPathFinder pathFinder, EntityData entityData)
         {
             _id = id;
             _teamFlag = entityData.teamFlag;
             _battleMapEventHandler = battleMapEventHandler;
+            _battleMapContext = battleMapContext;
             _moveAgent = new MoveAgent(pathFinder, this, _moveSpeed);
             name = entityData.name;
             startPositionName = entityData.startPositionName;
