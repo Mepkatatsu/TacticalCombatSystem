@@ -53,7 +53,6 @@ namespace Script.CommonLib
 
             if (pos == _destination)
             {
-                _isMoving = false;
                 _mover.StopMove();
                 return;
             }

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Script.CommonLib.Map
 {
-    public class BattleMapSimulator : IBattleMapEventHandler
+    public class BattleMapSimulator : IBattleMapEventHandler, IBattleMapContext
     {
         public BattleMapSimulator(IBattleMapEventHandler battleMapEventHandler, BattleMapData battleMapData)
         {
@@ -37,7 +37,7 @@ namespace Script.CommonLib.Map
 
         private void AddEntity(EntityData entityData)
         {
-            var entity = new Entity(++_entityIdKey, this, _battleMapPathFinder, entityData);
+            var entity = new Entity(++_entityIdKey, this, this, _battleMapPathFinder, entityData);
             OnEntityAdded(_entityIdKey, entity);
         }
 
@@ -74,6 +74,44 @@ namespace Script.CommonLib.Map
         public void OnEntityStopMoving(uint entityId)
         {
             _battleMapEventHandler.OnEntityStopMoving(entityId);
+        }
+
+        public IEntityContext GetNearestEnemy(uint entityId, float maxDistance)
+        {
+            if (!_entities.TryGetValue(entityId, out var entity))
+                return null;
+            
+            var pos = entity.GetPos();
+            
+            var minDistance = float.MaxValue;
+            
+            IEntityContext nearest = null;
+            
+            foreach (var otherEntity in _entities.Values)
+            {
+                if (otherEntity == entity)
+                    continue;
+
+                if (!otherEntity.IsAlive())
+                    continue;
+
+                if (entity.GetTeamFlag() == otherEntity.GetTeamFlag())
+                    continue;
+                
+                var otherPos = otherEntity.GetPos();
+                var distance = Vector3.Distance(pos, otherPos);
+
+                if (distance > maxDistance)
+                    continue;
+
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    nearest = otherEntity;
+                }
+            }
+
+            return nearest;
         }
     }
 }

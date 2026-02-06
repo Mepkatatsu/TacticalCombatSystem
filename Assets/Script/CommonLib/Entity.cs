@@ -4,11 +4,12 @@ using Script.CommonLib.Map;
 namespace Script.CommonLib
 {
     [Serializable]
-    public class Entity : IMover
+    public class Entity : IMover, IEntityContext
     {
         private uint _id;
         
         private IBattleMapEventHandler _battleMapEventHandler;
+        private IBattleMapContext _battleMapContext;
         private MoveAgent _moveAgent;
         private Vector3 _pos;
         private Vector3 _dir;
@@ -24,6 +25,8 @@ namespace Script.CommonLib
         private float _attackSpeed = 1f;
         private float _attackRange = 15f;
         private float _moveSpeed = 5f;
+
+        private IEntityContext _mainTarget;
 
         public Entity(uint id, IBattleMapEventHandler battleMapEventHandler, BattleMapPathFinder pathFinder, EntityData entityData)
         {
@@ -42,6 +45,17 @@ namespace Script.CommonLib
 
         public void Update(float deltaTime)
         {
+            if (!IsAlive())
+                return;
+            
+            _mainTarget = _battleMapContext.GetNearestEnemy(_id, _attackRange);
+
+            if (_mainTarget != null)
+            {
+                StopMove();
+                return;
+            }
+
             _moveAgent.Update(deltaTime);
         }
 
@@ -49,7 +63,12 @@ namespace Script.CommonLib
         {
             return _pos;
         }
-        
+
+        public bool IsAlive()
+        {
+            return _hp > 0;
+        }
+
         public void SetPos(GridPos gridPos)
         {
             SetPos(new Vector3(gridPos.x, 0, gridPos.y));
@@ -81,6 +100,7 @@ namespace Script.CommonLib
         
         public void StopMove()
         {
+            _moveAgent.SetIsMoving(false);
             _battleMapEventHandler.OnEntityStopMoving(_id);
         }
     }
