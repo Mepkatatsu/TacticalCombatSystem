@@ -15,29 +15,36 @@ namespace Script.CommonLib.Map
         private readonly BattleMapData _battleMapData;
         private readonly BattleMapPathFinder _battleMapPathFinder;
         
-        private readonly List<Entity> _entities = new();
+        private readonly Dictionary<uint, Entity> _entities = new();
+
+        private uint _entityIdKey;
 
         public void Init()
         {
             foreach (var entityData in _battleMapData.entities)
             {
-                var entity = new Entity(this, _battleMapPathFinder, entityData);
-                _entities.Add(entity);
-                OnEntityAdded(entity);
+                AddEntity(entityData);
             }
         }
 
         public void Update(float deltaTime)
         {
-            foreach (var entity in _entities)
+            foreach (var entity in _entities.Values)
             {
                 entity.Update(deltaTime);
             }
         }
 
-        public void OnEntityAdded(Entity entity)
+        private void AddEntity(EntityData entityData)
         {
-            _battleMapEventHandler.OnEntityAdded(entity);
+            var entity = new Entity(++_entityIdKey, this, _battleMapPathFinder, entityData);
+            OnEntityAdded(_entityIdKey, entity);
+        }
+
+        public void OnEntityAdded(uint entityId, Entity entity)
+        {
+            _entities.Add(entityId, entity);
+            _battleMapEventHandler.OnEntityAdded(entityId, entity);
 
             var startPositionData = _battleMapData.GetBattlePositionDataByName(entity.startPositionName);
             var endPositionData = _battleMapData.GetBattlePositionDataByName(entity.endPositionName);
@@ -49,24 +56,24 @@ namespace Script.CommonLib.Map
                 entity.MoveTo(new Vector3(endPositionData.gridPos.x, 0, endPositionData.gridPos.y));
         }
 
-        public void OnEntityPositionChanged(Entity entity, Vector3 pos)
+        public void OnEntityPositionChanged(uint entityId, Vector3 pos)
         {
-            _battleMapEventHandler.OnEntityPositionChanged(entity, pos);
+            _battleMapEventHandler.OnEntityPositionChanged(entityId, pos);
         }
 
-        public void OnEntityDirectionChanged(Entity entity, Vector3 pos)
+        public void OnEntityDirectionChanged(uint entityId, Vector3 pos)
         {
-            _battleMapEventHandler.OnEntityDirectionChanged(entity, pos);
+            _battleMapEventHandler.OnEntityDirectionChanged(entityId, pos);
         }
 
-        public void OnEntityStartMoving(Entity entity)
+        public void OnEntityStartMoving(uint entityId)
         {
-            _battleMapEventHandler.OnEntityStartMoving(entity);
+            _battleMapEventHandler.OnEntityStartMoving(entityId);
         }
 
-        public void OnEntityStopMoving(Entity entity)
+        public void OnEntityStopMoving(uint entityId)
         {
-            _battleMapEventHandler.OnEntityStopMoving(entity);
+            _battleMapEventHandler.OnEntityStopMoving(entityId);
         }
     }
 }

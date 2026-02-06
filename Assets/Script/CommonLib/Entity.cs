@@ -6,6 +6,8 @@ namespace Script.CommonLib
     [Serializable]
     public class Entity : IMover
     {
+        private uint _id;
+        
         private IBattleMapEventHandler _battleMapEventHandler;
         private MoveAgent _moveAgent;
         private Vector3 _pos;
@@ -14,17 +16,15 @@ namespace Script.CommonLib
         public string name;
         public string startPositionName;
         public string endPositionName;
-        public Vector3 modelScale = new Vector3(3.5f, 3.5f, 3.5f);
+        public Vector3 modelScale;
+        
+        private float _moveSpeed = 5f;
 
-        public Entity(BattleMapPathFinder pathFinder)
+        public Entity(uint id, IBattleMapEventHandler battleMapEventHandler, BattleMapPathFinder pathFinder, EntityData entityData)
         {
-            _moveAgent = new MoveAgent(pathFinder, this, 5);
-        }
-
-        public Entity(IBattleMapEventHandler battleMapEventHandler, BattleMapPathFinder pathFinder, EntityData entityData)
-        {
+            _id = id;
             _battleMapEventHandler = battleMapEventHandler;
-            _moveAgent = new MoveAgent(pathFinder, this, 5);
+            _moveAgent = new MoveAgent(pathFinder, this, _moveSpeed);
             name = entityData.name;
             startPositionName = entityData.startPositionName;
             endPositionName = entityData.endPositionName;
@@ -49,7 +49,7 @@ namespace Script.CommonLib
         public void SetPos(Vector3 pos)
         {
             _pos = pos;
-            _battleMapEventHandler.OnEntityPositionChanged(this, pos);
+            _battleMapEventHandler.OnEntityPositionChanged(_id, pos);
         }
 
         public Vector3 GetDir()
@@ -60,19 +60,19 @@ namespace Script.CommonLib
         public void SetDir(Vector3 dir)
         {
             _dir = dir;
-            _battleMapEventHandler.OnEntityDirectionChanged(this, dir);
+            _battleMapEventHandler.OnEntityDirectionChanged(_id, dir);
         }
 
         public void MoveTo(Vector3 pos)
         {
             _moveAgent.SetDestination(pos);
             _moveAgent.SetIsMoving(true);
-            _battleMapEventHandler.OnEntityStartMoving(this);
+            _battleMapEventHandler.OnEntityStartMoving(_id);
         }
         
         public void StopMove()
         {
-            _battleMapEventHandler.OnEntityStopMoving(this);
+            _battleMapEventHandler.OnEntityStopMoving(_id);
         }
     }
 }

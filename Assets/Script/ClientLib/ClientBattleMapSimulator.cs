@@ -11,10 +11,8 @@ namespace Script.ClientLib
 {
     public class ClientBattleMapSimulator : MonoBehaviour, IBattleMapEventHandler
     {
-        private static readonly int IsMoving = Animator.StringToHash("IsMoving");
-        
         private BattleMapSimulator _battleMapSimulator;
-        private Dictionary<Entity, GameObject> _models = new();
+        private Dictionary<uint, EntityView> _entityViews = new();
         
         private void Start()
         {
@@ -45,67 +43,54 @@ namespace Script.ClientLib
             _battleMapSimulator.Update(Time.deltaTime);
         }
 
-        public void OnEntityAdded(Entity entity)
+        public void OnEntityAdded(uint entityId, Entity entity)
         {
             var modelPath = ModelPathSettings.Instance.GetModelPath(entity.name);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
             var obj = Instantiate(prefab);
             obj.transform.localScale = new UnityEngine.Vector3(entity.modelScale.x, entity.modelScale.y, entity.modelScale.z);
-
-            _models[entity] = obj;
+            var entityView = obj.AddComponent<EntityView>();
+            _entityViews.Add(entityId, entityView);
         }
 
-        public void OnEntityPositionChanged(Entity entity, Vector3 pos)
+        public void OnEntityPositionChanged(uint entityId, Vector3 pos)
         {
-            // TODO: 새로운 class를 만들어서 처리해야 함.
-            _models.TryGetValue(entity, out var obj);
+            _entityViews.TryGetValue(entityId, out var entityView);
 
-            if (!obj)
+            if (!entityView)
                 return;
             
-            LogHelper.Log($"OnEntityPositionChanged: {entity.name} {pos}");
-            
-            obj.transform.position = new UnityEngine.Vector3(pos.x, pos.y, pos.z);
+            entityView.OnPositionChanged(new UnityEngine.Vector3(pos.x, pos.y, pos.z));
         }
 
-        public void OnEntityDirectionChanged(Entity entity, Vector3 dir)
+        public void OnEntityDirectionChanged(uint entityId, Vector3 dir)
         {
-            _models.TryGetValue(entity, out var obj);
+            _entityViews.TryGetValue(entityId, out var entityView);
 
-            if (!obj)
+            if (!entityView)
                 return;
             
-            obj.transform.rotation = Quaternion.LookRotation(new UnityEngine.Vector3(dir.x, dir.y, dir.z));
+            entityView.OnDirectionChanged(new UnityEngine.Vector3(dir.x, dir.y, dir.z));
         }
 
-        public void OnEntityStartMoving(Entity entity)
+        public void OnEntityStartMoving(uint entityId)
         {
-            _models.TryGetValue(entity, out var obj);
+            _entityViews.TryGetValue(entityId, out var entityView);
             
-            if (!obj)
-                return;
-
-            var animator = obj.GetComponent<Animator>();
-
-            if (!animator)
+            if (!entityView)
                 return;
             
-            animator.SetBool(IsMoving, true);
+            entityView.OnStartMoving();
         }
 
-        public void OnEntityStopMoving(Entity entity)
+        public void OnEntityStopMoving(uint entityId)
         {
-            _models.TryGetValue(entity, out var obj);
+            _entityViews.TryGetValue(entityId, out var entityView);
             
-            if (!obj)
+            if (!entityView)
                 return;
             
-            var animator = obj.GetComponent<Animator>();
-
-            if (!animator)
-                return;
-            
-            animator.SetBool(IsMoving, false);
+            entityView.OnStopMoving();
         }
     }
 }
