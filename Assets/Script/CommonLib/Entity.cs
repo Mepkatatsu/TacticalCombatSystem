@@ -17,6 +17,11 @@ namespace Script.CommonLib
         public string startPositionName;
         public string endPositionName;
         
+        private float _maxHp = 10f;
+        private float _hp;
+        private float _attackDamage = 1f;
+        private float _attackSpeed = 1f;
+        private float _attackRange = 15f;
         private float _moveSpeed = 5f;
 
         public Entity(uint id, IBattleMapEventHandler battleMapEventHandler, BattleMapPathFinder pathFinder, EntityData entityData)
