@@ -3422,10 +3422,6 @@ MonoBehaviour:
     name: Entity3
     startPositionName: StartPosition3
     endPositionName: EndPosition3
-    modelScale:
-      x: 3.5
-      y: 3.5
-      z: 3.5
 --- !u!1 &1200760448
 GameObject:
   m_ObjectHideFlags: 0
@@ -3830,10 +3826,6 @@ MonoBehaviour:
     name: Entity1
     startPositionName: StartPosition1
     endPositionName: EndPosition1
-    modelScale:
-      x: 3.5
-      y: 3.5
-      z: 3.5
 --- !u!1001 &1258572060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3940,10 +3932,6 @@ MonoBehaviour:
     name: Entity2
     startPositionName: StartPosition2
     endPositionName: EndPosition2
-    modelScale:
-      x: 3.5
-      y: 3.5
-      z: 3.5
 --- !u!1001 &1321644657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6303,10 +6291,6 @@ MonoBehaviour:
     name: Entity4
     startPositionName: StartPosition4
     endPositionName: EndPosition4
-    modelScale:
-      x: 3.5
-      y: 3.5
-      z: 3.5
 --- !u!1001 &2049472333
 PrefabInstance:
   m_ObjectHideFlags: 0

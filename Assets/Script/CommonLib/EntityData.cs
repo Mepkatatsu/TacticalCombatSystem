@@ -9,6 +9,5 @@ namespace Script.CommonLib
         public string name;
         public string startPositionName;
         public string endPositionName;
-        public Vector3 modelScale = new Vector3(3.5f, 3.5f, 3.5f);
     }
 }

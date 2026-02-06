@@ -16,7 +16,6 @@ namespace Script.CommonLib
         public string name;
         public string startPositionName;
         public string endPositionName;
-        public Vector3 modelScale;
         
         private float _moveSpeed = 5f;
 
@@ -28,7 +27,6 @@ namespace Script.CommonLib
             name = entityData.name;
             startPositionName = entityData.startPositionName;
             endPositionName = entityData.endPositionName;
-            modelScale = entityData.modelScale;
         }
 
         public void Update(float deltaTime)

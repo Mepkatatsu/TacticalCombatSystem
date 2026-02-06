@@ -45,10 +45,10 @@ namespace Script.ClientLib
 
         public void OnEntityAdded(uint entityId, Entity entity)
         {
-            var modelPath = ModelPathSettings.Instance.GetModelPath(entity.name);
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+            var modelData = ModelSettings.Instance.GetModelData(entity.name);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(modelData.modelPath);
             var obj = Instantiate(prefab);
-            obj.transform.localScale = new UnityEngine.Vector3(entity.modelScale.x, entity.modelScale.y, entity.modelScale.z);
+            obj.transform.localScale = new UnityEngine.Vector3(modelData.modelScale.x, modelData.modelScale.y, modelData.modelScale.z);
             var entityView = obj.AddComponent<EntityView>();
             _entityViews.Add(entityId, entityView);
         }
