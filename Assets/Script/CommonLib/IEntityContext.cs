@@ -5,7 +5,7 @@ namespace Script.CommonLib
 {
     public interface IEntityContext
     {
-        public EntityStateType CurrentStateTypeType { get; }
+        public EntityStateType CurrentStateType { get; }
         public bool IsAlive();
         public bool HasArrived();
         public bool HasMainTarget();

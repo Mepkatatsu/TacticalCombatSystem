@@ -19,8 +19,8 @@ namespace Script.CommonLib
         public string startPositionName;
         public string endPositionName;
 
-        private EntityStateType _currentStateTypeType = EntityStateType.Idle;
-        public EntityStateType CurrentStateTypeType => _currentStateTypeType;
+        private EntityStateType _currentStateType = EntityStateType.Idle;
+        public EntityStateType CurrentStateType => _currentStateType;
         
         private float _maxHp = 10f;
         private float _hp;
@@ -61,11 +61,12 @@ namespace Script.CommonLib
             var nextStateType = _brain.ThinkNextStateType();
             var nextState = GetState(nextStateType);
 
-            if (_currentStateTypeType != nextStateType)
+            if (_currentStateType != nextStateType)
             {
-                var currentState = GetState(_currentStateTypeType);
+                var currentState = GetState(_currentStateType);
                 currentState.Exit();
                 nextState.Enter();
+                _currentStateType = nextStateType;
             }
 
             nextState.Update(deltaTime);
