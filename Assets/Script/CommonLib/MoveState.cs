@@ -8,6 +8,8 @@ namespace Script.CommonLib
     {
         private IEntityContext _entityContext;
     
+        private Vec3 _pos;
+        private Vec3 _dir;
         private Vec3 _destination;
         private readonly List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
 
@@ -63,6 +65,19 @@ namespace Script.CommonLib
         
             _entityContext.FindWaypoints(startPos, endPos, _paths);
         }
+
+        public void SetPos(Vec3 pos)
+        {
+            _pos = pos;
+        }
+
+        public void SetDir(Vec3 dir)
+        {
+            _dir = dir;
+        }
+        
+        public Vec3 GetPos() => _pos;
+        public Vec3 GetDir() => _dir;
 
         public void MovePath(Vec3 pos, float deltaTime)
         {

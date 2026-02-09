@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Script.CommonLib.Map
 {
-    public class BattleMapSimulator : IBattleMapEventHandler, IBattleMapContext
+    public class BattleMapSimulator : IBattleMapContext
     {
         public BattleMapSimulator(IBattleMapEventHandler battleMapEventHandler, BattleMapData battleMapData)
         {
@@ -37,7 +37,7 @@ namespace Script.CommonLib.Map
 
         private void AddEntity(EntityData entityData)
         {
-            var entity = new Entity(++_entityIdKey, this, this, entityData);
+            var entity = new Entity(++_entityIdKey, this, entityData);
             OnEntityAdded(_entityIdKey, entity);
         }
 
@@ -56,24 +56,24 @@ namespace Script.CommonLib.Map
                 entity.SetDestination(new Vec3(endPositionData.gridPos.x, 0, endPositionData.gridPos.y));
         }
 
+        public void OnEntityStartMove(uint entityId)
+        {
+            _battleMapEventHandler.OnEntityStartMove(entityId);
+        }
+
+        public void OnEntityStopMove(uint entityId)
+        {
+            _battleMapEventHandler.OnEntityStopMove(entityId);
+        }
+
         public void OnEntityPositionChanged(uint entityId, Vec3 pos)
         {
             _battleMapEventHandler.OnEntityPositionChanged(entityId, pos);
         }
 
-        public void OnEntityDirectionChanged(uint entityId, Vec3 pos)
+        public void OnEntityDirectionChanged(uint entityId, Vec3 dir)
         {
-            _battleMapEventHandler.OnEntityDirectionChanged(entityId, pos);
-        }
-
-        public void OnEntityStartMoving(uint entityId)
-        {
-            _battleMapEventHandler.OnEntityStartMoving(entityId);
-        }
-
-        public void OnEntityStopMoving(uint entityId)
-        {
-            _battleMapEventHandler.OnEntityStopMoving(entityId);
+            _battleMapEventHandler.OnEntityDirectionChanged(entityId, dir);
         }
 
         public IEntityContext TryGetNearestEnemy(uint entityId, float maxDistance)

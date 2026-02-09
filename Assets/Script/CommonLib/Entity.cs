@@ -10,10 +10,7 @@ namespace Script.CommonLib
     {
         private uint _id;
         
-        private IBattleMapEventHandler _battleMapEventHandler;
         private IBattleMapContext _battleMapContext;
-        private Vec3 _pos;
-        private Vec3 _dir;
 
         private TeamFlag _teamFlag;
         public TeamFlag GetTeamFlag() => _teamFlag;
@@ -41,11 +38,10 @@ namespace Script.CommonLib
         private DieState _dieState;
         
 
-        public Entity(uint id, IBattleMapEventHandler battleMapEventHandler, IBattleMapContext battleMapContext, EntityData entityData)
+        public Entity(uint id, IBattleMapContext battleMapContext, EntityData entityData)
         {
             _id = id;
             _teamFlag = entityData.teamFlag;
-            _battleMapEventHandler = battleMapEventHandler;
             _battleMapContext = battleMapContext;
             name = entityData.name;
             startPositionName = entityData.startPositionName;
@@ -101,7 +97,7 @@ namespace Script.CommonLib
 
         public Vec3 GetPos()
         {
-            return _pos;
+            return _moveState.GetPos();
         }
 
         public bool IsAlive()
@@ -121,19 +117,16 @@ namespace Script.CommonLib
 
         public void SetPos(Vec3 pos)
         {
-            _pos = pos;
-            _battleMapEventHandler.OnEntityPositionChanged(_id, pos);
+            _moveState.SetPos(pos);
+            _battleMapContext.OnEntityPositionChanged(_id, pos);
         }
 
-        public Vec3 GetDir()
-        {
-            return _dir;
-        }
+        public Vec3 GetDir() => _moveState.GetDir();
         
         public void SetDir(Vec3 dir)
         {
-            _dir = dir;
-            _battleMapEventHandler.OnEntityDirectionChanged(_id, dir);
+            _moveState.SetDir(dir);
+            _battleMapContext.OnEntityDirectionChanged(_id, dir);
         }
 
         public void SetDestination(Vec3 pos)
@@ -143,12 +136,12 @@ namespace Script.CommonLib
 
         public void OnStartMove()
         {
-            _battleMapEventHandler.OnEntityStartMoving(_id);
+            _battleMapContext.OnEntityStartMove(_id);
         }
         
         public void OnStopMove()
         {
-            _battleMapEventHandler.OnEntityStopMoving(_id);
+            _battleMapContext.OnEntityStopMove(_id);
         }
 
         public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)

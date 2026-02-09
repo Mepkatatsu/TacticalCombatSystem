@@ -72,7 +72,7 @@ namespace Script.ClientLib
             entityView.OnDirectionChanged(new UnityEngine.Vector3(dir.x, dir.y, dir.z));
         }
 
-        public void OnEntityStartMoving(uint entityId)
+        public void OnEntityStartMove(uint entityId)
         {
             _entityViews.TryGetValue(entityId, out var entityView);
             
@@ -82,7 +82,7 @@ namespace Script.ClientLib
             entityView.OnStartMoving();
         }
 
-        public void OnEntityStopMoving(uint entityId)
+        public void OnEntityStopMove(uint entityId)
         {
             _entityViews.TryGetValue(entityId, out var entityView);
             
