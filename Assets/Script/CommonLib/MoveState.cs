@@ -1,37 +1,27 @@
 using System.Collections.Generic;
 using System.Linq;
-using Script.CommonLib.Map;
+using Script.CommonLib.Battle;
 
 namespace Script.CommonLib
 {
-    public interface IMover
+    public class MoveState : IState
     {
-        public Vector3 GetPos();
-        public void SetPos(Vector3 pos);
-        public Vector3 GetDir();
-        public void SetDir(Vector3 dir);
-        public void StopMove();
-    }
-
-    public class MoveAgent
-    {
-        private BattleMapPathFinder _pathFinder;
-        private IMover _mover;
+        private IEntityContext _entityContext;
     
         private Vector3 _destination;
-    
-        private List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
-        private bool _isMoving;
+        private readonly List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
 
         private float _moveSpeed;
 
-        public MoveAgent(BattleMapPathFinder pathFinder, IMover mover, float moveSpeed)
+        public MoveState(IEntityContext entityContext, float moveSpeed)
         {
-            _pathFinder = pathFinder;
-            _mover = mover;
+            _entityContext = entityContext;
             _moveSpeed = moveSpeed;
-            
-            _isMoving = false;
+        }
+
+        public bool HasArrived()
+        {
+            return _entityContext.GetPos() == _destination;
         }
 
         public void SetDestination(Vector3 destination)
@@ -39,41 +29,39 @@ namespace Script.CommonLib
             _destination = destination;
         }
 
-        public void SetIsMoving(bool isMoving)
+        public void Enter()
         {
-            _isMoving = isMoving;
+            _entityContext.OnStartMove();
         }
-    
+
         public void Update(float deltaTime)
         {
-            if (!_isMoving)
-                return;
-        
-            var pos = _mover.GetPos();
+            _entityContext.TryGetNearestEnemy();
 
-            if (pos == _destination)
-            {
-                _mover.StopMove();
+            if (HasArrived())
                 return;
-            }
 
             if (_paths.IsEmpty())
-            {
                 FindPath();
-            }
-
+            
+            var pos = _entityContext.GetPos();
             MovePath(pos, deltaTime);
         }
-    
+
+        public void Exit()
+        {
+            _entityContext.OnStopMove();
+        }
+
         private void FindPath()
         {
             _paths.Clear();
 
             // GridPos가 아닌 곳으로 이동하고 싶을 수 있을 듯 하여 추후 수정이 필요할 것 같음.
-            var startPos = new GridPos(_mover.GetPos());
+            var startPos = new GridPos(_entityContext.GetPos());
             var endPos = new GridPos(_destination);
         
-            _pathFinder.FindWaypoints(startPos, endPos, _paths);
+            _entityContext.FindWaypoints(startPos, endPos, _paths);
         }
 
         public void MovePath(Vector3 pos, float deltaTime)
@@ -98,11 +86,11 @@ namespace Script.CommonLib
             
             nextPos = pos + dir * moveDistance;
         
-            _mover.SetPos(nextPos);
+            _entityContext.SetPos(nextPos);
             
-            var currentDir = _mover.GetDir();
+            var currentDir = _entityContext.GetDir();
             var nextDir = Vector3.Lerp(currentDir, dir, deltaTime * _moveSpeed);
-            _mover.SetDir(nextDir);
+            _entityContext.SetDir(nextDir);
         }
     }
 }

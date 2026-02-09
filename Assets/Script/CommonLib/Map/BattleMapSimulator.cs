@@ -37,7 +37,7 @@ namespace Script.CommonLib.Map
 
         private void AddEntity(EntityData entityData)
         {
-            var entity = new Entity(++_entityIdKey, this, this, _battleMapPathFinder, entityData);
+            var entity = new Entity(++_entityIdKey, this, this, entityData);
             OnEntityAdded(_entityIdKey, entity);
         }
 
@@ -48,12 +48,12 @@ namespace Script.CommonLib.Map
 
             var startPositionData = _battleMapData.GetBattlePositionDataByName(entity.startPositionName);
             var endPositionData = _battleMapData.GetBattlePositionDataByName(entity.endPositionName);
-
+            
             if (startPositionData != null)
                 entity.SetPos(startPositionData.gridPos);
             
             if (endPositionData != null)
-                entity.MoveTo(new Vector3(endPositionData.gridPos.x, 0, endPositionData.gridPos.y));
+                entity.SetDestination(new Vector3(endPositionData.gridPos.x, 0, endPositionData.gridPos.y));
         }
 
         public void OnEntityPositionChanged(uint entityId, Vector3 pos)
@@ -76,7 +76,7 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler.OnEntityStopMoving(entityId);
         }
 
-        public IEntityContext GetNearestEnemy(uint entityId, float maxDistance)
+        public IEntityContext TryGetNearestEnemy(uint entityId, float maxDistance)
         {
             if (!_entities.TryGetValue(entityId, out var entity))
                 return null;
@@ -112,6 +112,11 @@ namespace Script.CommonLib.Map
             }
 
             return nearest;
+        }
+
+        public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+        {
+            _battleMapPathFinder.FindWaypoints(start, goal, resultWaypoints);
         }
     }
 }

@@ -1,23 +1,29 @@
 using System;
+using System.Collections.Generic;
+using Script.CommonLib.Battle;
 using Script.CommonLib.Map;
 
 namespace Script.CommonLib
 {
     [Serializable]
-    public class Entity : IMover, IEntityContext
+    public class Entity : IEntityContext
     {
         private uint _id;
         
         private IBattleMapEventHandler _battleMapEventHandler;
         private IBattleMapContext _battleMapContext;
-        private MoveAgent _moveAgent;
         private Vector3 _pos;
         private Vector3 _dir;
 
         private TeamFlag _teamFlag;
+        public TeamFlag GetTeamFlag() => _teamFlag;
+        
         public string name;
         public string startPositionName;
         public string endPositionName;
+
+        private EntityStateType _currentStateTypeType = EntityStateType.Idle;
+        public EntityStateType CurrentStateTypeType => _currentStateTypeType;
         
         private float _maxHp = 10f;
         private float _hp;
@@ -28,36 +34,69 @@ namespace Script.CommonLib
 
         private IEntityContext _mainTarget;
 
-        public Entity(uint id, IBattleMapEventHandler battleMapEventHandler, IBattleMapContext battleMapContext, BattleMapPathFinder pathFinder, EntityData entityData)
+        private EntityBrain _brain;
+        private IdleState _idleState;
+        private MoveState _moveState;
+        private AttackState _attackState;
+        private DieState _dieState;
+        
+
+        public Entity(uint id, IBattleMapEventHandler battleMapEventHandler, IBattleMapContext battleMapContext, EntityData entityData)
         {
             _id = id;
             _teamFlag = entityData.teamFlag;
             _battleMapEventHandler = battleMapEventHandler;
             _battleMapContext = battleMapContext;
-            _moveAgent = new MoveAgent(pathFinder, this, _moveSpeed);
             name = entityData.name;
             startPositionName = entityData.startPositionName;
             endPositionName = entityData.endPositionName;
 
             _hp = _maxHp;
+
+            _brain = new EntityBrain(this);
+            _idleState = new IdleState(this);
+            _moveState = new MoveState(this, _moveSpeed);
+            _attackState = new AttackState(this);
+            _dieState = new DieState(this);
         }
-        
-        public TeamFlag GetTeamFlag() => _teamFlag;
 
         public void Update(float deltaTime)
         {
-            if (!IsAlive())
-                return;
-            
-            _mainTarget = _battleMapContext.GetNearestEnemy(_id, _attackRange);
+            var nextStateType = _brain.ThinkNextStateType();
+            var nextState = GetState(nextStateType);
 
-            if (_mainTarget != null)
+            if (_currentStateTypeType != nextStateType)
             {
-                StopMove();
-                return;
+                var currentState = GetState(_currentStateTypeType);
+                currentState.Exit();
+                nextState.Enter();
             }
 
-            _moveAgent.Update(deltaTime);
+            nextState.Update(deltaTime);
+        }
+
+        private IState GetState(EntityStateType stateType)
+        {
+            switch (stateType)
+            {
+                case EntityStateType.Idle:
+                    return _idleState;
+                case EntityStateType.Move:
+                    return _moveState;
+                case EntityStateType.Attack:
+                    return _attackState;
+                case EntityStateType.Die:
+                    return _dieState;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(stateType), stateType, null);
+            }
+        }
+        
+        public bool HasMainTarget() => _mainTarget != null && _mainTarget.IsAlive();
+
+        public void TryGetNearestEnemy()
+        {
+            _mainTarget = _battleMapContext.TryGetNearestEnemy(_id, _attackRange);
         }
 
         public Vector3 GetPos()
@@ -68,6 +107,11 @@ namespace Script.CommonLib
         public bool IsAlive()
         {
             return _hp > 0;
+        }
+
+        public bool HasArrived()
+        {
+            return _moveState.HasArrived();
         }
 
         public void SetPos(GridPos gridPos)
@@ -92,17 +136,24 @@ namespace Script.CommonLib
             _battleMapEventHandler.OnEntityDirectionChanged(_id, dir);
         }
 
-        public void MoveTo(Vector3 pos)
+        public void SetDestination(Vector3 pos)
         {
-            _moveAgent.SetDestination(pos);
-            _moveAgent.SetIsMoving(true);
+            _moveState.SetDestination(pos);
+        }
+
+        public void OnStartMove()
+        {
             _battleMapEventHandler.OnEntityStartMoving(_id);
         }
         
-        public void StopMove()
+        public void OnStopMove()
         {
-            _moveAgent.SetIsMoving(false);
             _battleMapEventHandler.OnEntityStopMoving(_id);
+        }
+
+        public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+        {
+            _battleMapContext.FindWaypoints(start, goal, resultWaypoints);
         }
     }
 }
