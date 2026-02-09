@@ -8,7 +8,7 @@ namespace Script.CommonLib
     {
         private IEntityContext _entityContext;
     
-        private Vector3 _destination;
+        private Vec3 _destination;
         private readonly List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
 
         private float _moveSpeed;
@@ -24,7 +24,7 @@ namespace Script.CommonLib
             return _entityContext.GetPos() == _destination;
         }
 
-        public void SetDestination(Vector3 destination)
+        public void SetDestination(Vec3 destination)
         {
             _destination = destination;
         }
@@ -64,19 +64,19 @@ namespace Script.CommonLib
             _entityContext.FindWaypoints(startPos, endPos, _paths);
         }
 
-        public void MovePath(Vector3 pos, float deltaTime)
+        public void MovePath(Vec3 pos, float deltaTime)
         {
             if (_paths.Count == 0)
                 return;
             
             var nextGridPos = _paths.Last();
-            var nextPos = new Vector3(nextGridPos.x, 0, nextGridPos.y);
+            var nextPos = new Vec3(nextGridPos.x, 0, nextGridPos.y);
 
             var nextMoveVector = nextPos - pos;
 
             var dir = nextMoveVector.normalized;
             var moveDistance = deltaTime * _moveSpeed;
-            var maxMoveDistance = Vector3.Distance(pos, nextPos);
+            var maxMoveDistance = Vec3.Distance(pos, nextPos);
 
             if (moveDistance > maxMoveDistance)
             {
@@ -89,7 +89,7 @@ namespace Script.CommonLib
             _entityContext.SetPos(nextPos);
             
             var currentDir = _entityContext.GetDir();
-            var nextDir = Vector3.Lerp(currentDir, dir, deltaTime * _moveSpeed);
+            var nextDir = Vec3.Lerp(currentDir, dir, deltaTime * _moveSpeed);
             _entityContext.SetDir(nextDir);
         }
     }

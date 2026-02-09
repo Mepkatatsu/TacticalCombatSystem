@@ -105,10 +105,10 @@ namespace Script.CommonLib
         public static bool operator !=(Vector2 lhs, Vector2 rhs) => !(lhs == rhs);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator Vector2(Vector3 v) => new Vector2(v.x, v.y);
+        public static implicit operator Vector2(Vec3 v) => new Vector2(v.x, v.y);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator Vector3(Vector2 v) => new Vector3(v.x, v.y, 0.0f);
+        public static implicit operator Vec3(Vector2 v) => new Vec3(v.x, v.y, 0.0f);
 
         /// <summary>
         ///   <para>Makes this vector have a magnitude of 1.</para>

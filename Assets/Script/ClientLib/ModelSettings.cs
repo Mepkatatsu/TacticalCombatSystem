@@ -11,7 +11,7 @@ namespace Script.ClientLib
         {
             public string entityName;
             public string modelPath;
-            public Vector3 modelScale = new Vector3(3.5f, 3.5f, 3.5f);
+            public Vec3 modelScale = new Vec3(3.5f, 3.5f, 3.5f);
         }
         
         public List<ModelData> modelPaths;

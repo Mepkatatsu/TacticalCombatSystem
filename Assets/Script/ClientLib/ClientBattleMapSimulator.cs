@@ -5,7 +5,6 @@ using Script.CommonLib.Map;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Vector3 = Script.CommonLib.Vector3;
 
 namespace Script.ClientLib
 {
@@ -53,7 +52,7 @@ namespace Script.ClientLib
             _entityViews.Add(entityId, entityView);
         }
 
-        public void OnEntityPositionChanged(uint entityId, Vector3 pos)
+        public void OnEntityPositionChanged(uint entityId, Vec3 pos)
         {
             _entityViews.TryGetValue(entityId, out var entityView);
 
@@ -63,7 +62,7 @@ namespace Script.ClientLib
             entityView.OnPositionChanged(new UnityEngine.Vector3(pos.x, pos.y, pos.z));
         }
 
-        public void OnEntityDirectionChanged(uint entityId, Vector3 dir)
+        public void OnEntityDirectionChanged(uint entityId, Vec3 dir)
         {
             _entityViews.TryGetValue(entityId, out var entityView);
 

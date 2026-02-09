@@ -12,8 +12,8 @@ namespace Script.CommonLib
         
         private IBattleMapEventHandler _battleMapEventHandler;
         private IBattleMapContext _battleMapContext;
-        private Vector3 _pos;
-        private Vector3 _dir;
+        private Vec3 _pos;
+        private Vec3 _dir;
 
         private TeamFlag _teamFlag;
         public TeamFlag GetTeamFlag() => _teamFlag;
@@ -99,7 +99,7 @@ namespace Script.CommonLib
             _mainTarget = _battleMapContext.TryGetNearestEnemy(_id, _attackRange);
         }
 
-        public Vector3 GetPos()
+        public Vec3 GetPos()
         {
             return _pos;
         }
@@ -116,27 +116,27 @@ namespace Script.CommonLib
 
         public void SetPos(GridPos gridPos)
         {
-            SetPos(new Vector3(gridPos.x, 0, gridPos.y));
+            SetPos(new Vec3(gridPos.x, 0, gridPos.y));
         }
 
-        public void SetPos(Vector3 pos)
+        public void SetPos(Vec3 pos)
         {
             _pos = pos;
             _battleMapEventHandler.OnEntityPositionChanged(_id, pos);
         }
 
-        public Vector3 GetDir()
+        public Vec3 GetDir()
         {
             return _dir;
         }
         
-        public void SetDir(Vector3 dir)
+        public void SetDir(Vec3 dir)
         {
             _dir = dir;
             _battleMapEventHandler.OnEntityDirectionChanged(_id, dir);
         }
 
-        public void SetDestination(Vector3 pos)
+        public void SetDestination(Vec3 pos)
         {
             _moveState.SetDestination(pos);
         }

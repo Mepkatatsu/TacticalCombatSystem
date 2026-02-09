@@ -53,15 +53,15 @@ namespace Script.CommonLib.Map
                 entity.SetPos(startPositionData.gridPos);
             
             if (endPositionData != null)
-                entity.SetDestination(new Vector3(endPositionData.gridPos.x, 0, endPositionData.gridPos.y));
+                entity.SetDestination(new Vec3(endPositionData.gridPos.x, 0, endPositionData.gridPos.y));
         }
 
-        public void OnEntityPositionChanged(uint entityId, Vector3 pos)
+        public void OnEntityPositionChanged(uint entityId, Vec3 pos)
         {
             _battleMapEventHandler.OnEntityPositionChanged(entityId, pos);
         }
 
-        public void OnEntityDirectionChanged(uint entityId, Vector3 pos)
+        public void OnEntityDirectionChanged(uint entityId, Vec3 pos)
         {
             _battleMapEventHandler.OnEntityDirectionChanged(entityId, pos);
         }
@@ -99,7 +99,7 @@ namespace Script.CommonLib.Map
                     continue;
                 
                 var otherPos = otherEntity.GetPos();
-                var distance = Vector3.Distance(pos, otherPos);
+                var distance = Vec3.Distance(pos, otherPos);
 
                 if (distance > maxDistance)
                     continue;

@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 namespace Script.CommonLib
 {
     [Serializable]
-    public struct Vector3 : IEquatable<Vector3>, IFormattable
+    public struct Vec3 : IEquatable<Vec3>, IFormattable
     {
         public const float kEpsilon = 1E-05f;
         public const float kEpsilonNormalSqrt = 1E-15f;
@@ -21,43 +21,43 @@ namespace Script.CommonLib
         ///   <para>Z component of the vector.</para>
         /// </summary>
         public float z;
-        private static readonly Vector3 zeroVector = new Vector3(0.0f, 0.0f, 0.0f);
-        private static readonly Vector3 oneVector = new Vector3(1f, 1f, 1f);
-        private static readonly Vector3 upVector = new Vector3(0.0f, 1f, 0.0f);
-        private static readonly Vector3 downVector = new Vector3(0.0f, -1f, 0.0f);
-        private static readonly Vector3 leftVector = new Vector3(-1f, 0.0f, 0.0f);
-        private static readonly Vector3 rightVector = new Vector3(1f, 0.0f, 0.0f);
-        private static readonly Vector3 forwardVector = new Vector3(0.0f, 0.0f, 1f);
-        private static readonly Vector3 backVector = new Vector3(0.0f, 0.0f, -1f);
-        private static readonly Vector3 positiveInfinityVector = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
-        private static readonly Vector3 negativeInfinityVector = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
+        private static readonly Vec3 zeroVector = new Vec3(0.0f, 0.0f, 0.0f);
+        private static readonly Vec3 oneVector = new Vec3(1f, 1f, 1f);
+        private static readonly Vec3 upVector = new Vec3(0.0f, 1f, 0.0f);
+        private static readonly Vec3 downVector = new Vec3(0.0f, -1f, 0.0f);
+        private static readonly Vec3 leftVector = new Vec3(-1f, 0.0f, 0.0f);
+        private static readonly Vec3 rightVector = new Vec3(1f, 0.0f, 0.0f);
+        private static readonly Vec3 forwardVector = new Vec3(0.0f, 0.0f, 1f);
+        private static readonly Vec3 backVector = new Vec3(0.0f, 0.0f, -1f);
+        private static readonly Vec3 positiveInfinityVector = new Vec3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+        private static readonly Vec3 negativeInfinityVector = new Vec3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
     
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 operator +(Vector3 a, Vector3 b)
+        public static Vec3 operator +(Vec3 a, Vec3 b)
         {
-            return new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
+            return new Vec3(a.x + b.x, a.y + b.y, a.z + b.z);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 operator -(Vector3 a, Vector3 b)
+        public static Vec3 operator -(Vec3 a, Vec3 b)
         {
-            return new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
+            return new Vec3(a.x - b.x, a.y - b.y, a.z - b.z);
         }
     
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 operator -(Vector3 a) => new Vector3(-a.x, -a.y, -a.z);
+        public static Vec3 operator -(Vec3 a) => new Vec3(-a.x, -a.y, -a.z);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 operator *(Vector3 a, float d) => new Vector3(a.x * d, a.y * d, a.z * d);
+        public static Vec3 operator *(Vec3 a, float d) => new Vec3(a.x * d, a.y * d, a.z * d);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 operator *(float d, Vector3 a) => new Vector3(a.x * d, a.y * d, a.z * d);
+        public static Vec3 operator *(float d, Vec3 a) => new Vec3(a.x * d, a.y * d, a.z * d);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 operator /(Vector3 a, float d) => new Vector3(a.x / d, a.y / d, a.z / d);
+        public static Vec3 operator /(Vec3 a, float d) => new Vec3(a.x / d, a.y / d, a.z / d);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(Vector3 lhs, Vector3 rhs)
+        public static bool operator ==(Vec3 lhs, Vec3 rhs)
         {
             float num1 = lhs.x - rhs.x;
             float num2 = lhs.y - rhs.y;
@@ -66,10 +66,10 @@ namespace Script.CommonLib
         }
     
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(Vector3 lhs, Vector3 rhs) => !(lhs == rhs);
+        public static bool operator !=(Vec3 lhs, Vec3 rhs) => !(lhs == rhs);
     
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3(float x, float y, float z)
+        public Vec3(float x, float y, float z)
         {
             this.x = x;
             this.y = y;
@@ -77,10 +77,10 @@ namespace Script.CommonLib
         }
     
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object other) => other is Vector3 other1 && Equals(other1);
+        public override bool Equals(object other) => other is Vec3 other1 && Equals(other1);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Vector3 other)
+        public bool Equals(Vec3 other)
         {
             return MathHelper.Approximately(x, other.x) && MathHelper.Approximately(y, other.y) && MathHelper.Approximately(z, other.z);
         }
@@ -117,13 +117,13 @@ namespace Script.CommonLib
             return this.x.GetHashCode() ^ this.y.GetHashCode() << 2 ^ this.z.GetHashCode() >> 2;
         }
     
-        public Vector3 normalized
+        public Vec3 normalized
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Normalize(this);
         }
     
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Distance(Vector3 a, Vector3 b)
+        public static float Distance(Vec3 a, Vec3 b)
         {
             float num1 = a.x - b.x;
             float num2 = a.y - b.y;
@@ -132,14 +132,14 @@ namespace Script.CommonLib
         }
     
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 Normalize(Vector3 value)
+        public static Vec3 Normalize(Vec3 value)
         {
-            float num = Vector3.Magnitude(value);
-            return (double) num > 9.999999747378752E-06 ? value / num : Vector3.zero;
+            float num = Vec3.Magnitude(value);
+            return (double) num > 9.999999747378752E-06 ? value / num : Vec3.zero;
         }
     
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Magnitude(Vector3 vector)
+        public static float Magnitude(Vec3 vector)
         {
             return (float) Math.Sqrt((double) vector.x * (double) vector.x + (double) vector.y * (double) vector.y + (double) vector.z * (double) vector.z);
         }
@@ -147,88 +147,88 @@ namespace Script.CommonLib
         /// <summary>
         ///   <para>Shorthand for writing Vector3(0, 0, 0).</para>
         /// </summary>
-        public static Vector3 zero
+        public static Vec3 zero
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.zeroVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.zeroVector;
         }
 
         /// <summary>
         ///   <para>Shorthand for writing Vector3(1, 1, 1).</para>
         /// </summary>
-        public static Vector3 one
+        public static Vec3 one
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.oneVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.oneVector;
         }
 
         /// <summary>
         ///   <para>Shorthand for writing Vector3(0, 0, 1).</para>
         /// </summary>
-        public static Vector3 forward
+        public static Vec3 forward
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.forwardVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.forwardVector;
         }
 
         /// <summary>
         ///   <para>Shorthand for writing Vector3(0, 0, -1).</para>
         /// </summary>
-        public static Vector3 back
+        public static Vec3 back
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.backVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.backVector;
         }
 
         /// <summary>
         ///   <para>Shorthand for writing Vector3(0, 1, 0).</para>
         /// </summary>
-        public static Vector3 up
+        public static Vec3 up
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.upVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.upVector;
         }
 
         /// <summary>
         ///   <para>Shorthand for writing Vector3(0, -1, 0).</para>
         /// </summary>
-        public static Vector3 down
+        public static Vec3 down
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.downVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.downVector;
         }
 
         /// <summary>
         ///   <para>Shorthand for writing Vector3(-1, 0, 0).</para>
         /// </summary>
-        public static Vector3 left
+        public static Vec3 left
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.leftVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.leftVector;
         }
 
         /// <summary>
         ///   <para>Shorthand for writing Vector3(1, 0, 0).</para>
         /// </summary>
-        public static Vector3 right
+        public static Vec3 right
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.rightVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.rightVector;
         }
 
         /// <summary>
         ///   <para>Shorthand for writing Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity).</para>
         /// </summary>
-        public static Vector3 positiveInfinity
+        public static Vec3 positiveInfinity
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.positiveInfinityVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.positiveInfinityVector;
         }
 
         /// <summary>
         ///   <para>Shorthand for writing Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity).</para>
         /// </summary>
-        public static Vector3 negativeInfinity
+        public static Vec3 negativeInfinity
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vector3.negativeInfinityVector;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Vec3.negativeInfinityVector;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 Lerp(Vector3 a, Vector3 b, float t)
+        public static Vec3 Lerp(Vec3 a, Vec3 b, float t)
         {
             t = Math.Clamp(t, 0, 1);
-            return new Vector3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
+            return new Vec3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
         }
     }
 }

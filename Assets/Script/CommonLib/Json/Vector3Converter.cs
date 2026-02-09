@@ -3,9 +3,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Script.CommonLib;
 
-public class Vector3Converter : JsonConverter<Vector3>
+public class Vector3Converter : JsonConverter<Vec3>
 {
-    public override void WriteJson(JsonWriter writer, Vector3 value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, Vec3 value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
         writer.WritePropertyName("x"); writer.WriteValue(value.x);
@@ -14,11 +14,11 @@ public class Vector3Converter : JsonConverter<Vector3>
         writer.WriteEndObject();
     }
 
-    public override Vector3 ReadJson(JsonReader reader, Type objectType, Vector3 existingValue, bool hasExistingValue,
+    public override Vec3 ReadJson(JsonReader reader, Type objectType, Vec3 existingValue, bool hasExistingValue,
         JsonSerializer serializer)
     {
         var obj = JObject.Load(reader);
-        return new Vector3(
+        return new Vec3(
             (float)obj["x"],
             (float)obj["y"],
             (float)obj["z"]
