@@ -9,5 +9,6 @@ namespace Script.CommonLib.Map
         public void OnEntityStopMove(uint entityId);
         public void OnEntityAttack(uint attackerId, uint targetId);
         public void OnEntityRetired(uint entityId);
+        public void OnBattleEnd(TeamFlag winner);
     }
 }

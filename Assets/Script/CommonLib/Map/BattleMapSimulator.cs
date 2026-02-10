@@ -61,6 +61,42 @@ namespace Script.CommonLib.Map
                 entity.SetDestination(new Vec3(endPositionData.gridPos.x, 0, endPositionData.gridPos.y));
         }
 
+        public void OnEntityRetired(uint entityId)
+        {
+            _battleMapEventHandler.OnEntityRetired(entityId);
+
+            var blueTeamCount = 0;
+            var redTeamCount = 0;
+            
+            foreach (var entity in _entities.Values)
+            {
+                if (!entity.IsAlive())
+                    continue;
+
+                if (entity.GetTeamFlag() == TeamFlag.Blue)
+                {
+                    ++blueTeamCount;
+                }
+                else
+                {
+                    ++redTeamCount;
+                }
+            }
+
+            if (blueTeamCount == 0 && redTeamCount > 0)
+            {
+                _battleMapEventHandler.OnBattleEnd(TeamFlag.Red);
+            }
+            else if (redTeamCount == 0 && blueTeamCount > 0)
+            {
+                _battleMapEventHandler.OnBattleEnd(TeamFlag.Blue);
+            }
+            else if (redTeamCount == 0 && blueTeamCount == 0)
+            {
+                _battleMapEventHandler.OnBattleEnd(TeamFlag.None);
+            }
+        }
+
         public void RequestAttack(uint attackerId, uint targetEntityId)
         {
             if (!_entities.TryGetValue(attackerId, out var attacker))

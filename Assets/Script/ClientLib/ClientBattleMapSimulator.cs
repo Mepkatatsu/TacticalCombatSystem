@@ -12,6 +12,10 @@ namespace Script.ClientLib
     {
         private BattleMapSimulator _battleMapSimulator;
         private Dictionary<uint, EntityView> _entityViews = new();
+
+        public GameObject redTeamWinText;
+        public GameObject blueTeamWinText;
+        public GameObject drawText;
         
         private void Start()
         {
@@ -112,6 +116,22 @@ namespace Script.ClientLib
                 return;
             
             entityView.OnRetired();
+        }
+
+        public void OnBattleEnd(TeamFlag winner)
+        {
+            if (winner == TeamFlag.Blue)
+            {
+                blueTeamWinText.SetActive(true);
+            }
+            else if (winner == TeamFlag.Red)
+            {
+                redTeamWinText.SetActive(true);
+            }
+            else if (winner == TeamFlag.None)
+            {
+                drawText.SetActive(true);
+            }
         }
     }
 }
