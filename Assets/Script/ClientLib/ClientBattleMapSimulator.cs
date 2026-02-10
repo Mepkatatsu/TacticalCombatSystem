@@ -91,5 +91,27 @@ namespace Script.ClientLib
             
             entityView.OnStopMoving();
         }
+
+        public void OnEntityAttack(uint attackerId, uint targetId)
+        {
+            _entityViews.TryGetValue(attackerId, out var attacker);
+            
+            if (!attacker)
+                return;
+            
+            attacker.OnStartAttack();
+            
+            LogHelper.Log($"entity {attackerId} attacked {targetId}");
+        }
+
+        public void OnEntityRetired(uint entityId)
+        {
+            _entityViews.TryGetValue(entityId, out var entityView);
+
+            if (!entityView)
+                return;
+            
+            entityView.OnRetired();
+        }
     }
 }

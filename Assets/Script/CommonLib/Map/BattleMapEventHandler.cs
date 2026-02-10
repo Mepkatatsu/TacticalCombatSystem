@@ -7,5 +7,7 @@ namespace Script.CommonLib.Map
         public void OnEntityDirectionChanged(uint entityId, Vec3 pos);
         public void OnEntityStartMove(uint entityId);
         public void OnEntityStopMove(uint entityId);
+        public void OnEntityAttack(uint attackerId, uint targetId);
+        public void OnEntityRetired(uint entityId);
     }
 }

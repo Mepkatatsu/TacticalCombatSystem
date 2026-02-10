@@ -18,9 +18,12 @@ namespace Script.CommonLib.Map
         private readonly Dictionary<uint, Entity> _entities = new();
 
         private uint _entityIdKey;
+        public float ElapsedSec { get; private set; }
 
         public void Init()
         {
+            ElapsedSec = 0;
+            
             foreach (var entityData in _battleMapData.entities)
             {
                 AddEntity(entityData);
@@ -29,6 +32,8 @@ namespace Script.CommonLib.Map
 
         public void Update(float deltaTime)
         {
+            ElapsedSec += deltaTime;
+            
             foreach (var entity in _entities.Values)
             {
                 entity.Update(deltaTime);
@@ -54,6 +59,28 @@ namespace Script.CommonLib.Map
             
             if (endPositionData != null)
                 entity.SetDestination(new Vec3(endPositionData.gridPos.x, 0, endPositionData.gridPos.y));
+        }
+
+        public void RequestAttack(uint attackerId, uint targetEntityId)
+        {
+            if (!_entities.TryGetValue(attackerId, out var attacker))
+                return;
+            
+            if (!_entities.TryGetValue(targetEntityId, out var target))
+                return;
+
+            if (!attacker.IsAlive())
+                return;
+
+            if (Vec3.Distance(attacker.GetPos(), target.GetPos()) > attacker.AttackRange)
+                return;
+            
+            target.Hit(attacker.AttackDamage);
+            
+            _battleMapEventHandler.OnEntityAttack(attackerId, targetEntityId);
+            
+            if (!target.IsAlive())
+                OnEntityRetired(targetEntityId);
         }
 
         public void OnEntityStartMove(uint entityId)

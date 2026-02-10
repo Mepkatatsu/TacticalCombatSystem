@@ -16,7 +16,7 @@ namespace Script.CommonLib
             if (!_entityContext.IsAlive())
                 return EntityStateType.Die;
 
-            if (_entityContext.HasMainTarget())
+            if (_entityContext.IsMainTargetInRange())
                 return EntityStateType.Attack;
 
             return _entityContext.HasArrived() ? EntityStateType.Idle : EntityStateType.Move;
