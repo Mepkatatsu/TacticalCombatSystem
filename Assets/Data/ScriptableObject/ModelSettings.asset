@@ -41,3 +41,31 @@ MonoBehaviour:
       x: 3.5
       y: 3.5
       z: 3.5
+  - entityName: Entity5
+    modelPath: Assets/Data/ExternalAssets/TacticalCombatSystem_ExternalAssets/SD
+      Unity-Chan Haon Custom/Prefabs/Set/Set Costume_02 SD Unity-Chan.prefab
+    modelScale:
+      x: 3.5
+      y: 3.5
+      z: 3.5
+  - entityName: Entity6
+    modelPath: Assets/Data/ExternalAssets/TacticalCombatSystem_ExternalAssets/SD
+      Unity-Chan Haon Custom/Prefabs/Set/Set Costume_03 SD Yuko.prefab
+    modelScale:
+      x: 3.5
+      y: 3.5
+      z: 3.5
+  - entityName: Entity7
+    modelPath: Assets/Data/ExternalAssets/TacticalCombatSystem_ExternalAssets/SD
+      Unity-Chan Haon Custom/Prefabs/Set/Set Costume_02 SD Unity-Chan WGS.prefab
+    modelScale:
+      x: 3.5
+      y: 3.5
+      z: 3.5
+  - entityName: Entity8
+    modelPath: Assets/Data/ExternalAssets/TacticalCombatSystem_ExternalAssets/SD
+      Unity-Chan Haon Custom/Prefabs/Set/Custom/Set Costume 08 (8).prefab
+    modelScale:
+      x: 3.5
+      y: 3.5
+      z: 3.5

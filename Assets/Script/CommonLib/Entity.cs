@@ -22,12 +22,14 @@ namespace Script.CommonLib
         private EntityStateType _currentStateType = EntityStateType.Idle;
         public EntityStateType CurrentStateType => _currentStateType;
         
-        private float _maxHp = 10f;
+        private float _maxHp;
         private float _hp;
-        private float _attackDamage = 1f;
-        private float _attackSpeed = 1f;
-        private float _attackRange = 15f;
-        private float _moveSpeed = 5f;
+        private float _attackDamage;
+        private float _attackSpeed;
+        private float _attackRange;
+        private float _moveSpeed;
+
+        public float AttackSpeed => _attackSpeed;
 
         private IEntityContext _mainTarget;
 
@@ -47,6 +49,12 @@ namespace Script.CommonLib
             startPositionName = entityData.startPositionName;
             endPositionName = entityData.endPositionName;
 
+            _maxHp = entityData.maxHp;
+            _attackDamage = entityData.attackDamage;
+            _attackSpeed = entityData.attackSpeed;
+            _attackRange = entityData.attackRange;
+            _moveSpeed = entityData.moveSpeed;
+            
             _hp = _maxHp;
 
             _brain = new EntityBrain(this);

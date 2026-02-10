@@ -10,5 +10,11 @@ namespace Script.CommonLib
         public string name;
         public string startPositionName;
         public string endPositionName;
+
+        public float maxHp;
+        public float attackDamage;
+        public float attackSpeed;
+        public float attackRange;
+        public float moveSpeed;
     }
 }

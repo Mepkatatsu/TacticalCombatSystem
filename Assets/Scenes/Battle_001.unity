@@ -2188,9 +2188,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entityData:
     teamFlag: 1
-    name: Entity2
+    name: Entity6
     startPositionName: EndPosition2
     endPositionName: StartPosition2
+    maxHp: 10
+    attackDamage: 5
+    attackSpeed: 0.5
+    attackRange: 8
+    moveSpeed: 4.5
 --- !u!1 &710962602
 GameObject:
   m_ObjectHideFlags: 0
@@ -3411,9 +3416,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entityData:
     teamFlag: 1
-    name: Entity4
+    name: Entity8
     startPositionName: EndPosition4
     endPositionName: StartPosition4
+    maxHp: 10
+    attackDamage: 2
+    attackSpeed: 3
+    attackRange: 10
+    moveSpeed: 4.5
 --- !u!1001 &1198893644
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3521,6 +3531,11 @@ MonoBehaviour:
     name: Entity3
     startPositionName: StartPosition3
     endPositionName: EndPosition3
+    maxHp: 10
+    attackDamage: 1.5
+    attackSpeed: 2.5
+    attackRange: 12
+    moveSpeed: 5
 --- !u!1 &1200760448
 GameObject:
   m_ObjectHideFlags: 0
@@ -3926,6 +3941,11 @@ MonoBehaviour:
     name: Entity1
     startPositionName: StartPosition1
     endPositionName: EndPosition1
+    maxHp: 10
+    attackDamage: 2
+    attackSpeed: 2
+    attackRange: 10
+    moveSpeed: 5
 --- !u!1001 &1258572060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4033,6 +4053,11 @@ MonoBehaviour:
     name: Entity2
     startPositionName: StartPosition2
     endPositionName: EndPosition2
+    maxHp: 10
+    attackDamage: 1
+    attackSpeed: 3
+    attackRange: 8
+    moveSpeed: 4.5
 --- !u!1001 &1321644657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4365,9 +4390,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entityData:
     teamFlag: 1
-    name: Entity1
+    name: Entity5
     startPositionName: EndPosition1
     endPositionName: StartPosition1
+    maxHp: 10
+    attackDamage: 3
+    attackSpeed: 2
+    attackRange: 12
+    moveSpeed: 5
 --- !u!1001 &1369059883
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5666,9 +5696,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entityData:
     teamFlag: 1
-    name: Entity3
+    name: Entity7
     startPositionName: EndPosition3
     endPositionName: StartPosition3
+    maxHp: 10
+    attackDamage: 3
+    attackSpeed: 3
+    attackRange: 10
+    moveSpeed: 5
 --- !u!1001 &1752693875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6495,6 +6530,11 @@ MonoBehaviour:
     name: Entity4
     startPositionName: StartPosition4
     endPositionName: EndPosition4
+    maxHp: 10
+    attackDamage: 3
+    attackSpeed: 1
+    attackRange: 10
+    moveSpeed: 4.5
 --- !u!1001 &2049472333
 PrefabInstance:
   m_ObjectHideFlags: 0
