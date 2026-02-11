@@ -103,8 +103,7 @@ namespace Script.CommonLib
         
             _entityContext.SetPos(nextPos);
             
-            var currentDir = _entityContext.GetDir();
-            var nextDir = Vec3.Lerp(currentDir, dir, deltaTime * _moveSpeed);
+            var nextDir = Vec3.Lerp(_dir, dir, deltaTime * _moveSpeed);
             _entityContext.SetDir(nextDir);
         }
     }

@@ -15,9 +15,15 @@ namespace Script.CommonLib.Map
         private readonly BattleMapData _battleMapData;
         private readonly BattleMapPathFinder _battleMapPathFinder;
         
-        private readonly Dictionary<uint, Entity> _entities = new();
-
+        private readonly Dictionary<uint, Entity> _entities = new();            // TODO: PoolObject
+        private readonly Dictionary<ulong, Projectile> _projectiles = new();    // TODO: PoolObject
+        
+        private readonly List<uint> _removeEntityIds = new();
+        private readonly List<ulong> _removeProjectileIds = new();
+        
         private uint _entityIdKey;
+        private ulong _projectileIdKey;
+        
         public float ElapsedSec { get; private set; }
 
         public void Init()
@@ -34,10 +40,37 @@ namespace Script.CommonLib.Map
         {
             ElapsedSec += deltaTime;
             
+            foreach (var removeProjectileId in _removeProjectileIds)
+            {
+                _projectiles.Remove(removeProjectileId);
+            }
+            _removeProjectileIds.Clear();
+            
+            foreach (var removeEntityId in _removeEntityIds)
+            {
+                _entities.Remove(removeEntityId);
+            }
+            _removeEntityIds.Clear();
+            
+            foreach (var projectile in _projectiles.Values)
+            {
+                projectile.Update(deltaTime);
+            }
+            
             foreach (var entity in _entities.Values)
             {
                 entity.Update(deltaTime);
             }
+        }
+
+        private void RemoveEntity(uint entityId)
+        {
+            _removeEntityIds.Add(entityId);
+        }
+
+        private void RemoveProjectile(ulong projectileId)
+        {
+            _removeProjectileIds.Add(projectileId);
         }
 
         private void AddEntity(EntityData entityData)
@@ -64,6 +97,7 @@ namespace Script.CommonLib.Map
         public void OnEntityRetired(uint entityId)
         {
             _battleMapEventHandler.OnEntityRetired(entityId);
+            RemoveEntity(entityId);
 
             var blueTeamCount = 0;
             var redTeamCount = 0;
@@ -110,13 +144,41 @@ namespace Script.CommonLib.Map
 
             if (Vec3.Distance(attacker.GetPos(), target.GetPos()) > attacker.AttackRange)
                 return;
+
+            const float projectileLifeTime = 0.5f; // TODO: 임시값 변경 필요
             
-            target.Hit(attacker.AttackDamage);
+            var projectile = new Projectile(this, ++_projectileIdKey, attacker, target, attacker.AttackDamage, projectileLifeTime, attacker.GetPos());
+            _projectiles.Add(_projectileIdKey, projectile);
             
-            _battleMapEventHandler.OnEntityAttack(attackerId, targetEntityId);
+            _battleMapEventHandler.OnEntityStartAttack(attackerId, targetEntityId);
+            _battleMapEventHandler.OnProjectileAdded(projectile.Id, projectile);
+        }
+
+        public void OnProjectilePositionChanged(ulong projectileId, Vec3 pos)
+        {
+            _battleMapEventHandler.OnProjectilePositionChanged(projectileId, pos);
+        }
+
+        public void OnProjectileDirectionChanged(ulong projectileId, Vec3 dir)
+        {
+            _battleMapEventHandler.OnProjectileDirectionChanged(projectileId, dir);
+        }
+
+        public void OnProjectileTriggered(ulong projectileId)
+        {
+            if (!_projectiles.TryGetValue(projectileId, out var projectile))
+                return;
+            
+            RemoveProjectile(projectileId);
+            _battleMapEventHandler.OnProjectileTriggered(projectileId);
+
+            if (!_entities.TryGetValue(projectile.Target.Id, out var target))
+                return;
+            
+            target.Hit(projectile.Damage);
             
             if (!target.IsAlive())
-                OnEntityRetired(targetEntityId);
+                OnEntityRetired(target.Id);
         }
 
         public void OnEntityStartMove(uint entityId)

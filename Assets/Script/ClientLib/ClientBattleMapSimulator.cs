@@ -12,6 +12,7 @@ namespace Script.ClientLib
     {
         private BattleMapSimulator _battleMapSimulator;
         private Dictionary<uint, EntityView> _entityViews = new();
+        private Dictionary<ulong, ProjectileView> _projectileViews = new();
 
         public GameObject redTeamWinText;
         public GameObject blueTeamWinText;
@@ -51,7 +52,7 @@ namespace Script.ClientLib
             var modelData = ModelSettings.Instance.GetModelData(entity.name);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(modelData.modelPath);
             var obj = Instantiate(prefab);
-            obj.transform.localScale = new UnityEngine.Vector3(modelData.modelScale.x, modelData.modelScale.y, modelData.modelScale.z);
+            obj.transform.localScale = new Vector3(modelData.modelScale.x, modelData.modelScale.y, modelData.modelScale.z);
             var entityView = obj.AddComponent<EntityView>();
             _entityViews.Add(entityId, entityView);
         }
@@ -63,7 +64,7 @@ namespace Script.ClientLib
             if (!entityView)
                 return;
             
-            entityView.OnPositionChanged(new UnityEngine.Vector3(pos.x, pos.y, pos.z));
+            entityView.OnPositionChanged(new Vector3(pos.x, pos.y, pos.z));
         }
 
         public void OnEntityDirectionChanged(uint entityId, Vec3 dir)
@@ -73,7 +74,7 @@ namespace Script.ClientLib
             if (!entityView)
                 return;
             
-            entityView.OnDirectionChanged(new UnityEngine.Vector3(dir.x, dir.y, dir.z));
+            entityView.OnDirectionChanged(new Vector3(dir.x, dir.y, dir.z));
         }
 
         public void OnEntityStartMove(uint entityId)
@@ -96,7 +97,7 @@ namespace Script.ClientLib
             entityView.OnStopMoving();
         }
 
-        public void OnEntityAttack(uint attackerId, uint targetId)
+        public void OnEntityStartAttack(uint attackerId, uint targetId)
         {
             _entityViews.TryGetValue(attackerId, out var attacker);
             
@@ -116,6 +117,51 @@ namespace Script.ClientLib
                 return;
             
             entityView.OnRetired();
+        }
+
+        public void OnProjectileAdded(ulong projectileId, Projectile projectile)
+        {
+            const string projectileName = "Projectile"; // TODO: 임시값 변경
+            
+            var projectileData = ProjectileSettings.Instance.GetProjectileData(projectileName);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(projectileData.projectilePath);
+            var obj = Instantiate(prefab);
+            obj.transform.localScale = new Vector3(projectileData.scale.x, projectileData.scale.y, projectileData.scale.z);
+            var projectileView = obj.AddComponent<ProjectileView>();
+            _projectileViews.Add(projectileId, projectileView);
+        }
+
+        public void OnProjectilePositionChanged(ulong projectileId, Vec3 pos)
+        {
+            _projectileViews.TryGetValue(projectileId, out var projectileView);
+
+            if (!projectileView)
+                return;
+
+            const float projectileHeight = 1f;  // TODO: 임시값 수정해야 함
+            
+            projectileView.OnPositionChanged(new Vector3(pos.x, projectileHeight, pos.z));
+        }
+
+        public void OnProjectileDirectionChanged(ulong projectileId, Vec3 dir)
+        {
+            _projectileViews.TryGetValue(projectileId, out var projectileView);
+
+            if (!projectileView)
+                return;
+            
+            projectileView.OnDirectionChanged(new Vector3(dir.x, dir.y, dir.z));
+        }
+
+        public void OnProjectileTriggered(ulong projectileId)
+        {
+            _projectileViews.TryGetValue(projectileId, out var projectileView);
+
+            if (!projectileView)
+                return;
+            
+            _projectileViews.Remove(projectileId);
+            Destroy(projectileView.gameObject);
         }
 
         public void OnBattleEnd(TeamFlag winner)
