@@ -2431,7 +2431,7 @@ MonoBehaviour:
     endPositionName: StartPosition2
     maxHp: 10
     attackDamage: 5
-    attackSpeed: 0.5
+    attackSpeed: 1
     attackRange: 8
     moveSpeed: 4.5
 --- !u!1 &710962602
@@ -3972,7 +3972,7 @@ MonoBehaviour:
     startPositionName: StartPosition3
     endPositionName: EndPosition3
     maxHp: 10
-    attackDamage: 1.5
+    attackDamage: 3
     attackSpeed: 2.5
     attackRange: 12
     moveSpeed: 5
@@ -4381,8 +4381,8 @@ MonoBehaviour:
     name: Entity1
     startPositionName: StartPosition1
     endPositionName: EndPosition1
-    maxHp: 10
-    attackDamage: 2
+    maxHp: 5
+    attackDamage: 5
     attackSpeed: 2
     attackRange: 10
     moveSpeed: 5
@@ -4493,11 +4493,11 @@ MonoBehaviour:
     name: Entity2
     startPositionName: StartPosition2
     endPositionName: EndPosition2
-    maxHp: 10
+    maxHp: 20
     attackDamage: 1
     attackSpeed: 3
-    attackRange: 8
-    moveSpeed: 4.5
+    attackRange: 5
+    moveSpeed: 6
 --- !u!1001 &1321644657
 PrefabInstance:
   m_ObjectHideFlags: 0
