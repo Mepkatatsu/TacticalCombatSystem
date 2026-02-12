@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MiniServerProject.Api.Middleware;
+using MiniServerProject.Application.Cheats;
 using MiniServerProject.Application.Stages;
 using MiniServerProject.Application.Users;
 using MiniServerProject.Infrastructure;
@@ -44,6 +45,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 builder.Services.AddSingleton<IIdempotencyCache, RedisCache>();
 builder.Services.AddScoped<IStageService, StageService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICheatService, CheatService>();
 
 var app = builder.Build();
 

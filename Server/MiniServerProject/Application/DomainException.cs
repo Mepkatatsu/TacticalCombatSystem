@@ -10,7 +10,8 @@
         UserNotInThisStage,
         NotEnoughStamina,
         RequestIdUsedForDifferentStage,
-        IdempotencyMissingAfterUniqueViolation
+        IdempotencyMissingAfterUniqueViolation,
+        DevelopmentEnvironmentOnly,
     }
 
     public sealed class DomainException : Exception

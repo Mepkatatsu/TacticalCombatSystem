@@ -13,6 +13,7 @@ namespace MiniServerProject.Infrastructure.Persistence
         public DbSet<StageEnterLog> StageEnterLogs => Set<StageEnterLog>();
         public DbSet<StageClearLog> StageClearLogs => Set<StageClearLog>();
         public DbSet<StageGiveUpLog> StageGiveUpLogs => Set<StageGiveUpLog>();
+        public DbSet<CheatStamina100Log> CheatStamina100Logs => Set<CheatStamina100Log>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

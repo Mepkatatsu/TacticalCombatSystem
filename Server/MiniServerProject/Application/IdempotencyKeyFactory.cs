@@ -13,5 +13,8 @@
 
         public static string StageGiveUp(ulong userId, string stageId, string requestId)
             => $"idem:stages:give-up:{userId}:{stageId}:{requestId}";
+        
+        public static string CheatStamina100(ulong userId, string requestId)
+            => $"idem:cheat:stamina100:{userId}:{requestId}";
     }
 }

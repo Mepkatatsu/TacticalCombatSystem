@@ -111,7 +111,7 @@ namespace MiniServerProject.Domain.Entities
             return Stamina >= amount;
         }
 
-        public bool AddStamina(ushort amount, DateTime currentDateTime)
+        public void AddStamina(ushort amount, DateTime currentDateTime)
         {
             UpdateStaminaByDateTime(currentDateTime);
 
@@ -119,8 +119,14 @@ namespace MiniServerProject.Domain.Entities
             if (Stamina >= MaxRecoverableStamina)
                 LastStaminaUpdateTime = currentDateTime;
 
-            Stamina += amount;
-            return true;
+            if (ushort.MaxValue - amount < Stamina)
+            {
+                Stamina = ushort.MaxValue;
+            }
+            else
+            {
+                Stamina += amount;
+            }
         }
 
         public bool ConsumeStamina(ushort amount, DateTime currentDateTime)
