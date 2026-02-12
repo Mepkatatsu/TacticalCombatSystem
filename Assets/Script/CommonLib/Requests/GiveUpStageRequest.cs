@@ -2,8 +2,8 @@
 {
     public sealed class GiveUpStageRequest
     {
-        public ulong UserId { get; init; }
-        public string RequestId { get; init; } = null!;
+        public ulong UserId { get; }
+        public string RequestId { get; }
 
         public GiveUpStageRequest(ulong userId, string requestId)
         {

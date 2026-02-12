@@ -1,4 +1,7 @@
-﻿namespace MiniServerProject.Shared.Tables
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace MiniServerProject.Shared.Tables
 {
     public class StageTable : TableBase<string, StageData>
     {

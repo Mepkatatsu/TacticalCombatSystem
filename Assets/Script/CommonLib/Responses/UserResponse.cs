@@ -1,4 +1,6 @@
-﻿namespace MiniServerProject.Shared.Responses
+﻿using System;
+
+namespace MiniServerProject.Shared.Responses
 {
     public class UserResponse
     {

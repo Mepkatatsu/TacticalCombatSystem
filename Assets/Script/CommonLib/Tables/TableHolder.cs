@@ -1,4 +1,7 @@
-﻿namespace MiniServerProject.Shared.Tables
+﻿using System;
+using System.Collections.Generic;
+
+namespace MiniServerProject.Shared.Tables
 {
     public static class TableHolder
     {

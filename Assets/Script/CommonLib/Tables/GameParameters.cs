@@ -1,4 +1,6 @@
-﻿namespace MiniServerProject.Shared.Tables
+﻿using System;
+
+namespace MiniServerProject.Shared.Tables
 {
     public class GameParameters : ITable
     {

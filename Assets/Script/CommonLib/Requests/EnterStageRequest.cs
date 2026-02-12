@@ -2,8 +2,8 @@
 {
     public sealed class EnterStageRequest
     {
-        public ulong UserId { get; init; }
-        public string RequestId { get; init; } = null!;
+        public ulong UserId { get; }
+        public string RequestId { get; }
 
         public EnterStageRequest(ulong userId, string requestId)
         {
