@@ -1,4 +1,4 @@
-﻿using MiniServerProject.TestClient.App;
+﻿using Script.ClientLib.Network.App;
 using Script.CommonLib.Responses;
 using Script.CommonLib.Tables;
 

@@ -1,28 +1,26 @@
-﻿using MiniServerProject.TestClient.Api;
-using MiniServerProject.TestClient.Framework;
+﻿using System;
+using Script.ClientLib.Network.Api;
 using Script.CommonLib.Responses;
 
-namespace MiniServerProject.TestClient.App
+namespace Script.ClientLib.Network.App
 {
     public sealed class ClientContext
     {
         public AppState State { get; set; } = AppState.Boot;
 
         public string BaseUrl { get; set; } = "http://localhost:5099";
-        public string? AccountId { get; private set; }
+        public string AccountId { get; private set; }
         public ulong UserId { get; set; }
-        public string? Nickname { get; private set; }
+        public string Nickname { get; private set; }
         public ushort Level { get; set; }
         public ushort Stamina { get; set; }
         public ulong Gold { get; set; }
         public ulong Exp { get; set; }
-        public string? CurrentStageId { get; set; }
+        public string CurrentStageId { get; set; }
 
         public ApiClient Api { get; private set; } = null!;
 
         public string GetRequestId() => Guid.NewGuid().ToString();
-
-        private readonly ClientDataHelper _localStore = new();
 
         public void InitByUserResponse(string accountId, UserResponse userResponse)
         {
@@ -36,7 +34,7 @@ namespace MiniServerProject.TestClient.App
             CurrentStageId = userResponse.CurrentStageId;
         }
 
-        public void SetAccountId(string? accountId)
+        public void SetAccountId(string accountId)
         {
             AccountId = accountId;
         }
@@ -69,16 +67,6 @@ namespace MiniServerProject.TestClient.App
         public void ClearCurrentStageId()
         {
             CurrentStageId = null;
-        }
-
-        public void SaveClientData()
-        {
-            _localStore.Save(this);
-        }
-
-        public void LoadClientData()
-        {
-            _localStore.Load(this);
         }
 
         public void BuildApi()

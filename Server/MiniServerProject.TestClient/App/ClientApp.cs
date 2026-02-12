@@ -1,4 +1,5 @@
 ﻿using MiniServerProject.TestClient.Framework;
+using Script.ClientLib.Network.App;
 using Script.CommonLib.Requests;
 using Script.CommonLib.Responses;
 using Script.CommonLib.Tables;
@@ -8,12 +9,13 @@ namespace MiniServerProject.TestClient.App
     public sealed class ClientApp
     {
         private readonly ClientContext _ctx = new();
+        private readonly ClientDataHelper _localStore = new();
 
         public async Task RunAsync()
         {
             ConsoleEx.WriteTitle("MiniServer Test Client");
 
-            _ctx.LoadClientData();
+            _localStore.Load(_ctx);
             _ctx.BuildApi();
 
             while (_ctx.State != AppState.Exit)
@@ -64,7 +66,7 @@ namespace MiniServerProject.TestClient.App
                 }
             }
 
-            _ctx.SaveClientData();
+            _localStore.Save(_ctx);
             Console.WriteLine("Bye!");
         }
 
