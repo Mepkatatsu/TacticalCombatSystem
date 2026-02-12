@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MiniServerProject.Shared.Responses;
 using MiniServerProject.Domain.ServerLogs;
 using MiniServerProject.Infrastructure;
 using MiniServerProject.Infrastructure.Persistence;
-using MiniServerProject.Shared.Tables;
+using Script.CommonLib.Responses;
+using Script.CommonLib.Tables;
 
 namespace MiniServerProject.Application.Stages
 {

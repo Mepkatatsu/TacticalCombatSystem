@@ -1,6 +1,6 @@
-﻿using MiniServerProject.Shared.Responses;
-using MiniServerProject.Shared.Tables;
-using MiniServerProject.TestClient.App;
+﻿using MiniServerProject.TestClient.App;
+using Script.CommonLib.Responses;
+using Script.CommonLib.Tables;
 
 namespace MiniServerProject.TestClient.Framework
 {

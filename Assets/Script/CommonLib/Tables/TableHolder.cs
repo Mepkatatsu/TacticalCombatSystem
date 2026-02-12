@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MiniServerProject.Shared.Tables
+namespace Script.CommonLib.Tables
 {
     public static class TableHolder
     {

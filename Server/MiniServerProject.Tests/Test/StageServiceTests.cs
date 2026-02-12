@@ -6,8 +6,8 @@ using MiniServerProject.Application.Users;
 using MiniServerProject.Domain.Entities;
 using MiniServerProject.Infrastructure;
 using MiniServerProject.Infrastructure.Persistence;
-using MiniServerProject.Shared.Tables;
 using MiniServerProject.Tests.TestHelpers;
+using Script.CommonLib.Tables;
 
 namespace MiniServerProject.Tests.Test
 {

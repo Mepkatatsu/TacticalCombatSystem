@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MiniServerProject.Shared.Tables
+namespace Script.CommonLib.Tables
 {
     public class GameParameters : ITable
     {

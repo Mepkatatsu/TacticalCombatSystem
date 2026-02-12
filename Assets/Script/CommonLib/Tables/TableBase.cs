@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MiniServerProject.Shared.Tables
+namespace Script.CommonLib.Tables
 {
     public abstract class TableBase<TKey, TData> : ITable<TKey, TData> where TKey : notnull
     {

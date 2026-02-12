@@ -2,7 +2,7 @@
 using MiniServerProject.Domain.ServerLogs;
 using MiniServerProject.Infrastructure;
 using MiniServerProject.Infrastructure.Persistence;
-using MiniServerProject.Shared.Responses;
+using Script.CommonLib.Responses;
 
 namespace MiniServerProject.Application.Cheats
 {

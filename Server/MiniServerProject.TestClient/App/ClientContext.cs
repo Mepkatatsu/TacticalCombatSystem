@@ -1,6 +1,6 @@
-﻿using MiniServerProject.Shared.Responses;
-using MiniServerProject.TestClient.Api;
+﻿using MiniServerProject.TestClient.Api;
 using MiniServerProject.TestClient.Framework;
+using Script.CommonLib.Responses;
 
 namespace MiniServerProject.TestClient.App
 {

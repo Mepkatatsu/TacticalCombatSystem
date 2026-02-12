@@ -1,4 +1,4 @@
-﻿using MiniServerProject.Shared.Responses;
+﻿using Script.CommonLib.Responses;
 
 namespace MiniServerProject.Application.Stages
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MiniServerProject.Shared.Responses
+namespace Script.CommonLib.Responses
 {
     public class UserResponse
     {

@@ -1,4 +1,4 @@
-﻿namespace MiniServerProject.Shared.Tables
+﻿namespace Script.CommonLib.Tables
 {
     public interface ITable
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MiniServerProject.Application;
 using MiniServerProject.Application.Cheats;
-using MiniServerProject.Shared.Requests;
+using Script.CommonLib.Requests;
 
 namespace MiniServerProject.Controllers
 {

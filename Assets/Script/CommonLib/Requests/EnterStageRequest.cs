@@ -1,4 +1,4 @@
-﻿namespace MiniServerProject.Shared.Requests
+﻿namespace Script.CommonLib.Requests
 {
     public sealed class EnterStageRequest
     {

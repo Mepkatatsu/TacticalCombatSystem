@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace MiniServerProject.Shared.Tables
+namespace Script.CommonLib.Tables
 {
     public class StageTable : TableBase<string, StageData>
     {

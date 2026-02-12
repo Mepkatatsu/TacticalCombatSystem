@@ -1,5 +1,5 @@
-﻿using MiniServerProject.Shared.Responses;
-using MiniServerProject.Shared.Tables;
+﻿using Script.CommonLib.Responses;
+using Script.CommonLib.Tables;
 
 namespace MiniServerProject.Domain.Entities
 {

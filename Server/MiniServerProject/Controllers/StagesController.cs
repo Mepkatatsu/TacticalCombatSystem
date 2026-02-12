@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MiniServerProject.Application;
 using MiniServerProject.Application.Stages;
-using MiniServerProject.Shared.Requests;
+using Script.CommonLib.Requests;
 
-namespace MiniServerProject.Shared
+namespace MiniServerProject.Controllers
 {
     [ApiController]
     [Route("stages")]

@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MiniServerProject.Shared.Responses;
 using MiniServerProject.Domain.Entities;
 using MiniServerProject.Domain.ServerLogs;
 using MiniServerProject.Infrastructure;
 using MiniServerProject.Infrastructure.Persistence;
+using Script.CommonLib.Responses;
 
 namespace MiniServerProject.Application.Users
 {

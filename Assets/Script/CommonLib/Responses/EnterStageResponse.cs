@@ -1,4 +1,4 @@
-﻿namespace MiniServerProject.Shared.Responses
+﻿namespace Script.CommonLib.Responses
 {
     public class EnterStageResponse
     {
