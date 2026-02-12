@@ -7,6 +7,6 @@
 
     public interface ITable<TKey, TData> : ITable where TKey : notnull
     {
-        TData? Get(TKey key);
+        TData Get(TKey key);
     }
 }

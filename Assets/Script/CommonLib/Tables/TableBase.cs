@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+using System.Collections.Generic;
 
 namespace Script.CommonLib.Tables
 {
@@ -8,12 +9,9 @@ namespace Script.CommonLib.Tables
 
         public abstract void Initialize();
 
-        public TData? Get(TKey key)
+        public TData Get(TKey key)
         {
-            if (!datas.TryGetValue(key, out TData? data))
-                return default(TData);
-
-            return data;
+            return datas.GetValueOrDefault(key);
         }
 
         public ICollection<TKey> GetAllKeys()

@@ -12,7 +12,7 @@ namespace Script.CommonLib.Responses
         public ulong Exp { get; set; }
         public DateTime CreateDateTime { get; set; }
         public DateTime LastStaminaUpdateTime { get; set; }
-        public string? CurrentStageId { get; set; }
+        public string CurrentStageId { get; set; }
 
         // Deserialize용 생성자
         public UserResponse() { }

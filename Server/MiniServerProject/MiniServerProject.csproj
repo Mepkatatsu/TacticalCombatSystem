@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\CommonLib.csproj" />
-    <ProjectReference Include="..\MiniServerProject.Shared\MiniServerProject.Shared.csproj" />
   </ItemGroup>
 
 </Project>
