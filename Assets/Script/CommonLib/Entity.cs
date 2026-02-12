@@ -126,9 +126,6 @@ namespace Script.CommonLib
             
             if (_hp < 0)
                 _hp = 0;
-            
-            if (_hp <= 0)
-                LogHelper.Log($"entity {Id} is dead!!!");
         }
 
         public bool IsAlive()

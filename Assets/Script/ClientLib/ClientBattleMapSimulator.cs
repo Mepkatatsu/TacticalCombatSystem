@@ -105,8 +105,6 @@ namespace Script.ClientLib
                 return;
             
             attacker.OnStartAttack();
-            
-            LogHelper.Log($"entity {attackerId} attacked {targetId}");
         }
 
         public void OnEntityRetired(uint entityId)
