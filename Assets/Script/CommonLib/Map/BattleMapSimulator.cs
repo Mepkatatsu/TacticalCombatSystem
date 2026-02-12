@@ -150,6 +150,7 @@ namespace Script.CommonLib.Map
             var projectile = new Projectile(this, ++_projectileIdKey, attacker, target, attacker.AttackDamage, projectileLifeTime, attacker.GetPos());
             _projectiles.Add(_projectileIdKey, projectile);
             
+            attacker.SetDir(target.GetPos() - attacker.GetPos());
             _battleMapEventHandler.OnEntityStartAttack(attackerId, targetEntityId);
             _battleMapEventHandler.OnProjectileAdded(projectile.Id, projectile);
         }
