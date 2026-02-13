@@ -1,12 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using Script.ClientLib.Network.App;
 using Script.CommonLib;
 using Script.CommonLib.Map;
-using Script.CommonLib.Requests;
-using Script.CommonLib.Responses;
-using Script.CommonLib.Tables;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -27,6 +23,7 @@ namespace Script.ClientLib
         public GameObject drawText;
         
         private readonly TestClientApp _clientApp = new();
+        private readonly List<float> _updateIntervals = new();
         
         private async void Start()
         {
@@ -182,7 +179,7 @@ namespace Script.ClientLib
             Destroy(projectileView.gameObject);
         }
 
-        public void OnBattleEnd(TeamFlag winner)
+        public async void OnBattleEnd(TeamFlag winner)
         {
             foreach (var projectileView in _projectileViews.Values)
             {
@@ -207,6 +204,26 @@ namespace Script.ClientLib
             {
                 drawText.SetActive(true);
             }
+            
+            var result =  await _clientApp.RequestVerifyStageBattle(_updateIntervals);
+
+            if (result == null)
+            {
+                LogHelper.Error($"OnBattleEnd: result is null");
+                return;
+            }
+            
+            LogHelper.Log("===ServerResult===");
+            
+            foreach (var tuple in result)
+            {
+                LogHelper.Log($"[Alive] entityId: {tuple.Item1} hp: {tuple.Item2}");
+            }
+        }
+
+        public void OnBattleMapUpdated(float elapsedTime)
+        {
+            _updateIntervals.Add(elapsedTime);
         }
     }
 }
