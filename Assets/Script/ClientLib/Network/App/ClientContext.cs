@@ -10,17 +10,18 @@ namespace Script.ClientLib.Network.App
 
         public string BaseUrl { get; set; } = "http://localhost:5099";
         public string AccountId { get; private set; }
-        public ulong UserId { get; set; }
+        public ulong UserId { get; private set; }
         public string Nickname { get; private set; }
-        public ushort Level { get; set; }
-        public ushort Stamina { get; set; }
-        public ulong Gold { get; set; }
-        public ulong Exp { get; set; }
-        public string CurrentStageId { get; set; }
+        public ushort Level { get; private set; }
+        public ushort Stamina { get; private set; }
+        public ulong Gold { get; private set; }
+        public ulong Exp { get; private set; }
+        public string CurrentStageId { get; private set; }
 
         public ApiClient Api { get; private set; } = null!;
 
         public string GetRequestId() => Guid.NewGuid().ToString();
+        public bool IsInitialized { get; private set; }
 
         public void InitByUserResponse(string accountId, UserResponse userResponse)
         {
@@ -32,6 +33,8 @@ namespace Script.ClientLib.Network.App
             Gold = userResponse.Gold;
             Exp = userResponse.Exp;
             CurrentStageId = userResponse.CurrentStageId;
+            
+            IsInitialized = true;
         }
 
         public void SetAccountId(string accountId)

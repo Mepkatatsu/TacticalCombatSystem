@@ -5041,6 +5041,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79e9d398ebc611b4a9d17eb69448d12e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  baseUrl: http://localhost:5099
+  accountId: mepkatatsu
   redTeamWinText: {fileID: 889742237}
   blueTeamWinText: {fileID: 2042164397}
   drawText: {fileID: 127755451}

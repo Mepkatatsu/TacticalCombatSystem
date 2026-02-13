@@ -1,7 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using Script.ClientLib.Network.App;
 using Script.CommonLib;
 using Script.CommonLib.Map;
+using Script.CommonLib.Requests;
+using Script.CommonLib.Responses;
+using Script.CommonLib.Tables;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,15 +19,21 @@ namespace Script.ClientLib
         private Dictionary<uint, EntityView> _entityViews = new();
         private Dictionary<ulong, ProjectileView> _projectileViews = new();
 
+        public string baseUrl = "http://localhost:5099";
+        public string accountId;
+
         public GameObject redTeamWinText;
         public GameObject blueTeamWinText;
         public GameObject drawText;
         
-        private void Start()
+        private readonly TestClientApp _clientApp = new();
+        
+        private async void Start()
         {
             var scene = SceneManager.GetActiveScene();
-            var path = $"Assets/Data/MapData/{scene.name}_Data.json";
-            var json = File.ReadAllText(path);
+            var stageName = scene.name;
+            var path = $"Assets/Data/MapData/{stageName}_Data.json";
+            var json = await File.ReadAllTextAsync(path);
 
             if (string.IsNullOrEmpty(json))
             {
@@ -40,11 +51,20 @@ namespace Script.ClientLib
             
             _battleMapSimulator = new BattleMapSimulator(this, battleMapData);
             _battleMapSimulator.Init();
+            
+            var connectSucceed = await _clientApp.ConnectToServer(baseUrl, accountId);
+
+            if (!connectSucceed)
+                return;
+
+            var enterStageSucceed = await _clientApp.RequestEnterStage(stageName);
+            
+            LogHelper.Log($"enterStageSucceed: {enterStageSucceed}");
         }
 
         private void Update()
         {
-            _battleMapSimulator.Update(Time.deltaTime);
+            _battleMapSimulator?.Update(Time.deltaTime);
         }
 
         public void OnEntityAdded(uint entityId, Entity entity)
