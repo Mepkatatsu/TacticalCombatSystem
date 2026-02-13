@@ -12,6 +12,8 @@
         RequestIdUsedForDifferentStage,
         IdempotencyMissingAfterUniqueViolation,
         DevelopmentEnvironmentOnly,
+        StageDataNotFound,
+        BattleNotEnded,
     }
 
     public sealed class DomainException : Exception

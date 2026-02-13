@@ -57,5 +57,19 @@ namespace MiniServerProject.Controllers
             var resp = await _stageService.GiveUpAsync(request.UserId, request.RequestId, stageId, ct);
             return Ok(resp);
         }
+        
+        [HttpPost("{stageId}/verify-battle")]
+        public async Task<IActionResult> VerifyBattle(string stageId, [FromBody] VerifyStageBattleRequest request, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(stageId))
+                throw new DomainException(ErrorType.InvalidRequest, "stageId is required.");
+            if (request.UserId == 0)
+                throw new DomainException(ErrorType.InvalidRequest, "userId is required.");
+            if (string.IsNullOrWhiteSpace(request.RequestId))
+                throw new DomainException(ErrorType.InvalidRequest, "requestId is required.");
+
+            var resp = await _stageService.VerifyBattleAsync(request.UserId, request.RequestId, stageId, request.UpdateIntervals, ct);
+            return Ok(resp);
+        }
     }
 }

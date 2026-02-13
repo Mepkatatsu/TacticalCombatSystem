@@ -7,5 +7,6 @@ namespace MiniServerProject.Application.Stages
         Task<EnterStageResponse> EnterAsync(ulong userId, string requestId, string stageId, CancellationToken ct, int testDelayMs = 0);
         Task<ClearStageResponse> ClearAsync(ulong userId, string requestId, string stageId, CancellationToken ct, int testDelayMs = 0);
         Task<GiveUpStageResponse> GiveUpAsync(ulong userId, string requestId, string stageId, CancellationToken ct, int testDelayMs = 0);
+        Task<VerifyStageBattleResponse> VerifyBattleAsync(ulong userId, string requestId, string stageId, List<float> updateIntervals, CancellationToken ct, int testDelayMs = 0);
     }
 }

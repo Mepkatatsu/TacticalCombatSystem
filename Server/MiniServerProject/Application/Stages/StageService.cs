@@ -1,7 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MiniServerProject.Domain.Battle;
 using MiniServerProject.Domain.ServerLogs;
 using MiniServerProject.Infrastructure;
 using MiniServerProject.Infrastructure.Persistence;
+using Script.CommonLib;
+using Script.CommonLib.Map;
 using Script.CommonLib.Responses;
 using Script.CommonLib.Tables;
 
@@ -289,6 +292,46 @@ namespace MiniServerProject.Application.Stages
 
             response = log.CreateResponse();
             await _idemCache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            return response;
+        }
+
+        public async Task<VerifyStageBattleResponse> VerifyBattleAsync(ulong userId, string requestId, string stageId, List<float> updateIntervals, CancellationToken ct, int testDelayMs = 0)
+        {
+            var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId, ct)
+                       ?? throw new DomainException(ErrorType.UserNotFound);
+
+            if (user.CurrentStageId != stageId)
+                throw new DomainException(ErrorType.UserNotInThisStage, new { current = user.CurrentStageId });
+            
+            var baseDir = Directory.GetCurrentDirectory();
+            var mapDataPath = Path.GetFullPath(Path.Combine(baseDir, @"..\..\Assets\Data\MapData\TEST-001-NORMAL_Data.json"));
+
+            if (!File.Exists(mapDataPath))
+                throw new DomainException(ErrorType.StageDataNotFound);
+            
+            var json = await File.ReadAllTextAsync(mapDataPath, ct);
+            var mapData = JsonSerialize.DeserializeObject<BattleMapData>(json);
+            
+            if (mapData == null)
+                throw new DomainException(ErrorType.StageDataNotFound);
+
+            var serverSimulator = new ServerBattleMapSimulator(mapData, updateIntervals);
+            serverSimulator.Simulate();
+
+            if (!serverSimulator.IsBattleEnded)
+                throw new DomainException(ErrorType.BattleNotEnded);
+
+            var response = new VerifyStageBattleResponse()
+            {
+                Winner = serverSimulator.Winner,
+                AliveEntities = new List<Tuple<uint, float>>()
+            };
+            
+            foreach (var entityContext in serverSimulator.GetAliveEntities())
+            {
+                response.AliveEntities.Add(new Tuple<uint, float>(entityContext.Id, entityContext.Hp));
+            }
+
             return response;
         }
 
