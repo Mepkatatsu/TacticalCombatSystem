@@ -71,6 +71,8 @@ namespace Script.ClientLib
             var obj = Instantiate(prefab);
             obj.transform.localScale = new Vector3(modelData.modelScale.x, modelData.modelScale.y, modelData.modelScale.z);
             var entityView = obj.AddComponent<EntityView>();
+            entityView.SetHp(entity.Hp);
+            
             _entityViews.Add(entityId, entityView);
         }
 
@@ -122,6 +124,16 @@ namespace Script.ClientLib
                 return;
             
             attacker.OnStartAttack();
+        }
+
+        public void OnEntityGetDamage(uint entityId, float damage)
+        {
+            _entityViews.TryGetValue(entityId, out var entityView);
+
+            if (!entityView)
+                return;
+            
+            entityView.GetDamage(damage);
         }
 
         public void OnEntityRetired(uint entityId)
@@ -203,6 +215,19 @@ namespace Script.ClientLib
             else if (winner == TeamFlag.None)
             {
                 drawText.SetActive(true);
+            }
+            
+            LogHelper.Log("===ClientResult===");
+            
+            foreach (var keyValuePair in _entityViews)
+            {
+                var id = keyValuePair.Key;
+                var entityView = keyValuePair.Value;
+                
+                if (entityView.Hp > 0)
+                {
+                    LogHelper.Log($"[Alive] entityId: {id} hp: {entityView.Hp}");
+                }
             }
             
             var result =  await _clientApp.RequestVerifyStageBattle(_updateIntervals);

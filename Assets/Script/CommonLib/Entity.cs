@@ -29,6 +29,7 @@ namespace Script.CommonLib
         private float _attackRange;
         private float _moveSpeed;
 
+        public float Hp => _hp;
         public float AttackDamage => _attackDamage;
         public float AttackSpeed => _attackSpeed;
         public float AttackRange => _attackRange;
@@ -126,6 +127,8 @@ namespace Script.CommonLib
             
             if (_hp < 0)
                 _hp = 0;
+            
+            _battleMapContext.OnEntityGetDamage(Id, damage);
         }
 
         public bool IsAlive()

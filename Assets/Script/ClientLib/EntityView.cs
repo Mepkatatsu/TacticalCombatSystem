@@ -7,9 +7,24 @@ namespace Script.ClientLib
         private static readonly int IsMoving = Animator.StringToHash("IsMoving");
         private static readonly int IsAttack = Animator.StringToHash("IsAttack");
         private static readonly int IsRetired = Animator.StringToHash("IsRetired");
+
+        public float Hp { get; private set; }
         
         private Animator _animator;
         private Animator Animator => _animator ??= GetComponent<Animator>();
+
+        public void SetHp(float hp)
+        {
+            Hp = hp;
+        }
+        
+        public void GetDamage(float damage)
+        {
+            Hp -= damage;
+
+            if (Hp < 0)
+                Hp = 0;
+        }
 
         public void OnPositionChanged(Vector3 position)
         {

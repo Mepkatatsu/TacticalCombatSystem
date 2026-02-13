@@ -8,6 +8,7 @@ namespace Script.CommonLib.Map
         public void OnEntityStartMove(uint entityId);
         public void OnEntityStopMove(uint entityId);
         public void OnEntityStartAttack(uint attackerId, uint targetId);
+        public void OnEntityGetDamage(uint entityId, float damage);
         public void OnEntityRetired(uint entityId);
         
         public void OnProjectileAdded(ulong projectileId, Projectile projectile);
@@ -16,5 +17,6 @@ namespace Script.CommonLib.Map
         public void OnProjectileTriggered(ulong projectileId);
         
         public void OnBattleEnd(TeamFlag winner);
+        public void OnBattleMapUpdated(float elapsedTime);
     }
 }

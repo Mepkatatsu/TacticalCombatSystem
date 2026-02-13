@@ -67,6 +67,7 @@ namespace Script.CommonLib.Map
                 entity.Update(deltaTime);
             }
             
+            OnBattleMapUpdated(deltaTime);
             CheckBattleEnd();
         }
 
@@ -208,6 +209,11 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler.OnEntityStopMove(entityId);
         }
 
+        public void OnBattleMapUpdated(float elapsedTime)
+        {
+            _battleMapEventHandler.OnBattleMapUpdated(elapsedTime);
+        }
+
         public void OnEntityPositionChanged(uint entityId, Vec3 pos)
         {
             _battleMapEventHandler.OnEntityPositionChanged(entityId, pos);
@@ -216,6 +222,11 @@ namespace Script.CommonLib.Map
         public void OnEntityDirectionChanged(uint entityId, Vec3 dir)
         {
             _battleMapEventHandler.OnEntityDirectionChanged(entityId, dir);
+        }
+
+        public void OnEntityGetDamage(uint entityId, float damage)
+        {
+            _battleMapEventHandler.OnEntityGetDamage(entityId, damage);
         }
 
         public IEntityContext TryGetNearestEnemy(uint entityId, float maxDistance)
