@@ -24,6 +24,8 @@ namespace Script.CommonLib.Map
         private uint _entityIdKey;
         private ulong _projectileIdKey;
         
+        private bool _battleEnded;
+        
         public float ElapsedSec { get; private set; }
 
         public void Init()
@@ -38,6 +40,9 @@ namespace Script.CommonLib.Map
 
         public void Update(float deltaTime)
         {
+            if (_battleEnded)
+                return;
+            
             ElapsedSec += deltaTime;
             
             foreach (var removeProjectileId in _removeProjectileIds)
@@ -61,6 +66,8 @@ namespace Script.CommonLib.Map
             {
                 entity.Update(deltaTime);
             }
+            
+            CheckBattleEnd();
         }
 
         private void RemoveEntity(uint entityId)
@@ -98,7 +105,10 @@ namespace Script.CommonLib.Map
         {
             _battleMapEventHandler.OnEntityRetired(entityId);
             RemoveEntity(entityId);
+        }
 
+        private void CheckBattleEnd()
+        {
             var blueTeamCount = 0;
             var redTeamCount = 0;
             
@@ -119,16 +129,22 @@ namespace Script.CommonLib.Map
 
             if (blueTeamCount == 0 && redTeamCount > 0)
             {
-                _battleMapEventHandler.OnBattleEnd(TeamFlag.Red);
+                BattleEnd(TeamFlag.Red);
             }
             else if (redTeamCount == 0 && blueTeamCount > 0)
             {
-                _battleMapEventHandler.OnBattleEnd(TeamFlag.Blue);
+                BattleEnd(TeamFlag.Blue);
             }
             else if (redTeamCount == 0 && blueTeamCount == 0)
             {
-                _battleMapEventHandler.OnBattleEnd(TeamFlag.None);
+                BattleEnd(TeamFlag.None);
             }
+        }
+
+        private void BattleEnd(TeamFlag winner)
+        {
+            _battleEnded = true;
+            _battleMapEventHandler.OnBattleEnd(winner);
         }
 
         public void RequestAttack(uint attackerId, uint targetEntityId)

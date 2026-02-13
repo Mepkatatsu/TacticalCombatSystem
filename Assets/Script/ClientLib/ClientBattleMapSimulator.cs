@@ -184,6 +184,17 @@ namespace Script.ClientLib
 
         public void OnBattleEnd(TeamFlag winner)
         {
+            foreach (var projectileView in _projectileViews.Values)
+            {
+                Destroy(projectileView.gameObject);
+            }
+            _projectileViews.Clear();
+            
+            foreach (var entityView in _entityViews.Values)
+            {
+                entityView.OnStopMoving();
+            }
+
             if (winner == TeamFlag.Blue)
             {
                 blueTeamWinText.SetActive(true);
