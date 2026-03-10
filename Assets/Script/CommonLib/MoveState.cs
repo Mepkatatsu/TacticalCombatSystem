@@ -13,9 +13,9 @@ namespace Script.CommonLib
         private Vec3 _destination;
         private readonly List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
 
-        private float _moveSpeed;
+        private ushort _moveSpeed;
 
-        public MoveState(IEntityContext entityContext, float moveSpeed)
+        public MoveState(IEntityContext entityContext, ushort moveSpeed)
         {
             _entityContext = entityContext;
             _moveSpeed = moveSpeed;
@@ -90,7 +90,7 @@ namespace Script.CommonLib
             var nextMoveVector = nextPos - pos;
 
             var dir = nextMoveVector.normalized;
-            var moveDistance = deltaMs / 1000f * _moveSpeed; // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
+            var moveDistance = deltaMs / 1000f * (_moveSpeed / 400f); // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
             var maxMoveDistance = Vec3.Distance(pos, nextPos);
 
             if (moveDistance > maxMoveDistance)
@@ -103,7 +103,7 @@ namespace Script.CommonLib
         
             _entityContext.SetPos(nextPos);
             
-            var nextDir = Vec3.Lerp(_dir, dir, deltaMs / 1000f * _moveSpeed); // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
+            var nextDir = Vec3.Lerp(_dir, dir, deltaMs / 1000f * (_moveSpeed / 400f)); // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
             _entityContext.SetDir(nextDir);
         }
     }

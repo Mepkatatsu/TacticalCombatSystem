@@ -11,10 +11,10 @@ namespace Script.CommonLib
         public string startPositionName;
         public string endPositionName;
 
-        public float maxHp;
-        public float attackDamage;
-        public float attackSpeed;
-        public float attackRange;
-        public float moveSpeed;
+        public uint maxHp;
+        public uint attackDamage;
+        public ushort attackDelayMs;
+        public byte attackRange;
+        public ushort moveSpeed;
     }
 }

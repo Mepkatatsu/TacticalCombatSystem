@@ -22,17 +22,17 @@ namespace Script.CommonLib
         private EntityStateType _currentStateType = EntityStateType.Idle;
         public EntityStateType CurrentStateType => _currentStateType;
         
-        private float _maxHp;
-        private float _hp;
-        private float _attackDamage;
-        private float _attackSpeed;
-        private float _attackRange;
-        private float _moveSpeed;
+        private uint _maxHp;
+        private uint _hp;
+        private uint _attackDamage;
+        private ushort _attackDelayMs;
+        private byte _attackRange;
+        private ushort _moveSpeed;
 
-        public float Hp => _hp;
-        public float AttackDamage => _attackDamage;
-        public float AttackSpeed => _attackSpeed;
-        public float AttackRange => _attackRange;
+        public uint Hp => _hp;
+        public uint AttackDamage => _attackDamage;
+        public ushort AttackDelayMs => _attackDelayMs;
+        public byte AttackRange => _attackRange;
 
         private IEntityContext _mainTarget;
 
@@ -54,7 +54,7 @@ namespace Script.CommonLib
 
             _maxHp = entityData.maxHp;
             _attackDamage = entityData.attackDamage;
-            _attackSpeed = entityData.attackSpeed;
+            _attackDelayMs = entityData.attackDelayMs;
             _attackRange = entityData.attackRange;
             _moveSpeed = entityData.moveSpeed;
             
@@ -107,7 +107,7 @@ namespace Script.CommonLib
             if (!HasMainTarget())
                 return false;
             
-            var distance = Vec3.Distance(GetPos(), _mainTarget.GetPos());
+            var distance = Vec3.Distance(GetPos(), _mainTarget.GetPos()); // TODO: 부동 소수점 오차 고려한 수정 필요
             return distance <= _attackRange;
         }
 
@@ -121,12 +121,16 @@ namespace Script.CommonLib
             return _moveState.GetPos();
         }
 
-        public void Hit(float damage)
+        public void Hit(uint damage)
         {
-            _hp -= damage;
-            
-            if (_hp < 0)
+            if (damage >= _hp)
+            {
                 _hp = 0;
+            }
+            else
+            {
+                _hp -= damage;
+            }
             
             _battleMapContext.OnEntityGetDamage(Id, damage);
         }

@@ -3,8 +3,7 @@ namespace Script.CommonLib.Battle
     public class AttackState : IState
     {
         private IEntityContext _entityContext;
-
-        private const ushort DefaultAttackDelayMs = 2000;
+        
         private uint _lastAttackMs;
 
         public AttackState(IEntityContext entityContext)
@@ -36,7 +35,7 @@ namespace Script.CommonLib.Battle
 
         private ushort GetAttackDelayMs()
         {
-            return (ushort)(DefaultAttackDelayMs / _entityContext.AttackSpeed);
+            return _entityContext.AttackDelayMs;
         }
 
         private bool CanAttack(ushort attackDelayMs, uint battleMapElapsedMs)

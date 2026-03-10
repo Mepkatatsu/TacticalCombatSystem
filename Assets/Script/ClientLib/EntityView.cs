@@ -8,22 +8,26 @@ namespace Script.ClientLib
         private static readonly int IsAttack = Animator.StringToHash("IsAttack");
         private static readonly int IsRetired = Animator.StringToHash("IsRetired");
 
-        public float Hp { get; private set; }
+        public uint Hp { get; private set; }
         
         private Animator _animator;
         private Animator Animator => _animator ??= GetComponent<Animator>();
 
-        public void SetHp(float hp)
+        public void SetHp(uint hp)
         {
             Hp = hp;
         }
         
-        public void GetDamage(float damage)
+        public void GetDamage(uint damage)
         {
-            Hp -= damage;
-
-            if (Hp < 0)
+            if (damage >= Hp)
+            {
                 Hp = 0;
+            }
+            else
+            {
+                Hp -= damage;
+            }
         }
 
         public void OnPositionChanged(Vector3 position)

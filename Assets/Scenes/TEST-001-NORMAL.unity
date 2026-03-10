@@ -2429,11 +2429,11 @@ MonoBehaviour:
     name: Entity6
     startPositionName: EndPosition2
     endPositionName: StartPosition2
-    maxHp: 10
-    attackDamage: 5
-    attackSpeed: 1
+    maxHp: 100
+    attackDamage: 50
+    attackDelayMs: 2000
     attackRange: 8
-    moveSpeed: 4.5
+    moveSpeed: 2000
 --- !u!1 &710962602
 GameObject:
   m_ObjectHideFlags: 0
@@ -3859,11 +3859,11 @@ MonoBehaviour:
     name: Entity8
     startPositionName: EndPosition4
     endPositionName: StartPosition4
-    maxHp: 10
-    attackDamage: 2
-    attackSpeed: 3
+    maxHp: 100
+    attackDamage: 20
+    attackDelayMs: 666
     attackRange: 10
-    moveSpeed: 4.5
+    moveSpeed: 2000
 --- !u!1001 &1198893644
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3971,11 +3971,11 @@ MonoBehaviour:
     name: Entity3
     startPositionName: StartPosition3
     endPositionName: EndPosition3
-    maxHp: 10
-    attackDamage: 3
-    attackSpeed: 2.5
+    maxHp: 100
+    attackDamage: 30
+    attackDelayMs: 800
     attackRange: 12
-    moveSpeed: 5
+    moveSpeed: 2200
 --- !u!1 &1200760448
 GameObject:
   m_ObjectHideFlags: 0
@@ -4381,11 +4381,11 @@ MonoBehaviour:
     name: Entity1
     startPositionName: StartPosition1
     endPositionName: EndPosition1
-    maxHp: 5
-    attackDamage: 5
-    attackSpeed: 2
+    maxHp: 50
+    attackDamage: 50
+    attackDelayMs: 1000
     attackRange: 10
-    moveSpeed: 5
+    moveSpeed: 2600
 --- !u!1001 &1258572060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4493,11 +4493,11 @@ MonoBehaviour:
     name: Entity2
     startPositionName: StartPosition2
     endPositionName: EndPosition2
-    maxHp: 20
-    attackDamage: 1
-    attackSpeed: 3
+    maxHp: 200
+    attackDamage: 10
+    attackDelayMs: 666
     attackRange: 5
-    moveSpeed: 6
+    moveSpeed: 2600
 --- !u!1001 &1321644657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4833,11 +4833,11 @@ MonoBehaviour:
     name: Entity5
     startPositionName: EndPosition1
     endPositionName: StartPosition1
-    maxHp: 10
-    attackDamage: 3
-    attackSpeed: 2
+    maxHp: 100
+    attackDamage: 30
+    attackDelayMs: 1000
     attackRange: 12
-    moveSpeed: 5
+    moveSpeed: 2200
 --- !u!1001 &1369059883
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6144,11 +6144,11 @@ MonoBehaviour:
     name: Entity7
     startPositionName: EndPosition3
     endPositionName: StartPosition3
-    maxHp: 10
-    attackDamage: 3
-    attackSpeed: 3
+    maxHp: 100
+    attackDamage: 30
+    attackDelayMs: 666
     attackRange: 10
-    moveSpeed: 5
+    moveSpeed: 2200
 --- !u!1001 &1752693875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6975,11 +6975,11 @@ MonoBehaviour:
     name: Entity4
     startPositionName: StartPosition4
     endPositionName: EndPosition4
-    maxHp: 10
-    attackDamage: 3
-    attackSpeed: 1
+    maxHp: 100
+    attackDamage: 30
+    attackDelayMs: 2000
     attackRange: 10
-    moveSpeed: 4.5
+    moveSpeed: 2000
 --- !u!1 &2042164397
 GameObject:
   m_ObjectHideFlags: 0

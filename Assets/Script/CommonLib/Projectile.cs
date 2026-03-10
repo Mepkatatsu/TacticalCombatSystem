@@ -10,7 +10,7 @@ namespace Script.CommonLib
         public ulong Id { get; private set; }
         public IEntityContext Attacker { get; private set; }
         public IEntityContext Target { get; private set; }
-        public float Damage { get; private set; }
+        public uint Damage { get; private set; }
         private uint _leftLifeMs;
 
         private Vec3 _pos;
@@ -18,7 +18,7 @@ namespace Script.CommonLib
         
         private const float RotateSpeed = 10f;
         
-        public Projectile(IBattleMapContext battleMapContext, ulong id, IEntityContext attacker, IEntityContext target, float damage, uint lifeMs, Vec3 pos)
+        public Projectile(IBattleMapContext battleMapContext, ulong id, IEntityContext attacker, IEntityContext target, uint damage, uint lifeMs, Vec3 pos)
         {
             _battleMapContext = battleMapContext;
 

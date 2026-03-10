@@ -7,8 +7,8 @@ namespace Script.CommonLib
     {
         public uint Id { get; }
         public EntityStateType CurrentStateType { get; }
-        public float Hp { get; }
-        public float AttackSpeed { get; }
+        public uint Hp { get; }
+        public ushort AttackDelayMs { get; }
         public bool IsAlive();
         public bool HasArrived();
         public bool HasMainTarget();

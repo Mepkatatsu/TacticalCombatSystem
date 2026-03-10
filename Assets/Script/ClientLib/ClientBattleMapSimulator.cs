@@ -140,7 +140,7 @@ namespace Script.ClientLib
             attacker.OnStartAttack();
         }
 
-        public void OnEntityGetDamage(uint entityId, float damage)
+        public void OnEntityGetDamage(uint entityId, uint damage)
         {
             _entityViews.TryGetValue(entityId, out var entityView);
 

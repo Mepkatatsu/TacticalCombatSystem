@@ -159,7 +159,7 @@ namespace Script.CommonLib.Map
             if (!attacker.IsAlive())
                 return;
 
-            if (Vec3.Distance(attacker.GetPos(), target.GetPos()) > attacker.AttackRange)
+            if (Vec3.Distance(attacker.GetPos(), target.GetPos()) > attacker.AttackRange) // TODO: 부동 소수점 오차 고려한 수정 필요
                 return;
 
             const uint projectileLifeTime = 500; // TODO: 임시값 변경 필요
@@ -224,7 +224,7 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler.OnEntityDirectionChanged(entityId, dir);
         }
 
-        public void OnEntityGetDamage(uint entityId, float damage)
+        public void OnEntityGetDamage(uint entityId, uint damage)
         {
             _battleMapEventHandler.OnEntityGetDamage(entityId, damage);
         }

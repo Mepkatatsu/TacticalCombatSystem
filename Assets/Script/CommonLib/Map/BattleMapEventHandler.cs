@@ -8,7 +8,7 @@ namespace Script.CommonLib.Map
         public void OnEntityStartMove(uint entityId);
         public void OnEntityStopMove(uint entityId);
         public void OnEntityStartAttack(uint attackerId, uint targetId);
-        public void OnEntityGetDamage(uint entityId, float damage);
+        public void OnEntityGetDamage(uint entityId, uint damage);
         public void OnEntityRetired(uint entityId);
         
         public void OnProjectileAdded(ulong projectileId, Projectile projectile);

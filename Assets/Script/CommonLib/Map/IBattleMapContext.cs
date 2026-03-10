@@ -6,7 +6,7 @@ namespace Script.CommonLib.Map
     {
         public void OnEntityPositionChanged(uint entityId, Vec3 pos);
         public void OnEntityDirectionChanged(uint entityId, Vec3 dir);
-        public void OnEntityGetDamage(uint entityId, float damage);
+        public void OnEntityGetDamage(uint entityId, uint damage);
         public IEntityContext TryGetNearestEnemy(uint entityId, float maxDistance);
         public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
         public uint ElapsedMs { get; }
