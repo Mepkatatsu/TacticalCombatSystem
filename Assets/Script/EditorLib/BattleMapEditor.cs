@@ -7,6 +7,7 @@ using Script.CommonLib.Map;
 using Script.EditorLib.SaveData;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Script.EditorLib
@@ -145,7 +146,7 @@ namespace Script.EditorLib
             EditorGUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Find Path"))
-                FindPath(battleMap);
+                FindPath();
             
             if (GUILayout.Button("Clear Path"))
                 ClearPath();
@@ -191,9 +192,10 @@ namespace Script.EditorLib
             }
         }
 
-        private void FindPath(BattleMap battleMap)
+        private void FindPath()
         {
-            var path = $"Assets/Data/MapData/{battleMap.name}_Data.json";
+            var scene = SceneManager.GetActiveScene();
+            var path = $"Assets/Data/MapData/{scene.name}_Data.json";
             var json = File.ReadAllText(path);
             var battleMapData = JsonSerialize.DeserializeObject<BattleMapData>(json);
 
