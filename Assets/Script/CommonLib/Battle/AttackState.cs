@@ -4,8 +4,8 @@ namespace Script.CommonLib.Battle
     {
         private IEntityContext _entityContext;
 
-        private const float DefaultAttackDelaySec = 2f;
-        private float _lastAttackSec;
+        private const ushort DefaultAttackDelayMs = 2000;
+        private uint _lastAttackMs;
 
         public AttackState(IEntityContext entityContext)
         {
@@ -17,15 +17,15 @@ namespace Script.CommonLib.Battle
             
         }
 
-        public void Update(float deltaTime)
+        public void Update(ushort deltaMs)
         {
-            var attackDelaySec = GetAttackDelaySec();
-            var battleMapElapsedSec = _entityContext.GetBattleMapElapsedSec();
+            var attackDelayMs = GetAttackDelayMs();
+            var battleMapElapsedMs = _entityContext.GetBattleMapElapsedMs();
 
-            if (!CanAttack(attackDelaySec, battleMapElapsedSec))
+            if (!CanAttack(attackDelayMs, battleMapElapsedMs))
                 return;
 
-            _lastAttackSec = battleMapElapsedSec;
+            _lastAttackMs = battleMapElapsedMs;
             _entityContext.RequestAttack();
         }
 
@@ -34,14 +34,14 @@ namespace Script.CommonLib.Battle
             
         }
 
-        private float GetAttackDelaySec()
+        private ushort GetAttackDelayMs()
         {
-            return DefaultAttackDelaySec / _entityContext.AttackSpeed;
+            return (ushort)(DefaultAttackDelayMs / _entityContext.AttackSpeed);
         }
 
-        private bool CanAttack(float attackDelaySec, float battleMapElapsedSec)
+        private bool CanAttack(ushort attackDelayMs, uint battleMapElapsedMs)
         {
-            return _lastAttackSec + attackDelaySec < battleMapElapsedSec;
+            return _lastAttackMs + attackDelayMs < battleMapElapsedMs;
         }
     }
 }

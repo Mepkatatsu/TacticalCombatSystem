@@ -14,7 +14,7 @@ namespace Script.CommonLib.Battle
             
         }
 
-        public void Update(float deltaTime)
+        public void Update(ushort deltaMs)
         {
             
         }

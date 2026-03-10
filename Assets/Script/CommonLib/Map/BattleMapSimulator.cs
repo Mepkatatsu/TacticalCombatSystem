@@ -26,11 +26,11 @@ namespace Script.CommonLib.Map
         
         private bool _battleEnded;
         
-        public float ElapsedSec { get; private set; }
+        public uint ElapsedMs { get; private set; }
 
         public void Init()
         {
-            ElapsedSec = 0;
+            ElapsedMs = 0;
             
             foreach (var entityData in _battleMapData.entities)
             {
@@ -38,12 +38,12 @@ namespace Script.CommonLib.Map
             }
         }
 
-        public void Update(float deltaTime)
+        public void Update(ushort deltaMs)
         {
             if (_battleEnded)
                 return;
             
-            ElapsedSec += deltaTime;
+            ElapsedMs += deltaMs;
             
             foreach (var removeProjectileId in _removeProjectileIds)
             {
@@ -59,15 +59,15 @@ namespace Script.CommonLib.Map
             
             foreach (var projectile in _projectiles.Values)
             {
-                projectile.Update(deltaTime);
+                projectile.Update(deltaMs);
             }
             
             foreach (var entity in _entities.Values)
             {
-                entity.Update(deltaTime);
+                entity.Update(deltaMs);
             }
             
-            OnBattleMapUpdated(deltaTime);
+            OnBattleMapUpdated(deltaMs);
             CheckBattleEnd();
         }
 
@@ -162,7 +162,7 @@ namespace Script.CommonLib.Map
             if (Vec3.Distance(attacker.GetPos(), target.GetPos()) > attacker.AttackRange)
                 return;
 
-            const float projectileLifeTime = 0.5f; // TODO: 임시값 변경 필요
+            const uint projectileLifeTime = 500; // TODO: 임시값 변경 필요
             
             var projectile = new Projectile(this, ++_projectileIdKey, attacker, target, attacker.AttackDamage, projectileLifeTime, attacker.GetPos());
             _projectiles.Add(_projectileIdKey, projectile);
@@ -209,9 +209,9 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler.OnEntityStopMove(entityId);
         }
 
-        public void OnBattleMapUpdated(float elapsedTime)
+        public void OnBattleMapUpdated(ushort deltaMs)
         {
-            _battleMapEventHandler.OnBattleMapUpdated(elapsedTime);
+            _battleMapEventHandler.OnBattleMapUpdated(deltaMs);
         }
 
         public void OnEntityPositionChanged(uint entityId, Vec3 pos)

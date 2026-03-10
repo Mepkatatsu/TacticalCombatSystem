@@ -86,10 +86,8 @@ namespace Script.ClientLib.Network.App
             return true;
         }
         
-        public async Task<List<Tuple<uint, float>>> RequestVerifyStageBattle(List<float> updateIntervals)
+        public async Task<List<Tuple<uint, float>>> RequestVerifyStageBattle(List<ushort> updateIntervals)
         {
-            // TODO: 프레임과 전투 시간에 따라 패킷 크기가 커질 수 있으니 이에 대한 처리를 해야 함. 60FPS 기준 3분까지는 괜찮을 듯 (+float 대신 ms 기준으로 Update를 해서 안정성을 보장하면 좋을 듯)
-            
             if (!_ctx.IsInitialized)
             {
                 LogHelper.Error("RequestEnterStage: ClientContext is not Initialized");

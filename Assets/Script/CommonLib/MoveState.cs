@@ -36,7 +36,7 @@ namespace Script.CommonLib
             _entityContext.OnStartMove();
         }
 
-        public void Update(float deltaTime)
+        public void Update(ushort deltaMs)
         {
             _entityContext.TryGetNearestEnemy();
 
@@ -47,7 +47,7 @@ namespace Script.CommonLib
                 FindPath();
             
             var pos = _entityContext.GetPos();
-            MovePath(pos, deltaTime);
+            MovePath(pos, deltaMs);
         }
 
         public void Exit()
@@ -79,7 +79,7 @@ namespace Script.CommonLib
         public Vec3 GetPos() => _pos;
         public Vec3 GetDir() => _dir;
 
-        public void MovePath(Vec3 pos, float deltaTime)
+        public void MovePath(Vec3 pos, ushort deltaMs)
         {
             if (_paths.Count == 0)
                 return;
@@ -90,7 +90,7 @@ namespace Script.CommonLib
             var nextMoveVector = nextPos - pos;
 
             var dir = nextMoveVector.normalized;
-            var moveDistance = deltaTime * _moveSpeed;
+            var moveDistance = deltaMs / 1000f * _moveSpeed; // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
             var maxMoveDistance = Vec3.Distance(pos, nextPos);
 
             if (moveDistance > maxMoveDistance)
@@ -103,7 +103,7 @@ namespace Script.CommonLib
         
             _entityContext.SetPos(nextPos);
             
-            var nextDir = Vec3.Lerp(_dir, dir, deltaTime * _moveSpeed);
+            var nextDir = Vec3.Lerp(_dir, dir, deltaMs / 1000f * _moveSpeed); // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
             _entityContext.SetDir(nextDir);
         }
     }

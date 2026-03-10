@@ -21,7 +21,7 @@ namespace Script.CommonLib
         public void OnStartMove();
         public void OnStopMove();
         public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
-        public float GetBattleMapElapsedSec();
+        public uint GetBattleMapElapsedMs();
         public void RequestAttack();
     }
 }

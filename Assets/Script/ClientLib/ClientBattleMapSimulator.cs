@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Script.ClientLib.Network.App;
@@ -21,10 +22,13 @@ namespace Script.ClientLib
         public GameObject redTeamWinText;
         public GameObject blueTeamWinText;
         public GameObject drawText;
-        
+
         private readonly TestClientApp _clientApp = new();
-        private readonly List<float> _updateIntervals = new();
-        
+        private readonly List<ushort> _updateIntervals = new();
+
+        private const ushort MinDeltaMs = 10;
+        private const ushort MaxDeltaMs = 1000;
+
         private async void Start()
         {
             var scene = SceneManager.GetActiveScene();
@@ -37,7 +41,7 @@ namespace Script.ClientLib
                 LogHelper.Error($"file {path} not found");
                 return;
             }
-            
+
             var battleMapData = JsonSerialize.DeserializeObject<BattleMapData>(json);
 
             if (battleMapData == null)
@@ -45,23 +49,33 @@ namespace Script.ClientLib
                 LogHelper.Error($"file {path} is not a BattleMapData");
                 return;
             }
-            
+
             _battleMapSimulator = new BattleMapSimulator(this, battleMapData);
             _battleMapSimulator.Init();
-            
+
             var connectSucceed = await _clientApp.ConnectToServer(baseUrl, accountId);
 
             if (!connectSucceed)
                 return;
 
             var enterStageSucceed = await _clientApp.RequestEnterStage(stageName);
-            
+
             LogHelper.Log($"enterStageSucceed: {enterStageSucceed}");
         }
 
         private void Update()
         {
-            _battleMapSimulator?.Update(Time.deltaTime);
+            ushort deltaMs = GetDeltaMs();
+            _battleMapSimulator?.Update(deltaMs);
+        }
+
+        private ushort GetDeltaMs()
+        {
+            float deltaTime = Time.deltaTime;
+            uint rawDeltaMs = (uint)deltaTime * 1000;
+            ushort deltaMs = (ushort)Math.Clamp(rawDeltaMs, MinDeltaMs, MaxDeltaMs);
+            
+            return deltaMs;
         }
 
         public void OnEntityAdded(uint entityId, Entity entity)
@@ -246,9 +260,9 @@ namespace Script.ClientLib
             }
         }
 
-        public void OnBattleMapUpdated(float elapsedTime)
+        public void OnBattleMapUpdated(ushort deltaMs)
         {
-            _updateIntervals.Add(elapsedTime);
+            _updateIntervals.Add(deltaMs);
         }
     }
 }

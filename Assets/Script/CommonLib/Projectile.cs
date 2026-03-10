@@ -11,15 +11,14 @@ namespace Script.CommonLib
         public IEntityContext Attacker { get; private set; }
         public IEntityContext Target { get; private set; }
         public float Damage { get; private set; }
-        private readonly float _lifeTime;
-        private float _leftLifeTime;
+        private uint _leftLifeMs;
 
         private Vec3 _pos;
         private Vec3 _dir;
         
         private const float RotateSpeed = 10f;
         
-        public Projectile(IBattleMapContext battleMapContext, ulong id, IEntityContext attacker, IEntityContext target, float damage, float lifeTime, Vec3 pos)
+        public Projectile(IBattleMapContext battleMapContext, ulong id, IEntityContext attacker, IEntityContext target, float damage, uint lifeMs, Vec3 pos)
         {
             _battleMapContext = battleMapContext;
 
@@ -27,49 +26,48 @@ namespace Script.CommonLib
             Attacker = attacker;
             Target = target;
             Damage = damage;
-            _lifeTime = lifeTime;
-            _leftLifeTime = lifeTime;
+            _leftLifeMs = lifeMs;
 
-            if (_lifeTime <= 0)
+            if (lifeMs == 0)
             {
-                LogHelper.Error("Projectile LifeTime is less or equal to 0");
+                LogHelper.Error("Projectile LifeTime must be greater than 0");
             }
             
             _pos = pos;
             _dir = Target.GetPos() - Attacker.GetPos();
         }
 
-        public void Update(float deltaTime)
+        public void Update(ushort deltaMs)
         {
-            if (_leftLifeTime <= 0)
+            if (_leftLifeMs <= 0)
                 return;
             
-            _leftLifeTime -= deltaTime;
+            _leftLifeMs -= deltaMs;
             
-            MovePos(deltaTime);
+            MovePos(deltaMs);
 
-            if (_leftLifeTime <= 0)
+            if (_leftLifeMs <= 0)
                 Trigger();
         }
 
-        private void MovePos(float deltaTime)
+        private void MovePos(ushort deltaMs)
         {
             var targetPos = Target.GetPos();
             var nextPos = targetPos;
             var dir = (nextPos - _pos).normalized;
             
-            var lastLifeTime = _leftLifeTime + deltaTime;
+            var lastLifeMs = _leftLifeMs + deltaMs;
 
-            if (_leftLifeTime > 0 && lastLifeTime > 0)
+            if (_leftLifeMs > 0 && lastLifeMs > 0)
             {
                 var totalDistance = Vec3.Distance(targetPos, _pos);
-                var ratio = deltaTime / lastLifeTime;
+                var ratio = (float)deltaMs / lastLifeMs; // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
                 ratio = Math.Min(ratio, 1);
                 var moveDistance = totalDistance * ratio;
                 nextPos = _pos + dir * moveDistance;
             }
             
-            var nextDir = Vec3.Lerp(_dir, dir, RotateSpeed * deltaTime);
+            var nextDir = Vec3.Lerp(_dir, dir, RotateSpeed * deltaMs / 1000f); // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
             
             _pos = nextPos;
             _dir = nextDir;

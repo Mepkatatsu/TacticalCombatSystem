@@ -17,6 +17,6 @@ namespace Script.CommonLib.Map
         public void OnProjectileTriggered(ulong projectileId);
         
         public void OnBattleEnd(TeamFlag winner);
-        public void OnBattleMapUpdated(float elapsedTime);
+        public void OnBattleMapUpdated(ushort deltaMs);
     }
 }

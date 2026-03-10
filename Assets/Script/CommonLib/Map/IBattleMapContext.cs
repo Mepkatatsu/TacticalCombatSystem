@@ -9,7 +9,7 @@ namespace Script.CommonLib.Map
         public void OnEntityGetDamage(uint entityId, float damage);
         public IEntityContext TryGetNearestEnemy(uint entityId, float maxDistance);
         public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
-        public float ElapsedSec { get; }
+        public uint ElapsedMs { get; }
         public void RequestAttack(uint attackerId, uint targetEntityId);
         
         public void OnProjectilePositionChanged(ulong projectileId, Vec3 pos);

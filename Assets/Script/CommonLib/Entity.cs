@@ -67,7 +67,7 @@ namespace Script.CommonLib
             _dieState = new DieState(this);
         }
 
-        public void Update(float deltaTime)
+        public void Update(ushort deltaMs)
         {
             var nextStateType = _brain.ThinkNextStateType();
             var nextState = GetState(nextStateType);
@@ -80,7 +80,7 @@ namespace Script.CommonLib
                 _currentStateType = nextStateType;
             }
 
-            nextState.Update(deltaTime);
+            nextState.Update(deltaMs);
         }
 
         private IState GetState(EntityStateType stateType)
@@ -180,9 +180,9 @@ namespace Script.CommonLib
             _battleMapContext.FindWaypoints(start, goal, resultWaypoints);
         }
 
-        public float GetBattleMapElapsedSec()
+        public uint GetBattleMapElapsedMs()
         {
-            return _battleMapContext.ElapsedSec;
+            return _battleMapContext.ElapsedMs;
         }
 
         public void RequestAttack()
