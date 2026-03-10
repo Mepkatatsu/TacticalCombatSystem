@@ -10,11 +10,11 @@ public class ServerBattleMapSimulator : IBattleMapEventHandler
 
     private BattleMapSimulator _battleMapSimulator;
     private BattleMapData _battleMapData;
-    private List<float> _updateIntervals;
+    private List<ushort> _updateIntervals;
     
     private List<Entity> _entities = new();
 
-    public ServerBattleMapSimulator(BattleMapData battleMapData, List<float> updateIntervals)
+    public ServerBattleMapSimulator(BattleMapData battleMapData, List<ushort> updateIntervals)
     {
         _battleMapSimulator = new BattleMapSimulator(this, battleMapData);
         _battleMapData = battleMapData;
@@ -113,7 +113,7 @@ public class ServerBattleMapSimulator : IBattleMapEventHandler
         Winner = winner;
     }
 
-    public void OnBattleMapUpdated(float elapsedTime)
+    public void OnBattleMapUpdated(ushort elapsedMs)
     {
         
     }

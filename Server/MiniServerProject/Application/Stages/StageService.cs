@@ -295,7 +295,7 @@ namespace MiniServerProject.Application.Stages
             return response;
         }
 
-        public async Task<VerifyStageBattleResponse> VerifyBattleAsync(ulong userId, string requestId, string stageId, List<float> updateIntervals, CancellationToken ct, int testDelayMs = 0)
+        public async Task<VerifyStageBattleResponse> VerifyBattleAsync(ulong userId, string requestId, string stageId, List<ushort> updateIntervals, CancellationToken ct, int testDelayMs = 0)
         {
             var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId, ct)
                        ?? throw new DomainException(ErrorType.UserNotFound);
