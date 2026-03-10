@@ -77,7 +77,7 @@ public class ServerBattleMapSimulator : IBattleMapEventHandler
         
     }
 
-    public void OnEntityGetDamage(uint entityId, float damage)
+    public void OnEntityGetDamage(uint entityId, uint damage)
     {
         
     }
