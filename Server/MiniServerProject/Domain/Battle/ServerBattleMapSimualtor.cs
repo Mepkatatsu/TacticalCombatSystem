@@ -52,12 +52,12 @@ public class ServerBattleMapSimulator : IBattleMapEventHandler
         _entities.Add(entity);
     }
 
-    public void OnEntityPositionChanged(uint entityId, Vec3 pos)
+    public void OnEntityPositionChanged(uint entityId, FixedPos pos)
     {
         
     }
 
-    public void OnEntityDirectionChanged(uint entityId, Vec3 pos)
+    public void OnEntityDirectionChanged(uint entityId, FixedDir dir)
     {
         
     }
@@ -92,12 +92,12 @@ public class ServerBattleMapSimulator : IBattleMapEventHandler
         
     }
 
-    public void OnProjectilePositionChanged(ulong projectileId, Vec3 pos)
+    public void OnProjectilePositionChanged(ulong projectileId, FixedPos pos)
     {
         
     }
 
-    public void OnProjectileDirectionChanged(ulong projectileId, Vec3 dir)
+    public void OnProjectileDirectionChanged(ulong projectileId, FixedDir dir)
     {
         
     }
