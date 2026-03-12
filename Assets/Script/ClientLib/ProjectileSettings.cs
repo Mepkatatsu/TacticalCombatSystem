@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Script.CommonLib;
+using UnityEngine;
 
 namespace Script.ClientLib
 {
@@ -11,7 +12,7 @@ namespace Script.ClientLib
         {
             public string projectileName;
             public string projectilePath;
-            public Vec3 scale = new Vec3(1f, 1f, 1f);
+            public Vector3 scale = new Vector3(1f, 1f, 1f);
         }
         
         public List<ProjectileData> dataList;

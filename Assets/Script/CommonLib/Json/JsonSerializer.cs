@@ -5,20 +5,17 @@ namespace Script.CommonLib
 {
     public static class JsonSerialize
     {
-        private static readonly JsonSerializerSettings settings = new()
-        {
-            Converters = { new Vector3Converter() },
-        };
+        private static readonly JsonSerializerSettings Settings = new();
         
         public static string SerializeToJson(this object obj)
         {
-            var json = JsonConvert.SerializeObject(obj, settings);
+            var json = JsonConvert.SerializeObject(obj, Settings);
             return json;
         }
         
         public static T DeserializeObject<T>(string str)
         {
-            var obj = JsonConvert.DeserializeObject<T>(str, settings);
+            var obj = JsonConvert.DeserializeObject<T>(str, Settings);
             return obj;
         }
     }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Script.CommonLib;
 using Script.CommonLib.Map;
 using UnityEngine;
-using Vector2 = Script.CommonLib.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Script.ClientLib
@@ -112,7 +111,6 @@ namespace Script.ClientLib
         {
             var obstacleData = new ObstacleData
             {
-                position = new Vector2(transform.position.x, transform.position.z),
                 waypoints = GetWaypoints(),
                 blockedPoints = GetBlockedPoints(),
             };

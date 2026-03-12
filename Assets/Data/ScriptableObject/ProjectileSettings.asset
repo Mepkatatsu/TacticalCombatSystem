@@ -15,7 +15,4 @@ MonoBehaviour:
   dataList:
   - projectileName: Projectile
     projectilePath: Assets/Data/ExternalAssets/TacticalCombatSystem_ExternalAssets/CustomData/SlashEffect.prefab
-    scale:
-      x: 1
-      y: 1
-      z: 1
+    scale: {x: 1, y: 1, z: 1}
