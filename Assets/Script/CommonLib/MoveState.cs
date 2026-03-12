@@ -6,6 +6,8 @@ namespace Script.CommonLib
 {
     public class MoveState : IState
     {
+        private const int GlobalMoveSpeedDivisor = 1000;
+        
         private IEntityContext _entityContext;
     
         private FixedPos _pos;
@@ -86,7 +88,7 @@ namespace Script.CommonLib
             var nextGridPos = _paths.Last();
             var nextPos = nextGridPos.ToFixedPos();
             
-            var moveDistance = _moveSpeed * deltaMs;
+            var moveDistance = _moveSpeed * deltaMs / GlobalMoveSpeedDivisor;
             var maxMoveDistance = pos.GetDistance(nextPos);
 
             if (moveDistance >= maxMoveDistance)
