@@ -324,12 +324,12 @@ namespace MiniServerProject.Application.Stages
             var response = new VerifyStageBattleResponse()
             {
                 Winner = serverSimulator.Winner,
-                AliveEntities = new List<Tuple<uint, float>>()
+                AliveEntities = new List<Tuple<uint, uint>>()
             };
             
             foreach (var entityContext in serverSimulator.GetAliveEntities())
             {
-                response.AliveEntities.Add(new Tuple<uint, float>(entityContext.Id, entityContext.Hp));
+                response.AliveEntities.Add(new Tuple<uint, uint>(entityContext.Id, entityContext.Hp));
             }
 
             return response;
