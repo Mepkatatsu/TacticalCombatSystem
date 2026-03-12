@@ -19,9 +19,9 @@ namespace Script.CommonLib.Map.Path
         public readonly GridPos GridPos;
         public PathNode Parent;
 
-        public float CurrentCost;
-        public float HeuristicCost;
-        public float TotalCost;
+        public long CurrentCost;
+        public long HeuristicCost;
+        public long TotalCost;
         
         public bool Equals(PathNode other)
         {

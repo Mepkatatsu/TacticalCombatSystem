@@ -17,12 +17,18 @@ namespace Script.CommonLib
 
             _toString = string.Empty;
         }
-
-        public readonly float GetDistance(GridPos pos)
+        
+        public readonly long GetDistanceSq(GridPos pos)
         {
-            float dx = x - pos.x;
-            float dy = y - pos.y;
-            return (float)Math.Sqrt(dx * dx + dy * dy);
+            long dx = x - pos.x;
+            long dy = y - pos.y;
+
+            return dx * dx + dy * dy;
+        }
+        
+        public readonly long GetDistance(GridPos pos)
+        {
+            return MathHelper.IntSqrt(GetDistanceSq(pos));
         }
 
         public override string ToString()

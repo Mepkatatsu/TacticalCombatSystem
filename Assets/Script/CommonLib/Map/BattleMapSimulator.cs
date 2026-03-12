@@ -229,14 +229,14 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler.OnEntityGetDamage(entityId, damage);
         }
 
-        public IEntityContext TryGetNearestEnemy(uint entityId, float maxDistance)
+        public IEntityContext TryGetNearestEnemy(uint entityId, long maxDistance)
         {
             if (!_entities.TryGetValue(entityId, out var entity))
                 return null;
             
             var pos = entity.GetPos();
             
-            var minDistance = float.MaxValue;
+            var minDistance = long.MaxValue;
             
             IEntityContext nearest = null;
             

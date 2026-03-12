@@ -121,7 +121,7 @@ namespace Script.CommonLib.Map
             }
         }
 
-        private static float GetHeuristicCost(GridPos gridPos1, GridPos gridPos2)
+        private static long GetHeuristicCost(GridPos gridPos1, GridPos gridPos2)
         {
             return Mathf.Abs(gridPos1.x - gridPos2.x) + Mathf.Abs(gridPos1.y - gridPos2.y);
         }

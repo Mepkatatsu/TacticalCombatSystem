@@ -86,7 +86,7 @@ namespace Script.ClientLib.Network.App
             return true;
         }
         
-        public async Task<List<Tuple<uint, float>>> RequestVerifyStageBattle(List<ushort> updateIntervals)
+        public async Task<List<Tuple<uint, uint>>> RequestVerifyStageBattle(List<ushort> updateIntervals)
         {
             if (!_ctx.IsInitialized)
             {
