@@ -14,10 +14,10 @@ namespace Script.CommonLib
         public bool HasMainTarget();
         public bool IsMainTargetInRange();
         public void TryGetNearestEnemy();
-        public Vec3 GetPos();
-        public void SetPos(Vec3 pos);
-        public Vec3 GetDir();
-        public void SetDir(Vec3 dir);
+        public FixedPos GetPos();
+        public void SetPos(FixedPos pos);
+        public FixedDir GetDir();
+        public void SetDir(FixedDir dir);
         public void OnStartMove();
         public void OnStopMove();
         public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);

@@ -2432,8 +2432,8 @@ MonoBehaviour:
     maxHp: 100
     attackDamage: 50
     attackDelayMs: 2000
-    attackRange: 8
-    moveSpeed: 2000
+    attackRange: 8000
+    moveSpeed: 40
 --- !u!1 &710962602
 GameObject:
   m_ObjectHideFlags: 0
@@ -3862,8 +3862,8 @@ MonoBehaviour:
     maxHp: 100
     attackDamage: 20
     attackDelayMs: 666
-    attackRange: 10
-    moveSpeed: 2000
+    attackRange: 10000
+    moveSpeed: 40
 --- !u!1001 &1198893644
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3974,8 +3974,8 @@ MonoBehaviour:
     maxHp: 100
     attackDamage: 30
     attackDelayMs: 800
-    attackRange: 12
-    moveSpeed: 2200
+    attackRange: 12000
+    moveSpeed: 44
 --- !u!1 &1200760448
 GameObject:
   m_ObjectHideFlags: 0
@@ -4384,8 +4384,8 @@ MonoBehaviour:
     maxHp: 50
     attackDamage: 50
     attackDelayMs: 1000
-    attackRange: 10
-    moveSpeed: 2600
+    attackRange: 10000
+    moveSpeed: 52
 --- !u!1001 &1258572060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4496,8 +4496,8 @@ MonoBehaviour:
     maxHp: 200
     attackDamage: 10
     attackDelayMs: 666
-    attackRange: 5
-    moveSpeed: 2600
+    attackRange: 5000
+    moveSpeed: 52
 --- !u!1001 &1321644657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4836,8 +4836,8 @@ MonoBehaviour:
     maxHp: 100
     attackDamage: 30
     attackDelayMs: 1000
-    attackRange: 12
-    moveSpeed: 2200
+    attackRange: 12000
+    moveSpeed: 44
 --- !u!1001 &1369059883
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6147,8 +6147,8 @@ MonoBehaviour:
     maxHp: 100
     attackDamage: 30
     attackDelayMs: 666
-    attackRange: 10
-    moveSpeed: 2200
+    attackRange: 10000
+    moveSpeed: 44
 --- !u!1001 &1752693875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6978,8 +6978,8 @@ MonoBehaviour:
     maxHp: 100
     attackDamage: 30
     attackDelayMs: 2000
-    attackRange: 10
-    moveSpeed: 2000
+    attackRange: 10000
+    moveSpeed: 40
 --- !u!1 &2042164397
 GameObject:
   m_ObjectHideFlags: 0

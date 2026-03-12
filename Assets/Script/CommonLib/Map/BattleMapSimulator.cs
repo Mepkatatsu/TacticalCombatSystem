@@ -99,7 +99,7 @@ namespace Script.CommonLib.Map
                 entity.SetPos(startPositionData.gridPos);
             
             if (endPositionData != null)
-                entity.SetDestination(new Vec3(endPositionData.gridPos.x, 0, endPositionData.gridPos.y));
+                entity.SetDestination(endPositionData.gridPos.ToFixedPos());
         }
 
         public void OnEntityRetired(uint entityId)
@@ -159,7 +159,7 @@ namespace Script.CommonLib.Map
             if (!attacker.IsAlive())
                 return;
 
-            if (Vec3.Distance(attacker.GetPos(), target.GetPos()) > attacker.AttackRange) // TODO: 부동 소수점 오차 고려한 수정 필요
+            if (attacker.GetPos().GetDistance(target.GetPos()) > attacker.AttackRange)
                 return;
 
             const uint projectileLifeTime = 500; // TODO: 임시값 변경 필요
@@ -167,17 +167,17 @@ namespace Script.CommonLib.Map
             var projectile = new Projectile(this, ++_projectileIdKey, attacker, target, attacker.AttackDamage, projectileLifeTime, attacker.GetPos());
             _projectiles.Add(_projectileIdKey, projectile);
             
-            attacker.SetDir(target.GetPos() - attacker.GetPos());
+            attacker.SetDir(new FixedDir(attacker.GetPos(), target.GetPos()));
             _battleMapEventHandler.OnEntityStartAttack(attackerId, targetEntityId);
             _battleMapEventHandler.OnProjectileAdded(projectile.Id, projectile);
         }
 
-        public void OnProjectilePositionChanged(ulong projectileId, Vec3 pos)
+        public void OnProjectilePositionChanged(ulong projectileId, FixedPos pos)
         {
             _battleMapEventHandler.OnProjectilePositionChanged(projectileId, pos);
         }
 
-        public void OnProjectileDirectionChanged(ulong projectileId, Vec3 dir)
+        public void OnProjectileDirectionChanged(ulong projectileId, FixedDir dir)
         {
             _battleMapEventHandler.OnProjectileDirectionChanged(projectileId, dir);
         }
@@ -214,12 +214,12 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler.OnBattleMapUpdated(deltaMs);
         }
 
-        public void OnEntityPositionChanged(uint entityId, Vec3 pos)
+        public void OnEntityPositionChanged(uint entityId, FixedPos pos)
         {
             _battleMapEventHandler.OnEntityPositionChanged(entityId, pos);
         }
 
-        public void OnEntityDirectionChanged(uint entityId, Vec3 dir)
+        public void OnEntityDirectionChanged(uint entityId, FixedDir dir)
         {
             _battleMapEventHandler.OnEntityDirectionChanged(entityId, dir);
         }
@@ -252,7 +252,7 @@ namespace Script.CommonLib.Map
                     continue;
                 
                 var otherPos = otherEntity.GetPos();
-                var distance = Vec3.Distance(pos, otherPos);
+                var distance = pos.GetDistance(otherPos);
 
                 if (distance > maxDistance)
                     continue;

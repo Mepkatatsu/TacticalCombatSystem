@@ -26,13 +26,13 @@ namespace Script.CommonLib
         private uint _hp;
         private uint _attackDamage;
         private ushort _attackDelayMs;
-        private byte _attackRange;
+        private ushort _attackRange;
         private ushort _moveSpeed;
 
         public uint Hp => _hp;
         public uint AttackDamage => _attackDamage;
         public ushort AttackDelayMs => _attackDelayMs;
-        public byte AttackRange => _attackRange;
+        public ushort AttackRange => _attackRange;
 
         private IEntityContext _mainTarget;
 
@@ -107,7 +107,7 @@ namespace Script.CommonLib
             if (!HasMainTarget())
                 return false;
             
-            var distance = Vec3.Distance(GetPos(), _mainTarget.GetPos()); // TODO: 부동 소수점 오차 고려한 수정 필요
+            var distance = GetPos().GetDistance(_mainTarget.GetPos());
             return distance <= _attackRange;
         }
 
@@ -116,7 +116,7 @@ namespace Script.CommonLib
             _mainTarget = _battleMapContext.TryGetNearestEnemy(Id, _attackRange);
         }
 
-        public Vec3 GetPos()
+        public FixedPos GetPos()
         {
             return _moveState.GetPos();
         }
@@ -147,24 +147,24 @@ namespace Script.CommonLib
 
         public void SetPos(GridPos gridPos)
         {
-            SetPos(new Vec3(gridPos.x, 0, gridPos.y));
+            SetPos(gridPos.ToFixedPos());
         }
 
-        public void SetPos(Vec3 pos)
+        public void SetPos(FixedPos pos)
         {
             _moveState.SetPos(pos);
             _battleMapContext.OnEntityPositionChanged(Id, pos);
         }
 
-        public Vec3 GetDir() => _moveState.GetDir();
+        public FixedDir GetDir() => _moveState.GetDir();
         
-        public void SetDir(Vec3 dir)
+        public void SetDir(FixedDir dir)
         {
             _moveState.SetDir(dir);
             _battleMapContext.OnEntityDirectionChanged(Id, dir);
         }
 
-        public void SetDestination(Vec3 pos)
+        public void SetDestination(FixedPos pos)
         {
             _moveState.SetDestination(pos);
         }

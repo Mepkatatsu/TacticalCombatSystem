@@ -8,9 +8,9 @@ namespace Script.CommonLib
     {
         private IEntityContext _entityContext;
     
-        private Vec3 _pos;
-        private Vec3 _dir;
-        private Vec3 _destination;
+        private FixedPos _pos;
+        private FixedDir _dir;
+        private FixedPos _destination;
         private readonly List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
 
         private ushort _moveSpeed;
@@ -23,10 +23,10 @@ namespace Script.CommonLib
 
         public bool HasArrived()
         {
-            return _entityContext.GetPos() == _destination;
+            return _pos == _destination;
         }
 
-        public void SetDestination(Vec3 destination)
+        public void SetDestination(FixedPos destination)
         {
             _destination = destination;
         }
@@ -46,8 +46,7 @@ namespace Script.CommonLib
             if (_paths.IsEmpty())
                 FindPath();
             
-            var pos = _entityContext.GetPos();
-            MovePath(pos, deltaMs);
+            MovePath(_pos, deltaMs);
         }
 
         public void Exit()
@@ -59,52 +58,53 @@ namespace Script.CommonLib
         {
             _paths.Clear();
 
-            // GridPos가 아닌 곳으로 이동하고 싶을 수 있을 듯 하여 추후 수정이 필요할 것 같음.
-            var startPos = new GridPos(_entityContext.GetPos());
-            var endPos = new GridPos(_destination);
+            // TODO: GridPos가 아닌 곳으로 이동하고 싶을 수 있을 듯 하여 추후 수정이 필요할 것 같음.
+            var startPos = _pos.ToGridPos();
+            var endPos = _destination.ToGridPos();
         
             _entityContext.FindWaypoints(startPos, endPos, _paths);
         }
 
-        public void SetPos(Vec3 pos)
+        public void SetPos(FixedPos pos)
         {
             _pos = pos;
         }
 
-        public void SetDir(Vec3 dir)
+        public void SetDir(FixedDir dir)
         {
             _dir = dir;
         }
         
-        public Vec3 GetPos() => _pos;
-        public Vec3 GetDir() => _dir;
+        public FixedPos GetPos() => _pos;
+        public FixedDir GetDir() => _dir;
 
-        public void MovePath(Vec3 pos, ushort deltaMs)
+        public void MovePath(FixedPos pos, ushort deltaMs)
         {
             if (_paths.Count == 0)
                 return;
             
             var nextGridPos = _paths.Last();
-            var nextPos = new Vec3(nextGridPos.x, 0, nextGridPos.y);
+            var nextPos = nextGridPos.ToFixedPos();
+            
+            var moveDistance = _moveSpeed * deltaMs;
+            var maxMoveDistance = pos.GetDistance(nextPos);
 
-            var nextMoveVector = nextPos - pos;
-
-            var dir = nextMoveVector.normalized;
-            var moveDistance = deltaMs / 1000f * (_moveSpeed / 400f); // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
-            var maxMoveDistance = Vec3.Distance(pos, nextPos);
-
-            if (moveDistance > maxMoveDistance)
+            if (moveDistance >= maxMoveDistance)
             {
                 _paths.RemoveAt(_paths.Count - 1);
-                moveDistance = maxMoveDistance;
             }
-            
-            nextPos = pos + dir * moveDistance;
+            else
+            {
+                var deltaFixedPos = nextPos - pos;
+                var distance = nextPos.GetDistance(pos);
+                var moveX = deltaFixedPos.X * moveDistance / distance; // TODO: 반올림/최솟값 처리 고려
+                var moveZ = deltaFixedPos.Z * moveDistance / distance; // TODO: 반올림/최솟값 처리 고려
+                
+                nextPos = new FixedPos(pos.X + moveX, pos.Y, pos.Z + moveZ);
+            }
         
             _entityContext.SetPos(nextPos);
-            
-            var nextDir = Vec3.Lerp(_dir, dir, deltaMs / 1000f * (_moveSpeed / 400f)); // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
-            _entityContext.SetDir(nextDir);
+            _entityContext.SetDir(new FixedDir(pos, nextPos));
         }
     }
 }

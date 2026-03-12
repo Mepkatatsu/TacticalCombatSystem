@@ -72,7 +72,7 @@ namespace Script.ClientLib
         private ushort GetDeltaMs()
         {
             float deltaTime = Time.deltaTime;
-            uint rawDeltaMs = (uint)deltaTime * 1000;
+            uint rawDeltaMs = (uint)(deltaTime * 1000);
             ushort deltaMs = (ushort)Math.Clamp(rawDeltaMs, MinDeltaMs, MaxDeltaMs);
             
             return deltaMs;
@@ -90,24 +90,24 @@ namespace Script.ClientLib
             _entityViews.Add(entityId, entityView);
         }
 
-        public void OnEntityPositionChanged(uint entityId, Vec3 pos)
+        public void OnEntityPositionChanged(uint entityId, FixedPos pos)
         {
             _entityViews.TryGetValue(entityId, out var entityView);
 
             if (!entityView)
                 return;
             
-            entityView.OnPositionChanged(new Vector3(pos.x, pos.y, pos.z));
+            entityView.OnPositionChanged(pos.ToVector3());
         }
 
-        public void OnEntityDirectionChanged(uint entityId, Vec3 dir)
+        public void OnEntityDirectionChanged(uint entityId, FixedDir dir)
         {
             _entityViews.TryGetValue(entityId, out var entityView);
 
             if (!entityView)
                 return;
             
-            entityView.OnDirectionChanged(new Vector3(dir.x, dir.y, dir.z));
+            entityView.OnDirectionChanged(dir.ToDirection());
         }
 
         public void OnEntityStartMove(uint entityId)
@@ -172,7 +172,7 @@ namespace Script.ClientLib
             _projectileViews.Add(projectileId, projectileView);
         }
 
-        public void OnProjectilePositionChanged(ulong projectileId, Vec3 pos)
+        public void OnProjectilePositionChanged(ulong projectileId, FixedPos pos)
         {
             _projectileViews.TryGetValue(projectileId, out var projectileView);
 
@@ -180,18 +180,21 @@ namespace Script.ClientLib
                 return;
 
             const float projectileHeight = 1f;  // TODO: 임시값 수정해야 함
+
+            var vector3Pos = pos.ToVector3();
+            vector3Pos.y = projectileHeight;
             
-            projectileView.OnPositionChanged(new Vector3(pos.x, projectileHeight, pos.z));
+            projectileView.OnPositionChanged(vector3Pos);
         }
 
-        public void OnProjectileDirectionChanged(ulong projectileId, Vec3 dir)
+        public void OnProjectileDirectionChanged(ulong projectileId, FixedDir dir)
         {
             _projectileViews.TryGetValue(projectileId, out var projectileView);
 
             if (!projectileView)
                 return;
             
-            projectileView.OnDirectionChanged(new Vector3(dir.x, dir.y, dir.z));
+            projectileView.OnDirectionChanged(dir.ToDirection());
         }
 
         public void OnProjectileTriggered(ulong projectileId)

@@ -10,14 +10,6 @@ namespace Script.CommonLib
 
         private string _toString;
 
-        public GridPos(Vec3 pos)
-        {
-            x = (int)Math.Round(pos.x);
-            y = (int)Math.Round(pos.z);
-
-            _toString = string.Empty;
-        }
-
         public GridPos(int x, int y)
         {
             this.x = x;

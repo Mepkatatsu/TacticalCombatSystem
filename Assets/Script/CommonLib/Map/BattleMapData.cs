@@ -7,7 +7,7 @@ namespace Script.CommonLib.Map
     [Serializable]
     public class BattleMapData
     {
-        public const int MaxMapSize = 1000;    // 너무 크게 만들지 않도록 제한
+        public const int MaxMapSize = 1000;    // 너무 크게 만들지 않도록 제한: PositionConverter.FixedPosMultiplier 참조하여 overflow 주의
     
         public GridPos minGridPos;
         public GridPos maxGridPos;

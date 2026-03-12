@@ -35,12 +35,12 @@ namespace Script.ClientLib
             transform.position = position;
         }
     
-        public void OnDirectionChanged(Vector3 position)
+        public void OnDirectionChanged(Vector3 dir)
         {
-            if (position == Vector3.zero)
+            if (dir == Vector3.zero)
                 return;
             
-            transform.rotation = Quaternion.LookRotation(position);
+            transform.rotation = Quaternion.LookRotation(dir);
         }
 
         public void OnStartMoving()

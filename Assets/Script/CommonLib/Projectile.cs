@@ -12,13 +12,13 @@ namespace Script.CommonLib
         public IEntityContext Target { get; private set; }
         public uint Damage { get; private set; }
         private uint _leftLifeMs;
+        
+        private FixedPos _currentPos;
+        private FixedDir _dir;
 
-        private Vec3 _pos;
-        private Vec3 _dir;
+        private bool _hasTriggered;
         
-        private const float RotateSpeed = 10f;
-        
-        public Projectile(IBattleMapContext battleMapContext, ulong id, IEntityContext attacker, IEntityContext target, uint damage, uint lifeMs, Vec3 pos)
+        public Projectile(IBattleMapContext battleMapContext, ulong id, IEntityContext attacker, IEntityContext target, uint damage, uint lifeMs, FixedPos startPos)
         {
             _battleMapContext = battleMapContext;
 
@@ -27,63 +27,67 @@ namespace Script.CommonLib
             Target = target;
             Damage = damage;
             _leftLifeMs = lifeMs;
-
-            if (lifeMs == 0)
-            {
-                LogHelper.Error("Projectile LifeTime must be greater than 0");
-            }
             
-            _pos = pos;
-            _dir = Target.GetPos() - Attacker.GetPos();
+            _currentPos = startPos;
+            _dir = new FixedDir(Attacker.GetPos(), Target.GetPos());
         }
 
         public void Update(ushort deltaMs)
         {
-            if (_leftLifeMs <= 0)
+            if (_hasTriggered)
                 return;
-            
-            _leftLifeMs -= deltaMs;
+
+            if (_leftLifeMs <= deltaMs)
+            {
+                deltaMs = (ushort)_leftLifeMs;
+                _leftLifeMs = 0;
+            }
+            else
+            {
+                _leftLifeMs -= deltaMs;
+            }
             
             MovePos(deltaMs);
 
-            if (_leftLifeMs <= 0)
+            if (_leftLifeMs == 0)
+            {
                 Trigger();
+            }
         }
 
         private void MovePos(ushort deltaMs)
         {
+            if (deltaMs == 0)
+                return;
+            
             var targetPos = Target.GetPos();
             var nextPos = targetPos;
-            var dir = (nextPos - _pos).normalized;
             
-            var lastLifeMs = _leftLifeMs + deltaMs;
+            var prevLifeMs = _leftLifeMs + deltaMs;
 
-            if (_leftLifeMs > 0 && lastLifeMs > 0)
+            if (_leftLifeMs > 0)
             {
-                var totalDistance = Vec3.Distance(targetPos, _pos);
-                var ratio = (float)deltaMs / lastLifeMs; // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
-                ratio = Math.Min(ratio, 1);
-                var moveDistance = totalDistance * ratio;
-                nextPos = _pos + dir * moveDistance;
+                var delta = targetPos - _currentPos;
+                var move = delta * deltaMs / (int)prevLifeMs; // TODO: 반올림/최솟값 처리 고려
+                nextPos = _currentPos + move;
             }
             
-            var nextDir = Vec3.Lerp(_dir, dir, RotateSpeed * deltaMs / 1000f); // TODO: 부동 소수점 오차를 고려해 이동 방식 변경
+            _dir = new FixedDir(_currentPos, nextPos);
+            _currentPos = nextPos;
             
-            _pos = nextPos;
-            _dir = nextDir;
-            
-            _battleMapContext.OnProjectilePositionChanged(Id, _pos);
+            _battleMapContext.OnProjectilePositionChanged(Id, _currentPos);
             _battleMapContext.OnProjectileDirectionChanged(Id, _dir);
         }
 
         private void Trigger()
         {
+            _hasTriggered = true;
             _battleMapContext.OnProjectileTriggered(Id);
         }
 
-        public Vec3 GetPos()
+        public FixedPos GetPos()
         {
-            return _pos;
+            return _currentPos;
         }
     }
 }
