@@ -68,7 +68,8 @@ namespace MiniServerProject.Controllers
             if (string.IsNullOrWhiteSpace(request.RequestId))
                 throw new DomainException(ErrorType.InvalidRequest, "requestId is required.");
 
-            var resp = await _stageService.VerifyBattleAsync(request.UserId, request.RequestId, stageId, request.UpdateIntervals, ct);
+            var resp = await _stageService.VerifyBattleAsync(request.UserId, request.RequestId, stageId, request.UpdateIntervals,
+                request.AliveEntities, request.Winner, ct);
             return Ok(resp);
         }
     }

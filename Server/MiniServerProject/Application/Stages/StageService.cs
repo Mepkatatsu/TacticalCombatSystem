@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using MiniServerProject.Domain.Battle;
 using MiniServerProject.Domain.ServerLogs;
 using MiniServerProject.Infrastructure;
@@ -295,7 +296,8 @@ namespace MiniServerProject.Application.Stages
             return response;
         }
 
-        public async Task<VerifyStageBattleResponse> VerifyBattleAsync(ulong userId, string requestId, string stageId, List<ushort> updateIntervals, CancellationToken ct, int testDelayMs = 0)
+        public async Task<VerifyStageBattleResponse> VerifyBattleAsync(ulong userId, string requestId, string stageId, List<ushort> updateIntervals,
+            List<Tuple<uint, uint>> aliveEntities, TeamFlag winner, CancellationToken ct, int testDelayMs = 0)
         {
             var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId, ct)
                        ?? throw new DomainException(ErrorType.UserNotFound);
@@ -315,24 +317,67 @@ namespace MiniServerProject.Application.Stages
             if (mapData == null)
                 throw new DomainException(ErrorType.StageDataNotFound);
 
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             var serverSimulator = new ServerBattleMapSimulator(mapData, updateIntervals);
             serverSimulator.Simulate();
 
             if (!serverSimulator.IsBattleEnded)
                 throw new DomainException(ErrorType.BattleNotEnded);
 
+            var isVerified = VerifyClientRequestData(aliveEntities, winner, serverSimulator);
+            stopWatch.Stop();
+            
+            RecordVerifyHistory(isVerified, stopWatch.ElapsedMilliseconds, serverSimulator.Winner, serverSimulator.TotalElapsedMs, serverSimulator.TotalElapsedFrames);
+            
             var response = new VerifyStageBattleResponse()
             {
-                Winner = serverSimulator.Winner,
-                AliveEntities = new List<Tuple<uint, uint>>()
+                IsVerified = isVerified
             };
-            
-            foreach (var entityContext in serverSimulator.GetAliveEntities())
-            {
-                response.AliveEntities.Add(new Tuple<uint, uint>(entityContext.Id, entityContext.Hp));
-            }
 
             return response;
+        }
+
+        private bool VerifyClientRequestData(List<Tuple<uint, uint>> aliveEntities, TeamFlag winner, ServerBattleMapSimulator serverSimulator)
+        {
+            if (serverSimulator.Winner != winner)
+            {
+                _logger.LogWarning("VerifyClientRequestData: Winner is different from winner team.");
+                return false;
+            }
+
+            var aliveEntitiesDictionary = serverSimulator.GetAliveEntitiesDictionary();
+
+            if (aliveEntitiesDictionary.Count != aliveEntities.Count)
+            {
+                _logger.LogWarning("VerifyClientRequestData: aliveEntitiesDictionary count mismatch.");
+                return false;
+            }
+            
+            foreach ((uint id, uint hp) in aliveEntities)
+            {
+                if (!aliveEntitiesDictionary.TryGetValue(id, out var entity))
+                {
+                    _logger.LogWarning("VerifyClientRequestData: Entity not found.");
+                    return false;
+                }
+
+                if (entity.Hp != hp)
+                {
+                    _logger.LogWarning("VerifyClientRequestData: Entity hp mismatch.");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void RecordVerifyHistory(bool isVerified, long verifyMs, TeamFlag winner, uint battleMs, uint battleFrames)
+        {
+            var battleSec = battleMs / 1000f;
+            var avgFps = Math.Round(battleFrames / battleSec, 2);
+            _logger.LogInformation($"isVerified: {isVerified}, verifyMs: {verifyMs}ms, winner: {winner}, battleMs: {battleMs}, battleFrames: {battleFrames}, avgFps: {avgFps}");
         }
 
         private async Task<StageEnterLog?> FindEnterLogAsync(ulong userId, string requestId, CancellationToken ct)

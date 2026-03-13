@@ -14,6 +14,9 @@ public class ServerBattleMapSimulator : IBattleMapEventHandler
     
     private List<Entity> _entities = new();
 
+    public uint TotalElapsedMs { get; private set; }
+    public uint TotalElapsedFrames { get; private set; }
+
     public ServerBattleMapSimulator(BattleMapData battleMapData, List<ushort> updateIntervals)
     {
         _battleMapSimulator = new BattleMapSimulator(this, battleMapData);
@@ -34,17 +37,9 @@ public class ServerBattleMapSimulator : IBattleMapEventHandler
         }
     }
 
-    public List<IEntityContext> GetAliveEntities()
+    public Dictionary<uint, IEntityContext> GetAliveEntitiesDictionary()
     {
-        var aliveEntities = new List<IEntityContext>();
-
-        foreach (var entity in _entities)
-        {
-            if (entity.IsAlive())
-                aliveEntities.Add(entity);
-        }
-
-        return aliveEntities;
+        return _battleMapSimulator.GetAliveEntitiesDictionary();
     }
     
     public void OnEntityAdded(uint entityId, Entity entity)
@@ -115,6 +110,7 @@ public class ServerBattleMapSimulator : IBattleMapEventHandler
 
     public void OnBattleMapUpdated(ushort elapsedMs)
     {
-        
+        TotalElapsedMs += elapsedMs;
+        ++TotalElapsedFrames;
     }
 }
