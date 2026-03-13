@@ -271,5 +271,33 @@ namespace Script.CommonLib.Map
         {
             _battleMapPathFinder.FindWaypoints(start, goal, resultWaypoints);
         }
+        
+        public List<IEntityContext> GetAliveEntities()
+        {
+            var aliveEntities = new List<IEntityContext>();
+
+            foreach (var entity in _entities.Values)
+            {
+                if (entity.IsAlive())
+                    aliveEntities.Add(entity);
+            }
+
+            return aliveEntities;
+        }
+        
+        public Dictionary<uint, IEntityContext> GetAliveEntitiesDictionary()
+        {
+            var aliveEntitiesDictionary = new Dictionary<uint, IEntityContext>();
+
+            foreach ((uint id, Entity entity) in _entities)
+            {
+                if (entity.IsAlive())
+                {
+                    aliveEntitiesDictionary.Add(entity.Id, entity);
+                }
+            }
+
+            return aliveEntitiesDictionary;
+        }
     }
 }

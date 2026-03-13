@@ -86,32 +86,37 @@ namespace Script.ClientLib.Network.App
             return true;
         }
         
-        public async Task<List<Tuple<uint, uint>>> RequestVerifyStageBattle(List<ushort> updateIntervals)
+        public async Task<bool> RequestVerifyStageBattle(List<ushort> updateIntervals, List<IEntityContext> aliveEntities, TeamFlag winner)
         {
             if (!_ctx.IsInitialized)
             {
                 LogHelper.Error("RequestEnterStage: ClientContext is not Initialized");
-                return null;
+                return false;
             }
 
             if (_ctx.CurrentStageId == null)
             {
                 LogHelper.Error("RequestEnterStage: CurrentStageId is null");
-                return null;
+                return false;
             }
 
-            var request = new VerifyStageBattleRequest(_ctx.UserId, _ctx.GetRequestId(), updateIntervals);
+            var aliveEntitiesData = new List<Tuple<uint, uint>>();
+            
+            foreach (var entityContext in aliveEntities)
+            {
+                aliveEntitiesData.Add(new Tuple<uint, uint>(entityContext.Id, entityContext.Hp));
+            }
+
+            var request = new VerifyStageBattleRequest(_ctx.UserId, _ctx.GetRequestId(), updateIntervals, aliveEntitiesData, winner);
             var response = await _ctx.Api.PostAsync<VerifyStageBattleRequest, VerifyStageBattleResponse>($"/stages/{_ctx.CurrentStageId}/verify-battle", request);
 
             if (response == null)
             {
                 LogHelper.Error("RequestEnterStage: VerifyStageBattleRequest Failed");
-                return null;
+                return false;
             }
-            
-            LogHelper.Log($"RequestVerifyStageBattle Winner: {response.Winner}");
-            
-            return response.AliveEntities;
+
+            return response.IsVerified;
         }
     }
 }

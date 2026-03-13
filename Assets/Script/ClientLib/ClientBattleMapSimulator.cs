@@ -247,20 +247,21 @@ namespace Script.ClientLib
                 }
             }
             
-            var result =  await _clientApp.RequestVerifyStageBattle(_updateIntervals);
+            var result =  await _clientApp.RequestVerifyStageBattle(_updateIntervals, GetAliveEntities(), winner);
 
-            if (result == null)
+            if (!result)
             {
-                LogHelper.Error($"OnBattleEnd: result is null");
-                return;
+                LogHelper.Error($"OnBattleEnd: result is not Verified");
             }
-            
-            LogHelper.Log("===ServerResult===");
-            
-            foreach (var tuple in result)
+            else
             {
-                LogHelper.Log($"[Alive] entityId: {tuple.Item1} hp: {tuple.Item2}");
+                LogHelper.Log($"OnBattleEnd: result is Verified");
             }
+        }
+        
+        public List<IEntityContext> GetAliveEntities()
+        {
+            return _battleMapSimulator?.GetAliveEntities();
         }
 
         public void OnBattleMapUpdated(ushort deltaMs)

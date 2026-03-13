@@ -1,6 +1,12 @@
-public enum TeamFlag
+using System;
+
+namespace Script.CommonLib
 {
-    None,
-    Blue,
-    Red
+    [Serializable]
+    public enum TeamFlag
+    {
+        None,
+        Blue,
+        Red
+    }
 }
