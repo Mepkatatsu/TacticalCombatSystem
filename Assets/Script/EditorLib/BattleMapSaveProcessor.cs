@@ -102,10 +102,12 @@ namespace Script.EditorLib
 
         private static List<BattlePositionData> SaveBattlePositions(BattleMap battleMap)
         {
+            var battlePositionDataList = new List<BattlePositionData>();
+            
             var battlePositions = battleMap.transform.GetComponentsInChildren<BattlePosition>();
 
             if (battlePositions.IsEmpty())
-                return null;
+                return battlePositionDataList;
             
             var startPosIndex = 0;
             var endPosIndex = 0;
@@ -127,8 +129,6 @@ namespace Script.EditorLib
             if (startPosIndex != endPosIndex)
                 throw new Exception("StartPosition과 EndPosition의 수가 다릅니다. BattleMap이 저장되지 않습니다.");
             
-            var battlePositionDataList = new List<BattlePositionData>();
-            
             foreach (var battlePosition in battlePositions)
             {
                 battlePositionDataList.Add(battlePosition.ToBattlePositionData());
@@ -139,12 +139,12 @@ namespace Script.EditorLib
         
         private static List<ObstacleData> SaveObstacles(BattleMap battleMap)
         {
+            var obstacleDataList = new List<ObstacleData>();
+            
             var obstacles = battleMap.transform.GetComponentsInChildren<Obstacle>();
 
             if (obstacles.IsEmpty())
-                return null;
-            
-            var obstacleDataList = new List<ObstacleData>();
+                return obstacleDataList;
             
             foreach (var obstacle in obstacles)
             {
@@ -156,12 +156,12 @@ namespace Script.EditorLib
         
         private static List<EntityData> SaveEntities(BattleMap battleMap)
         {
+            var entitiesDataList = new List<EntityData>();
+            
             var entityComponents = battleMap.transform.GetComponentsInChildren<EntityComponent>();
 
             if (entityComponents.IsEmpty())
-                return null;
-            
-            var entitiesDataList = new List<EntityData>();
+                return entitiesDataList;
             
             foreach (var entityComponent in entityComponents)
             {
