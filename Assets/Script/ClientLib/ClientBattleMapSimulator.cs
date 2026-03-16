@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Script.ClientLib.Network.App;
 using Script.CommonLib;
 using Script.CommonLib.Map;
@@ -16,6 +17,8 @@ namespace Script.ClientLib
         private Dictionary<uint, EntityView> _entityViews = new();
         private Dictionary<ulong, ProjectileView> _projectileViews = new();
 
+        public uint simulationSpeed = 1;
+        public bool repeatTest;
         public string baseUrl = "http://localhost:5099";
         public string accountId;
 
@@ -31,18 +34,35 @@ namespace Script.ClientLib
 
         private async void Start()
         {
+#if !UNITY_EDITOR
+            repeatTest = false;
+#endif
+            var stageName = GetStageName();
+            await InitBattleMap(stageName);
+            await ConnectToServer(stageName);
+        }
+
+        private void ReloadBattleMap()
+        {
+            Clear();
+            ReloadScene();
+        }
+
+        private void Clear()
+        {
+            _entityViews.Clear();
+            _projectileViews.Clear();
+        }
+
+        private void ReloadScene()
+        {
             var scene = SceneManager.GetActiveScene();
-            var stageName = scene.name;
-            var path = $"Assets/Data/MapData/{stageName}_Data.json";
-            var json = await File.ReadAllTextAsync(path);
+            SceneManager.LoadScene(scene.name);
+        }
 
-            if (string.IsNullOrEmpty(json))
-            {
-                LogHelper.Error($"file {path} not found");
-                return;
-            }
-
-            var battleMapData = JsonSerialize.DeserializeObject<BattleMapData>(json);
+        private async Task InitBattleMap(string stageName)
+        {
+            var (path, battleMapData) = await GetBattleMapData(stageName);
 
             if (battleMapData == null)
             {
@@ -52,7 +72,10 @@ namespace Script.ClientLib
 
             _battleMapSimulator = new BattleMapSimulator(this, battleMapData);
             _battleMapSimulator.Init();
+        }
 
+        private async Task ConnectToServer(string stageName)
+        {
             var connectSucceed = await _clientApp.ConnectToServer(baseUrl, accountId);
 
             if (!connectSucceed)
@@ -63,10 +86,38 @@ namespace Script.ClientLib
             LogHelper.Log($"enterStageSucceed: {enterStageSucceed}");
         }
 
+        private static async Task<(string path, BattleMapData battleMapData)> GetBattleMapData(string stageName)
+        {
+            var path = $"Assets/Data/MapData/{stageName}_Data.json";
+            var json = await File.ReadAllTextAsync(path);
+
+            if (string.IsNullOrEmpty(json))
+            {
+                LogHelper.Error($"file {path} not found");
+                return (path, null);
+            }
+
+            var battleMapData = JsonSerialize.DeserializeObject<BattleMapData>(json);
+            return (path, battleMapData);
+        }
+
+        private static string GetStageName()
+        {
+            var scene = SceneManager.GetActiveScene();
+            var stageName = scene.name;
+            return stageName;
+        }
+
         private void Update()
         {
+#if !UNITY_EDITOR
+            simulationSpeed = 1;
+#endif
             ushort deltaMs = GetDeltaMs();
-            _battleMapSimulator?.Update(deltaMs);
+            for (int i = 0; i < simulationSpeed; ++i)
+            {
+                _battleMapSimulator?.Update(deltaMs);
+            }
         }
 
         private ushort GetDeltaMs()
@@ -86,6 +137,8 @@ namespace Script.ClientLib
             obj.transform.localScale = new Vector3(modelData.modelScale.x, modelData.modelScale.y, modelData.modelScale.z);
             var entityView = obj.AddComponent<EntityView>();
             entityView.SetHp(entity.Hp);
+            
+            LogHelper.Log($"OnEntityAdded: {entityId}");
             
             _entityViews.Add(entityId, entityView);
         }
@@ -257,6 +310,9 @@ namespace Script.ClientLib
             {
                 LogHelper.Log($"OnBattleEnd: result is Verified");
             }
+
+            if (repeatTest)
+                ReloadBattleMap();
         }
         
         public List<IEntityContext> GetAliveEntities()

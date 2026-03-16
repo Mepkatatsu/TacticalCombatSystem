@@ -14,6 +14,9 @@ namespace Script.ClientLib.Network.App
         
         public async Task<bool> ConnectToServer(string url, string accountId)
         {
+            if (_ctx.IsInitialized)
+                return true;
+            
             _ctx.BaseUrl = url;
             _ctx.BuildApi();
             var response = await _ctx.Api.GetAsync<UserResponse>($"/users/{accountId}", true);

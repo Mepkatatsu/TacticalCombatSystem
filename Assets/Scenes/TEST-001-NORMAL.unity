@@ -3772,7 +3772,7 @@ MonoBehaviour:
     name: Entity8
     startPositionName: EndPosition4
     endPositionName: StartPosition1
-    maxHp: 6000
+    maxHp: 550
     attackDamage: 2
     attackDelayMs: 666
     attackRange: 10000
@@ -4954,6 +4954,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79e9d398ebc611b4a9d17eb69448d12e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  simulationSpeed: 10
+  repeatTest: 1
   baseUrl: http://localhost:5099
   accountId: mepkatatsu
   redTeamWinText: {fileID: 889742237}
@@ -6807,7 +6809,7 @@ MonoBehaviour:
     name: Entity4
     startPositionName: StartPosition4
     endPositionName: EndPosition1
-    maxHp: 6000
+    maxHp: 600
     attackDamage: 3
     attackDelayMs: 2000
     attackRange: 10000
