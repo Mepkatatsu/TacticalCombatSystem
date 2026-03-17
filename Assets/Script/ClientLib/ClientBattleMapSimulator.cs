@@ -138,8 +138,6 @@ namespace Script.ClientLib
             var entityView = obj.AddComponent<EntityView>();
             entityView.SetHp(entity.Hp);
             
-            LogHelper.Log($"OnEntityAdded: {entityId}");
-            
             _entityViews.Add(entityId, entityView);
         }
 

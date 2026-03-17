@@ -3772,7 +3772,7 @@ MonoBehaviour:
     name: Entity8
     startPositionName: EndPosition4
     endPositionName: StartPosition1
-    maxHp: 550
+    maxHp: 543
     attackDamage: 2
     attackDelayMs: 666
     attackRange: 10000
