@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using MiniServerProject.Domain.Battle;
 using MiniServerProject.Domain.ServerLogs;
@@ -16,6 +17,9 @@ namespace MiniServerProject.Application.Stages
         private readonly GameDbContext _db;
         private readonly IIdempotencyCache _idemCache;
         private readonly ILogger<StageService> _logger;
+        
+        private static readonly List<BattleHistory> BattleHistoryList = new();
+        private readonly StringBuilder _stringBuilder = new();
 
         public StageService(GameDbContext db, IIdempotencyCache idemCache, ILogger<StageService> logger)
         {
@@ -328,8 +332,11 @@ namespace MiniServerProject.Application.Stages
 
             var isVerified = VerifyClientRequestData(aliveEntities, winner, serverSimulator);
             stopWatch.Stop();
+
+            var battleHistory = new BattleHistory(isVerified, stopWatch.ElapsedMilliseconds, serverSimulator.Winner, serverSimulator.TotalElapsedMs,
+                serverSimulator.TotalElapsedFrames);
             
-            RecordVerifyHistory(isVerified, stopWatch.ElapsedMilliseconds, serverSimulator.Winner, serverSimulator.TotalElapsedMs, serverSimulator.TotalElapsedFrames);
+            LogBattleHistory(battleHistory);
             
             var response = new VerifyStageBattleResponse()
             {
@@ -337,6 +344,72 @@ namespace MiniServerProject.Application.Stages
             };
 
             return response;
+        }
+
+        private void LogBattleHistory(BattleHistory battleHistory)
+        {
+            // TODO: Thread Safe 처리
+            BattleHistoryList.Add(battleHistory);
+            _stringBuilder.Clear();
+
+            int totalBattleCount = BattleHistoryList.Count;
+            int verifiedCount = 0;
+            long totalVerifyMs = 0;
+            int blueTeamWinCount = 0;
+            int redTeamWinCount = 0;
+            long totalBattleMs = 0;
+            ulong totalBattleFrames = 0;
+            float totalAvgFps = 0;
+
+            const int detailLogLimit = 20;
+            var detailLogSkipCount = BattleHistoryList.Count - detailLogLimit;
+            
+            foreach (var history in BattleHistoryList)
+            {
+                if (history.IsVerified)
+                    ++verifiedCount;
+                
+                totalVerifyMs += history.VerifyMs;
+                
+                if (history.Winner == TeamFlag.Blue)
+                    blueTeamWinCount++;
+                
+                if (history.Winner == TeamFlag.Red)
+                    redTeamWinCount++;
+                
+                totalBattleMs += history.BattleMs;
+                totalBattleFrames += history.BattleFrames;
+                totalAvgFps += history.AvgFps;
+
+                if (detailLogSkipCount > 0)
+                {
+                    --detailLogSkipCount;
+                }
+                else
+                {
+                    _stringBuilder.AppendLine(history.ToString());
+                }
+            }
+            
+            var verifiedRate = Math.Round((float)verifiedCount / totalBattleCount * 100, 2);
+            var totalBattleSec = Math.Round(totalBattleMs / 1000f, 2);
+            var avgVerifyMs = Math.Round((float)totalVerifyMs / totalBattleCount, 2);
+            var avgBattleMs = Math.Round((float)totalBattleMs / totalBattleCount, 2);
+            var avgBattleSec = Math.Round(totalBattleSec / totalBattleCount, 2);
+            var avgBattleFrames = Math.Round((float)totalBattleFrames / totalBattleCount, 2);
+            var avgAvgFps = Math.Round(totalAvgFps / totalBattleCount, 2);
+
+            _stringBuilder.AppendLine();
+            _stringBuilder.AppendLine($"==========TOTAL==========");
+            _stringBuilder.AppendLine($"Total Battle Count: {totalBattleCount}");
+            _stringBuilder.AppendLine($"Total Verified Count: {verifiedCount}/{totalBattleCount}({verifiedRate}%)");
+            _stringBuilder.AppendLine($"Total Verify Ms: {totalVerifyMs}ms, AVG Verify Ms: {avgVerifyMs}ms");
+            _stringBuilder.AppendLine($"BlueTeam Wins: {blueTeamWinCount}, RedTeam Wins: {redTeamWinCount}, Draw: {totalBattleCount - blueTeamWinCount - redTeamWinCount}");
+            _stringBuilder.AppendLine($"Total Battle Ms: {totalBattleMs}({totalBattleSec}s), AVG Battle Ms: {avgBattleMs}({avgBattleSec}s)");
+            _stringBuilder.AppendLine($"Total Battle Frames: {totalBattleFrames}, AVG Battle Frames: {avgBattleFrames}");
+            _stringBuilder.AppendLine($"Total AVG FPS: {totalAvgFps}, AVG AVG FPS: {avgAvgFps}");
+            
+            _logger.LogInformation(_stringBuilder.ToString());
         }
 
         private bool VerifyClientRequestData(List<Tuple<uint, uint>> aliveEntities, TeamFlag winner, ServerBattleMapSimulator serverSimulator)
@@ -371,13 +444,6 @@ namespace MiniServerProject.Application.Stages
             }
 
             return true;
-        }
-
-        private void RecordVerifyHistory(bool isVerified, long verifyMs, TeamFlag winner, uint battleMs, uint battleFrames)
-        {
-            var battleSec = battleMs / 1000f;
-            var avgFps = Math.Round(battleFrames / battleSec, 2);
-            _logger.LogInformation($"isVerified: {isVerified}, verifyMs: {verifyMs}ms, winner: {winner}, battleMs: {battleMs}, battleFrames: {battleFrames}, avgFps: {avgFps}");
         }
 
         private async Task<StageEnterLog?> FindEnterLogAsync(ulong userId, string requestId, CancellationToken ct)
