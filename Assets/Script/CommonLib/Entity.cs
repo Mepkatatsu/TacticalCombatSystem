@@ -33,6 +33,7 @@ namespace Script.CommonLib
         public uint AttackDamage => _attackDamage;
         public ushort AttackDelayMs => _attackDelayMs;
         public ushort AttackRange => _attackRange;
+        public ushort MoveSpeed => _moveSpeed;
 
         private IEntityContext _mainTarget;
 

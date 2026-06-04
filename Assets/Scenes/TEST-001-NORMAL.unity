@@ -3773,10 +3773,10 @@ MonoBehaviour:
     startPositionName: EndPosition4
     endPositionName: StartPosition1
     maxHp: 543
-    attackDamage: 2
+    attackDamage: 3
     attackDelayMs: 666
     attackRange: 10000
-    moveSpeed: 4000
+    moveSpeed: 4400
 --- !u!1001 &1198893644
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3884,11 +3884,11 @@ MonoBehaviour:
     name: Entity3
     startPositionName: StartPosition3
     endPositionName: EndPosition2
-    maxHp: 500
-    attackDamage: 3
-    attackDelayMs: 800
-    attackRange: 12000
-    moveSpeed: 4400
+    maxHp: 1000
+    attackDamage: 2
+    attackDelayMs: 2000
+    attackRange: 4000
+    moveSpeed: 5200
 --- !u!1 &1200760448
 GameObject:
   m_ObjectHideFlags: 0
@@ -4298,7 +4298,7 @@ MonoBehaviour:
     attackDamage: 5
     attackDelayMs: 1000
     attackRange: 10000
-    moveSpeed: 5200
+    moveSpeed: 4000
 --- !u!1001 &1258572060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4409,8 +4409,8 @@ MonoBehaviour:
     maxHp: 800
     attackDamage: 1
     attackDelayMs: 666
-    attackRange: 5000
-    moveSpeed: 5200
+    attackRange: 8000
+    moveSpeed: 4000
 --- !u!1001 &1321644657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4748,9 +4748,9 @@ MonoBehaviour:
     endPositionName: StartPosition4
     maxHp: 500
     attackDamage: 3
-    attackDelayMs: 1000
+    attackDelayMs: 666
     attackRange: 12000
-    moveSpeed: 4400
+    moveSpeed: 4000
 --- !u!1001 &1369059883
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5978,11 +5978,11 @@ MonoBehaviour:
     name: Entity7
     startPositionName: EndPosition3
     endPositionName: StartPosition2
-    maxHp: 700
-    attackDamage: 3
-    attackDelayMs: 666
-    attackRange: 10000
-    moveSpeed: 4400
+    maxHp: 1000
+    attackDamage: 2
+    attackDelayMs: 2000
+    attackRange: 4000
+    moveSpeed: 5200
 --- !u!1001 &1752693875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6811,9 +6811,9 @@ MonoBehaviour:
     endPositionName: EndPosition1
     maxHp: 600
     attackDamage: 3
-    attackDelayMs: 2000
+    attackDelayMs: 666
     attackRange: 10000
-    moveSpeed: 4000
+    moveSpeed: 4400
 --- !u!1 &2042164397
 GameObject:
   m_ObjectHideFlags: 0

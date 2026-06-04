@@ -7,6 +7,9 @@ namespace Script.ClientLib
         private static readonly int IsMoving = Animator.StringToHash("IsMoving");
         private static readonly int IsAttack = Animator.StringToHash("IsAttack");
         private static readonly int IsRetired = Animator.StringToHash("IsRetired");
+        
+        private static readonly int MoveSpeed = Animator.StringToHash("MoveSpeed");
+        private static readonly int AttackSpeed = Animator.StringToHash("AttackSpeed");
 
         public uint Hp { get; private set; }
         
@@ -61,6 +64,20 @@ namespace Script.ClientLib
         public void OnRetired()
         {
             Animator.SetTrigger(IsRetired);
+        }
+        
+        public void OnMoveSpeedChanged(ushort moveSpeed)
+        {
+            float animationMoveSpeed = moveSpeed / (float)GameParameterSettings.Instance.DefaultMoveSpeed;
+            
+            Animator.SetFloat(MoveSpeed, animationMoveSpeed);
+        }
+
+        public void OnAttackDelayMsChanged(ushort attackDelayMs)
+        {
+            float animationAttackSpeed = (float)GameParameterSettings.Instance.DefaultAttackDelayMs / attackDelayMs;
+            
+            Animator.SetFloat(AttackSpeed, animationAttackSpeed);
         }
     }
 }
