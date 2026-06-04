@@ -6398,13 +6398,18 @@ Animator:
   m_GameObject: {fileID: 9109619094904892091}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: a0f1b92a35189a949ac21f68aed632e9, type: 3}
-  m_Controller: {fileID: 9100000, guid: 452988431389e7648baf15cbc3fb9076, type: 2}
+  m_Controller: {fileID: 9100000, guid: e669e57347bc57f4ba7c67c12e6daf0b, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 1
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
+    are already bound by a Humanoid avatar. These transforms can only be changed
+    by Humanoid clips.\n\tTransform 'Jaw'\n\tTransform 'Toes_R'\n\tTransform 'Eye_R'\n\tTransform
+    'Jaw'\n\tTransform 'Toes_L'\n\tTransform 'Toes_R'\n\tTransform 'Eye_L'\n\tTransform
+    'Eye_R'\n\tTransform 'Toes_L'\n\tTransform 'Eye_L'\n\tand more ...\n\tFrom animation
+    clip 'WGS_Die'"
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0

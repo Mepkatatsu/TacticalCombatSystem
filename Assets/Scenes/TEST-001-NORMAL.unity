@@ -2344,7 +2344,7 @@ MonoBehaviour:
     endPositionName: StartPosition3
     maxHp: 600
     attackDamage: 5
-    attackDelayMs: 2000
+    attackDelayMs: 1500
     attackRange: 8000
     moveSpeed: 4000
 --- !u!1 &710962602
@@ -3886,7 +3886,7 @@ MonoBehaviour:
     endPositionName: EndPosition2
     maxHp: 1000
     attackDamage: 2
-    attackDelayMs: 2000
+    attackDelayMs: 1200
     attackRange: 4000
     moveSpeed: 5200
 --- !u!1 &1200760448
@@ -5980,7 +5980,7 @@ MonoBehaviour:
     endPositionName: StartPosition2
     maxHp: 1000
     attackDamage: 2
-    attackDelayMs: 2000
+    attackDelayMs: 1200
     attackRange: 4000
     moveSpeed: 5200
 --- !u!1001 &1752693875
