@@ -4954,8 +4954,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79e9d398ebc611b4a9d17eb69448d12e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  simulationSpeed: 10
-  repeatTest: 1
+  simulationSpeed: 1
+  repeatTest: 0
   baseUrl: http://localhost:5099
   accountId: mepkatatsu
   redTeamWinText: {fileID: 889742237}
