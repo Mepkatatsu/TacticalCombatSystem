@@ -323,6 +323,11 @@ namespace Script.ClientLib
         public void OnBattleMapUpdated(ushort deltaMs)
         {
             _updateIntervals.Add(deltaMs);
+
+            foreach (var entityView in _entityViews.Values)
+            {
+                entityView.OnUpdate(deltaMs);
+            }
         }
     }
 }

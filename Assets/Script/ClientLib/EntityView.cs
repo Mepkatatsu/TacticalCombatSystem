@@ -10,11 +10,28 @@ namespace Script.ClientLib
         
         private static readonly int MoveSpeed = Animator.StringToHash("MoveSpeed");
         private static readonly int AttackSpeed = Animator.StringToHash("AttackSpeed");
+        private static readonly int AttackIndex = Animator.StringToHash("AttackIndex");
 
         public uint Hp { get; private set; }
         
         private Animator _animator;
         private Animator Animator => _animator ??= GetComponent<Animator>();
+
+        private ushort _attackDelayMs;
+        private uint _comboMs;
+        private byte _nextAttack = 0;
+
+        public void OnUpdate(ushort deltaMs)
+        {
+            if (_comboMs <= deltaMs)
+            {
+                _comboMs = 0;
+            }
+            else
+            {
+                _comboMs -= deltaMs;
+            }
+        }
 
         public void SetHp(uint hp)
         {
@@ -59,6 +76,23 @@ namespace Script.ClientLib
         public void OnStartAttack()
         {
             Animator.SetTrigger(IsAttack);
+            if (_nextAttack == 0 || _comboMs <= 0)
+            {
+                Animator.SetInteger(AttackIndex, 0);
+                _nextAttack = 1;
+            }
+            else if (_nextAttack == 1)
+            {
+                Animator.SetInteger(AttackIndex, 1);
+                _nextAttack = 2;
+            }
+            else if (_nextAttack == 2)
+            {
+                Animator.SetInteger(AttackIndex, 2);
+                _nextAttack = 0;
+            }
+
+            _comboMs = (uint)_attackDelayMs * GameParameterSettings.Instance.ComboMaintainMs;
         }
 
         public void OnRetired()
@@ -75,6 +109,8 @@ namespace Script.ClientLib
 
         public void OnAttackDelayMsChanged(ushort attackDelayMs)
         {
+            _attackDelayMs = attackDelayMs;
+            
             float animationAttackSpeed = (float)GameParameterSettings.Instance.DefaultAttackDelayMs / attackDelayMs;
             
             Animator.SetFloat(AttackSpeed, animationAttackSpeed);
