@@ -23,5 +23,6 @@ namespace Script.CommonLib
         public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
         public uint GetBattleMapElapsedMs();
         public void RequestAttack();
+        public bool IsForceIdle { get; }
     }
 }

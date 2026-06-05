@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Script.CommonLib.Battle;
 using Script.CommonLib.Map;
+using Script.CommonLib.Tables;
 
 namespace Script.CommonLib
 {
@@ -42,7 +43,11 @@ namespace Script.CommonLib
         private MoveState _moveState;
         private AttackState _attackState;
         private DieState _dieState;
-        
+
+        private uint _lastStateMs;
+        private uint _forceIdleLeftMs;
+
+        public bool IsForceIdle => _forceIdleLeftMs > 0;
 
         public Entity(uint id, IBattleMapContext battleMapContext, EntityData entityData)
         {
@@ -70,8 +75,31 @@ namespace Script.CommonLib
 
         public void Update(ushort deltaMs)
         {
+            if (_forceIdleLeftMs > deltaMs)
+            {
+                _forceIdleLeftMs -= deltaMs;
+            }
+            else
+            {
+                _forceIdleLeftMs = 0;
+            }
+            
             var nextStateType = _brain.ThinkNextStateType();
             var nextState = GetState(nextStateType);
+
+            uint battleElapsedMs = _battleMapContext.ElapsedMs;
+
+            if ((_currentStateType == EntityStateType.Move && nextStateType == EntityStateType.Attack) ||
+                (_currentStateType == EntityStateType.Attack && nextStateType == EntityStateType.Move))
+            {
+                // TODO: 임시 대기 시간 500ms 값을 외부로 빼서 수정 가능하도록
+                if (_lastStateMs + 500 > battleElapsedMs)
+                {
+                    _forceIdleLeftMs = 500;
+                    nextStateType = EntityStateType.Idle;
+                    nextState = GetState(nextStateType);
+                }
+            }
 
             if (_currentStateType != nextStateType)
             {
@@ -80,6 +108,8 @@ namespace Script.CommonLib
                 nextState.Enter();
                 _currentStateType = nextStateType;
             }
+
+            _lastStateMs = battleElapsedMs;
 
             nextState.Update(deltaMs);
         }
