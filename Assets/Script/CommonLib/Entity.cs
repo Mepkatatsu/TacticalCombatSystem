@@ -26,12 +26,14 @@ namespace Script.CommonLib
         private uint _maxHp;
         private uint _hp;
         private uint _attackDamage;
+        private ushort _basisAttackDelayMs;
         private ushort _attackDelayMs;
         private ushort _attackRange;
         private ushort _moveSpeed;
 
         public uint Hp => _hp;
         public uint AttackDamage => _attackDamage;
+        public ushort BasisAttackDelayMs => _basisAttackDelayMs;
         public ushort AttackDelayMs => _attackDelayMs;
         public ushort AttackRange => _attackRange;
         public ushort MoveSpeed => _moveSpeed;
@@ -60,6 +62,7 @@ namespace Script.CommonLib
 
             _maxHp = entityData.maxHp;
             _attackDamage = entityData.attackDamage;
+            _basisAttackDelayMs = entityData.basisAttackDelayMs;
             _attackDelayMs = entityData.attackDelayMs;
             _attackRange = entityData.attackRange;
             _moveSpeed = entityData.moveSpeed;

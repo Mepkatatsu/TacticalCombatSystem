@@ -13,6 +13,7 @@ namespace Script.CommonLib
 
         public uint maxHp;
         public uint attackDamage;
+        public ushort basisAttackDelayMs;
         public ushort attackDelayMs;
         public ushort attackRange;
         public ushort moveSpeed;

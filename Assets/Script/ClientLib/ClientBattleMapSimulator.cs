@@ -138,7 +138,7 @@ namespace Script.ClientLib
             var entityView = obj.AddComponent<EntityView>();
             entityView.SetHp(entity.Hp);
             entityView.OnMoveSpeedChanged(entity.MoveSpeed);
-            entityView.OnAttackDelayMsChanged(entity.AttackDelayMs);
+            entityView.OnAttackDelayMsChanged(entity.BasisAttackDelayMs, entity.AttackDelayMs);
             
             _entityViews.Add(entityId, entityView);
         }

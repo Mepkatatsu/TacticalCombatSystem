@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: GameParameterSettings
   m_EditorClassIdentifier: 
   defaultMoveSpeed: 4000
-  defaultAttackDelayMs: 400
+  defaultAttackDelayMs: 1000
   comboMaintainMs: 1000

@@ -107,11 +107,11 @@ namespace Script.ClientLib
             Animator.SetFloat(MoveSpeed, animationMoveSpeed);
         }
 
-        public void OnAttackDelayMsChanged(ushort attackDelayMs)
+        public void OnAttackDelayMsChanged(ushort basisAttackDelayMs, ushort attackDelayMs)
         {
             _attackDelayMs = attackDelayMs;
             
-            float animationAttackSpeed = (float)GameParameterSettings.Instance.DefaultAttackDelayMs / attackDelayMs;
+            float animationAttackSpeed = (float)basisAttackDelayMs / attackDelayMs;
             
             Animator.SetFloat(AttackSpeed, animationAttackSpeed);
         }
