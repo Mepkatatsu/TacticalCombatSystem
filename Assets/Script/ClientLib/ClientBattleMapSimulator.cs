@@ -215,9 +215,7 @@ namespace Script.ClientLib
 
         public void OnProjectileAdded(ulong projectileId, Projectile projectile)
         {
-            const string projectileName = "Projectile"; // TODO: 임시값 변경
-            
-            var projectileData = ProjectileSettings.Instance.GetProjectileData(projectileName);
+            var projectileData = ProjectileSettings.Instance.GetProjectileData(projectile.ProjectileName);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(projectileData.projectilePath);
             var obj = Instantiate(prefab);
             obj.transform.localScale = new Vector3(projectileData.scale.x, projectileData.scale.y, projectileData.scale.z);

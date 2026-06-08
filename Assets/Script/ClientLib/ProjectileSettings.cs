@@ -19,6 +19,9 @@ namespace Script.ClientLib
 
         public ProjectileData GetProjectileData(string projectileName)
         {
+            if (string.IsNullOrEmpty(projectileName))
+                projectileName = "DefaultProjectile";
+            
             // TODO: 성능 개선, 비슷한 방식이 자주 사용될 것 같아 기반을 다져놓으면 좋을 것 같음
             return dataList.Find(e => e.projectileName == projectileName);
         }

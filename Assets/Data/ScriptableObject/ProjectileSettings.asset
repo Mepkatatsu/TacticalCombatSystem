@@ -13,6 +13,17 @@ MonoBehaviour:
   m_Name: ProjectileSettings
   m_EditorClassIdentifier: 
   dataList:
-  - projectileName: Projectile
+  - projectileName: DefaultProjectile
     projectilePath: Assets/Data/ExternalAssets/TacticalCombatSystem_ExternalAssets/CustomData/SlashEffect.prefab
+    scale: {x: 1, y: 1, z: 1}
+  - projectileName: SlashEffect_39FFCC
+    projectilePath: Assets/Data/ExternalAssets/TacticalCombatSystem_ExternalAssets/CustomData/SlashEffect_39FFCC.prefab
+    scale: {x: 1, y: 1, z: 1}
+  - projectileName: Crystal_Red
+    projectilePath: Assets/Data/ExternalAssets/TacticalCombatSystem_ExternalAssets/CustomData/Crystal
+      effect red.prefab
+    scale: {x: 1, y: 1, z: 1}
+  - projectileName: Crystal_Blue
+    projectilePath: Assets/Data/ExternalAssets/TacticalCombatSystem_ExternalAssets/CustomData/Crystal
+      effect blue.prefab
     scale: {x: 1, y: 1, z: 1}

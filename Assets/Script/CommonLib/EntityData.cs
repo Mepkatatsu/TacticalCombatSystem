@@ -10,6 +10,7 @@ namespace Script.CommonLib
         public string name;
         public string startPositionName;
         public string endPositionName;
+        public string projectileName;
 
         public uint maxHp;
         public uint attackDamage;

@@ -10,6 +10,7 @@ namespace Script.CommonLib
         public ulong Id { get; private set; }
         public IEntityContext Attacker { get; private set; }
         public IEntityContext Target { get; private set; }
+        public string ProjectileName { get; private set; }
         public uint Damage { get; private set; }
         private uint _leftLifeMs;
         
@@ -18,7 +19,7 @@ namespace Script.CommonLib
 
         private bool _hasTriggered;
         
-        public Projectile(IBattleMapContext battleMapContext, ulong id, IEntityContext attacker, IEntityContext target, uint damage, uint lifeMs, FixedPos startPos)
+        public Projectile(IBattleMapContext battleMapContext, ulong id, IEntityContext attacker, IEntityContext target, uint damage, uint lifeMs, FixedPos startPos, string projectileName)
         {
             _battleMapContext = battleMapContext;
 
@@ -30,6 +31,7 @@ namespace Script.CommonLib
             
             _currentPos = startPos;
             _dir = new FixedDir(Attacker.GetPos(), Target.GetPos());
+            ProjectileName = projectileName;
         }
 
         public void Update(ushort deltaMs)

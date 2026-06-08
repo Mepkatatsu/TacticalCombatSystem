@@ -19,6 +19,7 @@ namespace Script.CommonLib
         public string name;
         public string startPositionName;
         public string endPositionName;
+        public string projectileName;
 
         private EntityStateType _currentStateType = EntityStateType.Idle;
         public EntityStateType CurrentStateType => _currentStateType;
@@ -59,6 +60,7 @@ namespace Script.CommonLib
             name = entityData.name;
             startPositionName = entityData.startPositionName;
             endPositionName = entityData.endPositionName;
+            projectileName = entityData.projectileName;
 
             _maxHp = entityData.maxHp;
             _attackDamage = entityData.attackDamage;

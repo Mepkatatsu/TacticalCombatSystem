@@ -2087,6 +2087,7 @@ MonoBehaviour:
     name: Entity6
     startPositionName: EndPosition2
     endPositionName: StartPosition3
+    projectileName: Crystal_Blue
     maxHp: 1000
     attackDamage: 50
     basisAttackDelayMs: 1000
@@ -3518,6 +3519,7 @@ MonoBehaviour:
     name: Entity8
     startPositionName: EndPosition4
     endPositionName: StartPosition1
+    projectileName: Crystal_Red
     maxHp: 300
     attackDamage: 100
     basisAttackDelayMs: 1000
@@ -3631,6 +3633,7 @@ MonoBehaviour:
     name: Entity3
     startPositionName: StartPosition3
     endPositionName: EndPosition2
+    projectileName: DefaultProjectile
     maxHp: 2000
     attackDamage: 20
     basisAttackDelayMs: 1000
@@ -4042,6 +4045,7 @@ MonoBehaviour:
     name: Entity1
     startPositionName: StartPosition1
     endPositionName: EndPosition4
+    projectileName: SlashEffect_39FFCC
     maxHp: 10000
     attackDamage: 50
     basisAttackDelayMs: 400
@@ -4155,6 +4159,7 @@ MonoBehaviour:
     name: Entity2
     startPositionName: StartPosition2
     endPositionName: EndPosition3
+    projectileName: Crystal_Blue
     maxHp: 1000
     attackDamage: 50
     basisAttackDelayMs: 1000
@@ -4496,6 +4501,7 @@ MonoBehaviour:
     name: Entity5
     startPositionName: EndPosition1
     endPositionName: StartPosition4
+    projectileName: SlashEffect_39FFCC
     maxHp: 1000
     attackDamage: 30
     basisAttackDelayMs: 400
@@ -5729,6 +5735,7 @@ MonoBehaviour:
     name: Entity7
     startPositionName: EndPosition3
     endPositionName: StartPosition2
+    projectileName: DefaultProjectile
     maxHp: 2000
     attackDamage: 20
     basisAttackDelayMs: 1000
@@ -6561,6 +6568,7 @@ MonoBehaviour:
     name: Entity4
     startPositionName: StartPosition4
     endPositionName: EndPosition1
+    projectileName: Crystal_Red
     maxHp: 300
     attackDamage: 100
     basisAttackDelayMs: 1000

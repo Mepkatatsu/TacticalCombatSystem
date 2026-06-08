@@ -164,7 +164,7 @@ namespace Script.CommonLib.Map
 
             const uint projectileLifeTime = 500; // TODO: 임시값 변경 필요
             
-            var projectile = new Projectile(this, ++_projectileIdKey, attacker, target, attacker.AttackDamage, projectileLifeTime, attacker.GetPos());
+            var projectile = new Projectile(this, ++_projectileIdKey, attacker, target, attacker.AttackDamage, projectileLifeTime, attacker.GetPos(), attacker.projectileName);
             _projectiles.Add(_projectileIdKey, projectile);
             
             attacker.SetDir(new FixedDir(attacker.GetPos(), target.GetPos()));
