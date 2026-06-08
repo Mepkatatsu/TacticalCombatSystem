@@ -2086,7 +2086,7 @@ MonoBehaviour:
     teamFlag: 2
     name: Entity6
     startPositionName: EndPosition2
-    endPositionName: StartPosition3
+    endPositionName: StartPosition2
     projectileName: Crystal_Blue
     maxHp: 1000
     attackDamage: 50
@@ -3518,7 +3518,7 @@ MonoBehaviour:
     teamFlag: 2
     name: Entity8
     startPositionName: EndPosition4
-    endPositionName: StartPosition1
+    endPositionName: StartPosition4
     projectileName: Crystal_Red
     maxHp: 300
     attackDamage: 100
@@ -3632,14 +3632,14 @@ MonoBehaviour:
     teamFlag: 1
     name: Entity3
     startPositionName: StartPosition3
-    endPositionName: EndPosition2
+    endPositionName: EndPosition3
     projectileName: DefaultProjectile
     maxHp: 2000
     attackDamage: 20
     basisAttackDelayMs: 1000
     attackDelayMs: 1200
     attackRange: 4000
-    moveSpeed: 5200
+    moveSpeed: 5600
 --- !u!1 &1200760448
 GameObject:
   m_ObjectHideFlags: 0
@@ -4044,14 +4044,14 @@ MonoBehaviour:
     teamFlag: 1
     name: Entity1
     startPositionName: StartPosition1
-    endPositionName: EndPosition4
+    endPositionName: EndPosition1
     projectileName: SlashEffect_39FFCC
     maxHp: 10000
     attackDamage: 50
     basisAttackDelayMs: 400
     attackDelayMs: 300
-    attackRange: 8000
-    moveSpeed: 4800
+    attackRange: 12000
+    moveSpeed: 4000
 --- !u!1001 &1258572060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4158,7 +4158,7 @@ MonoBehaviour:
     teamFlag: 1
     name: Entity2
     startPositionName: StartPosition2
-    endPositionName: EndPosition3
+    endPositionName: EndPosition2
     projectileName: Crystal_Blue
     maxHp: 1000
     attackDamage: 50
@@ -4500,14 +4500,14 @@ MonoBehaviour:
     teamFlag: 2
     name: Entity5
     startPositionName: EndPosition1
-    endPositionName: StartPosition4
+    endPositionName: StartPosition1
     projectileName: SlashEffect_39FFCC
     maxHp: 1000
     attackDamage: 30
     basisAttackDelayMs: 400
     attackDelayMs: 300
-    attackRange: 8000
-    moveSpeed: 4800
+    attackRange: 12000
+    moveSpeed: 4000
 --- !u!1001 &1369059883
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5734,14 +5734,14 @@ MonoBehaviour:
     teamFlag: 2
     name: Entity7
     startPositionName: EndPosition3
-    endPositionName: StartPosition2
+    endPositionName: StartPosition3
     projectileName: DefaultProjectile
     maxHp: 2000
     attackDamage: 20
     basisAttackDelayMs: 1000
     attackDelayMs: 1200
     attackRange: 4000
-    moveSpeed: 5200
+    moveSpeed: 5600
 --- !u!1001 &1752693875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6567,7 +6567,7 @@ MonoBehaviour:
     teamFlag: 1
     name: Entity4
     startPositionName: StartPosition4
-    endPositionName: EndPosition1
+    endPositionName: EndPosition4
     projectileName: Crystal_Red
     maxHp: 300
     attackDamage: 100
