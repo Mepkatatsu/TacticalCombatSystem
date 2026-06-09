@@ -2092,7 +2092,7 @@ MonoBehaviour:
     attackDamage: 50
     basisAttackDelayMs: 1000
     attackDelayMs: 1500
-    attackRange: 12000
+    attackRange: 14000
     moveSpeed: 4000
 --- !u!1 &710962602
 GameObject:
@@ -3524,7 +3524,7 @@ MonoBehaviour:
     attackDamage: 100
     basisAttackDelayMs: 1000
     attackDelayMs: 666
-    attackRange: 14000
+    attackRange: 16000
     moveSpeed: 4400
 --- !u!1001 &1198893644
 PrefabInstance:
@@ -3638,8 +3638,8 @@ MonoBehaviour:
     attackDamage: 20
     basisAttackDelayMs: 1000
     attackDelayMs: 1200
-    attackRange: 5000
-    moveSpeed: 5600
+    attackRange: 7000
+    moveSpeed: 6000
 --- !u!1 &1200760448
 GameObject:
   m_ObjectHideFlags: 0
@@ -4050,7 +4050,7 @@ MonoBehaviour:
     attackDamage: 50
     basisAttackDelayMs: 400
     attackDelayMs: 300
-    attackRange: 12000
+    attackRange: 14000
     moveSpeed: 4000
 --- !u!1001 &1258572060
 PrefabInstance:
@@ -4164,7 +4164,7 @@ MonoBehaviour:
     attackDamage: 50
     basisAttackDelayMs: 1000
     attackDelayMs: 666
-    attackRange: 12000
+    attackRange: 14000
     moveSpeed: 4000
 --- !u!1001 &1321644657
 PrefabInstance:
@@ -4506,7 +4506,7 @@ MonoBehaviour:
     attackDamage: 30
     basisAttackDelayMs: 400
     attackDelayMs: 300
-    attackRange: 12000
+    attackRange: 14000
     moveSpeed: 4000
 --- !u!1001 &1369059883
 PrefabInstance:
@@ -5740,8 +5740,8 @@ MonoBehaviour:
     attackDamage: 20
     basisAttackDelayMs: 1000
     attackDelayMs: 1200
-    attackRange: 5000
-    moveSpeed: 5600
+    attackRange: 7000
+    moveSpeed: 6000
 --- !u!1001 &1752693875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6573,7 +6573,7 @@ MonoBehaviour:
     attackDamage: 100
     basisAttackDelayMs: 1000
     attackDelayMs: 666
-    attackRange: 14000
+    attackRange: 16000
     moveSpeed: 4400
 --- !u!1 &2042164397
 GameObject:
