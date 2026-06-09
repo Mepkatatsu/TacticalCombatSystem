@@ -3634,7 +3634,7 @@ MonoBehaviour:
     startPositionName: StartPosition3
     endPositionName: EndPosition3
     projectileName: DefaultProjectile
-    maxHp: 2000
+    maxHp: 1900
     attackDamage: 20
     basisAttackDelayMs: 1000
     attackDelayMs: 1200
