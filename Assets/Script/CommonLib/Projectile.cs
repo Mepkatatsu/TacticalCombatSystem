@@ -69,7 +69,7 @@ namespace Script.CommonLib
 
             if (_leftLifeMs > 0)
             {
-                var delta = targetPos - _currentPos;
+                var delta = (targetPos - _currentPos) * 7 / 10; // TODO: 무기/거리에 따라 자연스러움이 떨어질 수 있어 이를 고려한 수정 필요
                 var move = delta * deltaMs / (int)prevLifeMs; // TODO: 반올림/최솟값 처리 고려
                 nextPos = _currentPos + move;
             }
