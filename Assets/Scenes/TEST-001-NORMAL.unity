@@ -3638,7 +3638,7 @@ MonoBehaviour:
     attackDamage: 20
     basisAttackDelayMs: 1000
     attackDelayMs: 1200
-    attackRange: 4000
+    attackRange: 5000
     moveSpeed: 5600
 --- !u!1 &1200760448
 GameObject:
@@ -5740,7 +5740,7 @@ MonoBehaviour:
     attackDamage: 20
     basisAttackDelayMs: 1000
     attackDelayMs: 1200
-    attackRange: 4000
+    attackRange: 5000
     moveSpeed: 5600
 --- !u!1001 &1752693875
 PrefabInstance:
