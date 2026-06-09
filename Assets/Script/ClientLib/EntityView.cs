@@ -92,7 +92,7 @@ namespace Script.ClientLib
                 _nextAttack = 0;
             }
 
-            _comboMs = (uint)_attackDelayMs * GameParameterSettings.Instance.ComboMaintainMs;
+            _comboMs = (uint)_attackDelayMs + GameParameterSettings.Instance.ComboMaintainMs;
         }
 
         public void OnRetired()
