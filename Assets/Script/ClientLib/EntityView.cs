@@ -7,6 +7,7 @@ namespace Script.ClientLib
         private static readonly int IsMoving = Animator.StringToHash("IsMoving");
         private static readonly int IsAttack = Animator.StringToHash("IsAttack");
         private static readonly int IsRetired = Animator.StringToHash("IsRetired");
+        private static readonly int IsWin = Animator.StringToHash("IsWin");
         
         private static readonly int MoveSpeed = Animator.StringToHash("MoveSpeed");
         private static readonly int AttackSpeed = Animator.StringToHash("AttackSpeed");
@@ -98,6 +99,12 @@ namespace Script.ClientLib
         public void OnRetired()
         {
             Animator.SetTrigger(IsRetired);
+        }
+
+        public void OnBattleEnd()
+        {
+            if (Hp > 0)
+                Animator.SetTrigger(IsWin);
         }
         
         public void OnMoveSpeedChanged(ushort moveSpeed)

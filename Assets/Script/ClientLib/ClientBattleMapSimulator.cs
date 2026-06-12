@@ -249,6 +249,7 @@ namespace Script.ClientLib
             foreach (var entityView in _entityViews.Values)
             {
                 entityView.OnStopMoving();
+                entityView.OnBattleEnd();
             }
 
             if (winner == TeamFlag.Blue)
