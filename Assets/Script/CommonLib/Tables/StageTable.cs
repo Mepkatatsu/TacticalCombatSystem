@@ -20,9 +20,23 @@ namespace Script.CommonLib.Tables
                 RewardId = "TEST-002-NORMAL-REWARD",
                 NeedStamina = 10,
             };
+            
+            StageData testStage3Data = new()
+            {
+                RewardId = "TEST-003-NORMAL-REWARD",
+                NeedStamina = 10,
+            };
+            
+            StageData testStage4Data = new()
+            {
+                RewardId = "TEST-004-NORMAL-REWARD",
+                NeedStamina = 10,
+            };
 
             datas.Add("TEST-001-NORMAL", testStage1Data);
             datas.Add("TEST-002-NORMAL", testStage2Data);
+            datas.Add("TEST-003-NORMAL", testStage3Data);
+            datas.Add("TEST-004-NORMAL", testStage4Data);
         }
 
         public KeyValuePair<string, StageData> GetIdFirstOrDefault()

@@ -17,9 +17,23 @@
                 Gold = 2,
                 Exp = 2,
             };
+            
+            RewardData rewardData3 = new()
+            {
+                Gold = 3,
+                Exp = 3,
+            };
+            
+            RewardData rewardData4 = new()
+            {
+                Gold = 4,
+                Exp = 4,
+            };
 
             datas.Add("TEST-001-NORMAL-REWARD", rewardData1);
             datas.Add("TEST-002-NORMAL-REWARD", rewardData2);
+            datas.Add("TEST-003-NORMAL-REWARD", rewardData3);
+            datas.Add("TEST-004-NORMAL-REWARD", rewardData4);
         }
     }
 
