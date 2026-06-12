@@ -16,7 +16,7 @@ namespace Script.CommonLib
             Z = z;
         }
         
-        public readonly long GetDistanceSq(FixedPos pos)
+        public long GetDistanceSq(FixedPos pos)
         {
             long dx = X - pos.X;
             long dy = Y - pos.Y;
@@ -25,20 +25,21 @@ namespace Script.CommonLib
             return dx * dx + dy * dy + dz * dz;
         }
         
-        public readonly long GetDistance(FixedPos pos)
-        {
-            return MathHelper.IntSqrt(GetDistanceSq(pos));
-        }
-
+        public long GetDistance(FixedPos pos) => MathHelper.IntSqrt(GetDistanceSq(pos));
+        
+        public static FixedPos operator +(FixedPos a, FixedPos b) 
+            => new FixedPos(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+        public static FixedPos operator -(FixedPos a, FixedPos b) 
+            => new FixedPos(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        public static FixedPos operator *(FixedPos fixedPos, int value) 
+            => new FixedPos(fixedPos.X * value, fixedPos.Y * value, fixedPos.Z * value);
+        public static FixedPos operator /(FixedPos fixedPos, int value) 
+            => new FixedPos(fixedPos.X / value, fixedPos.Y / value, fixedPos.Z / value);
+        
         public override string ToString()
         {
             return $"({X}, {Y}, {Z})";
         }
-        
-        public static FixedPos operator +(FixedPos a, FixedPos b) => new FixedPos(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-        public static FixedPos operator -(FixedPos a, FixedPos b) => new FixedPos(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-        public static FixedPos operator *(FixedPos fixedPos, int value)  => new FixedPos(fixedPos.X * value, fixedPos.Y * value, fixedPos.Z * value);
-        public static FixedPos operator /(FixedPos fixedPos, int value)  => new FixedPos(fixedPos.X / value, fixedPos.Y / value, fixedPos.Z / value);
         
         public static bool operator ==(FixedPos fixedPos1, FixedPos fixedPos2)
         {
