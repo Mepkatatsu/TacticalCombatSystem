@@ -136,6 +136,7 @@ namespace Script.ClientLib
             var obj = Instantiate(prefab);
             obj.transform.localScale = new Vector3(modelData.modelScale.x, modelData.modelScale.y, modelData.modelScale.z);
             var entityView = obj.AddComponent<EntityView>();
+            obj.name = $"{entity.name}_Model";
             entityView.SetHp(entity.Hp);
             entityView.OnMoveSpeedChanged(entity.MoveSpeed);
             entityView.OnAttackDelayMsChanged(entity.BasisAttackDelayMs, entity.AttackDelayMs);
