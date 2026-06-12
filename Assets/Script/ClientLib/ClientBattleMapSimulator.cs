@@ -145,9 +145,7 @@ namespace Script.ClientLib
 
         public void OnEntityPositionChanged(uint entityId, FixedPos pos)
         {
-            _entityViews.TryGetValue(entityId, out var entityView);
-
-            if (!entityView)
+            if (!_entityViews.TryGetValue(entityId, out var entityView))
                 return;
             
             entityView.OnPositionChanged(pos.ToVector3());
@@ -155,9 +153,7 @@ namespace Script.ClientLib
 
         public void OnEntityDirectionChanged(uint entityId, FixedDir dir)
         {
-            _entityViews.TryGetValue(entityId, out var entityView);
-
-            if (!entityView)
+            if (!_entityViews.TryGetValue(entityId, out var entityView))
                 return;
             
             entityView.OnDirectionChanged(dir.ToDirection());
@@ -165,9 +161,7 @@ namespace Script.ClientLib
 
         public void OnEntityStartMove(uint entityId)
         {
-            _entityViews.TryGetValue(entityId, out var entityView);
-            
-            if (!entityView)
+            if (!_entityViews.TryGetValue(entityId, out var entityView))
                 return;
             
             entityView.OnStartMoving();
@@ -175,9 +169,7 @@ namespace Script.ClientLib
 
         public void OnEntityStopMove(uint entityId)
         {
-            _entityViews.TryGetValue(entityId, out var entityView);
-            
-            if (!entityView)
+            if (!_entityViews.TryGetValue(entityId, out var entityView))
                 return;
             
             entityView.OnStopMoving();
@@ -185,9 +177,7 @@ namespace Script.ClientLib
 
         public void OnEntityStartAttack(uint attackerId, uint targetId)
         {
-            _entityViews.TryGetValue(attackerId, out var attacker);
-            
-            if (!attacker)
+            if (!_entityViews.TryGetValue(attackerId, out var attacker))
                 return;
             
             attacker.OnStartAttack();
@@ -195,9 +185,7 @@ namespace Script.ClientLib
 
         public void OnEntityGetDamage(uint entityId, uint damage)
         {
-            _entityViews.TryGetValue(entityId, out var entityView);
-
-            if (!entityView)
+            if (!_entityViews.TryGetValue(entityId, out var entityView))
                 return;
             
             entityView.GetDamage(damage);
@@ -205,9 +193,7 @@ namespace Script.ClientLib
 
         public void OnEntityRetired(uint entityId)
         {
-            _entityViews.TryGetValue(entityId, out var entityView);
-
-            if (!entityView)
+            if (!_entityViews.TryGetValue(entityId, out var entityView))
                 return;
             
             entityView.OnRetired();
@@ -225,9 +211,7 @@ namespace Script.ClientLib
 
         public void OnProjectilePositionChanged(ulong projectileId, FixedPos pos)
         {
-            _projectileViews.TryGetValue(projectileId, out var projectileView);
-
-            if (!projectileView)
+            if (!_projectileViews.TryGetValue(projectileId, out var projectileView))
                 return;
 
             const float projectileHeight = 1f;  // TODO: 임시값 수정해야 함
@@ -240,9 +224,7 @@ namespace Script.ClientLib
 
         public void OnProjectileDirectionChanged(ulong projectileId, FixedDir dir)
         {
-            _projectileViews.TryGetValue(projectileId, out var projectileView);
-
-            if (!projectileView)
+            if (!_projectileViews.TryGetValue(projectileId, out var projectileView))
                 return;
             
             projectileView.OnDirectionChanged(dir.ToDirection());
@@ -250,12 +232,9 @@ namespace Script.ClientLib
 
         public void OnProjectileTriggered(ulong projectileId)
         {
-            _projectileViews.TryGetValue(projectileId, out var projectileView);
-
-            if (!projectileView)
+            if (!_projectileViews.Remove(projectileId, out var projectileView))
                 return;
-            
-            _projectileViews.Remove(projectileId);
+
             Destroy(projectileView.gameObject);
         }
 

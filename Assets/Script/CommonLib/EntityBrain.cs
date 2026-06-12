@@ -4,8 +4,7 @@ namespace Script.CommonLib
 {
     public class EntityBrain
     {
-        private IEntityContext _entityContext;
-        
+        private readonly IEntityContext _entityContext;
         public EntityBrain(IEntityContext entityContext)
         {
             _entityContext = entityContext;
