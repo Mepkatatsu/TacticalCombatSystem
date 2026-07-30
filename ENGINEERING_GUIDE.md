@@ -258,8 +258,6 @@ Entity는 자신의 데이터와 상태 객체를 보유한다.
 
 Dictionary는 ID 조회를 위한 자료구조이며, 전투 결과에 영향을 주는 순회 순서를 제공하는 자료구조가 아니다.
 
-현재 `BattleMapSimulator`는 `_entities.Values`, `_projectiles.Values`를 순회하고, 최근접 적 탐색도 `_entities.Values`를 순회한다. 이 방식은 문서의 결정론 목표에 맞추어 개선해야 하는 기준선이다.
-
 전투 순회 규칙은 다음과 같다.
 
 - Entity와 Projectile은 Dictionary로 빠르게 조회한다.
