@@ -17,6 +17,8 @@ namespace Script.CommonLib.Map
         
         private readonly Dictionary<uint, Entity> _entities = new();            // TODO: PoolObject
         private readonly Dictionary<ulong, Projectile> _projectiles = new();    // TODO: PoolObject
+        private readonly List<uint> _entityIds = new();
+        private readonly List<ulong> _projectileIds = new();
         
         private readonly List<uint> _removeEntityIds = new();
         private readonly List<ulong> _removeProjectileIds = new();
@@ -45,26 +47,34 @@ namespace Script.CommonLib.Map
             
             ElapsedMs += deltaMs;
             
-            foreach (var removeProjectileId in _removeProjectileIds)
+            for (var i = 0; i < _removeProjectileIds.Count; i++)
             {
+                var removeProjectileId = _removeProjectileIds[i];
                 _projectiles.Remove(removeProjectileId);
+                _projectileIds.Remove(removeProjectileId);
             }
             _removeProjectileIds.Clear();
             
-            foreach (var removeEntityId in _removeEntityIds)
+            for (var i = 0; i < _removeEntityIds.Count; i++)
             {
+                var removeEntityId = _removeEntityIds[i];
                 _entities.Remove(removeEntityId);
+                _entityIds.Remove(removeEntityId);
             }
             _removeEntityIds.Clear();
             
-            foreach (var projectile in _projectiles.Values)
+            for (var i = 0; i < _projectileIds.Count; i++)
             {
-                projectile.Update(deltaMs);
+                var projectileId = _projectileIds[i];
+                if (_projectiles.TryGetValue(projectileId, out var projectile))
+                    projectile.Update(deltaMs);
             }
             
-            foreach (var entity in _entities.Values)
+            for (var i = 0; i < _entityIds.Count; i++)
             {
-                entity.Update(deltaMs);
+                var entityId = _entityIds[i];
+                if (_entities.TryGetValue(entityId, out var entity))
+                    entity.Update(deltaMs);
             }
             
             OnBattleMapUpdated(deltaMs);
@@ -90,6 +100,8 @@ namespace Script.CommonLib.Map
         public void OnEntityAdded(uint entityId, Entity entity)
         {
             _entities.Add(entityId, entity);
+            var insertIndex = _entityIds.BinarySearch(entityId);
+            _entityIds.Insert(~insertIndex, entityId);
             _battleMapEventHandler.OnEntityAdded(entityId, entity);
 
             var startPositionData = _battleMapData.GetBattlePositionDataByName(entity.startPositionName);
@@ -113,8 +125,12 @@ namespace Script.CommonLib.Map
             var blueTeamCount = 0;
             var redTeamCount = 0;
             
-            foreach (var entity in _entities.Values)
+            for (var i = 0; i < _entityIds.Count; i++)
             {
+                var entityId = _entityIds[i];
+                if (!_entities.TryGetValue(entityId, out var entity))
+                    continue;
+
                 if (!entity.IsAlive())
                     continue;
 
@@ -166,6 +182,7 @@ namespace Script.CommonLib.Map
             
             var projectile = new Projectile(this, ++_projectileIdKey, attacker, target, attacker.AttackDamage, projectileLifeTime, attacker.GetPos(), attacker.projectileName);
             _projectiles.Add(_projectileIdKey, projectile);
+            _projectileIds.Add(_projectileIdKey);
             
             attacker.SetDir(new FixedDir(attacker.GetPos(), target.GetPos()));
             _battleMapEventHandler.OnEntityStartAttack(attackerId, targetEntityId);
@@ -197,6 +214,12 @@ namespace Script.CommonLib.Map
             
             if (!target.IsAlive())
                 OnEntityRetired(target.Id);
+        }
+
+        // 제거된 ProjectileId의 갱신 순서 목록 제거 여부 검증용
+        internal bool IsProjectileScheduledForUpdateForTest(ulong projectileId)
+        {
+            return _projectileIds.Contains(projectileId);
         }
 
         public void OnEntityStartMove(uint entityId)
@@ -240,8 +263,12 @@ namespace Script.CommonLib.Map
             
             IEntityContext nearest = null;
             
-            foreach (var otherEntity in _entities.Values)
+            for (var i = 0; i < _entityIds.Count; i++)
             {
+                var otherEntityId = _entityIds[i];
+                if (!_entities.TryGetValue(otherEntityId, out var otherEntity))
+                    continue;
+
                 if (otherEntity == entity)
                     continue;
 
@@ -276,8 +303,12 @@ namespace Script.CommonLib.Map
         {
             var aliveEntities = new List<IEntityContext>();
 
-            foreach (var entity in _entities.Values)
+            for (var i = 0; i < _entityIds.Count; i++)
             {
+                var entityId = _entityIds[i];
+                if (!_entities.TryGetValue(entityId, out var entity))
+                    continue;
+
                 if (entity.IsAlive())
                     aliveEntities.Add(entity);
             }
@@ -289,8 +320,12 @@ namespace Script.CommonLib.Map
         {
             var aliveEntitiesDictionary = new Dictionary<uint, IEntityContext>();
 
-            foreach ((uint id, Entity entity) in _entities)
+            for (var i = 0; i < _entityIds.Count; i++)
             {
+                var entityId = _entityIds[i];
+                if (!_entities.TryGetValue(entityId, out var entity))
+                    continue;
+
                 if (entity.IsAlive())
                 {
                     aliveEntitiesDictionary.Add(entity.Id, entity);

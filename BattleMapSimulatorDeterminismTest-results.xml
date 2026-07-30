@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-29 06:25:50Z" end-time="2026-07-29 06:25:50Z" duration="0.0992925">
+  <test-suite type="TestSuite" id="1011" name="Tactical_Combat_System" fullname="Tactical_Combat_System" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-29 06:25:50Z" end-time="2026-07-29 06:25:50Z" duration="0.099293" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties />
+    <test-suite type="Assembly" id="1014" name="EditorLib.Tests.dll" fullname="D:/Github/TacticalCombatSystem/Library/ScriptAssemblies/EditorLib.Tests.dll" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-29 06:25:50Z" end-time="2026-07-29 06:25:50Z" duration="0.080087" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="24520" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+      </properties>
+      <test-suite type="TestSuite" id="1015" name="Script" fullname="Script" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-29 06:25:50Z" end-time="2026-07-29 06:25:50Z" duration="0.079279" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1016" name="EditorLib" fullname="Script.EditorLib" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-29 06:25:50Z" end-time="2026-07-29 06:25:50Z" duration="0.075696" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1017" name="Test" fullname="Script.EditorLib.Test" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-29 06:25:50Z" end-time="2026-07-29 06:25:50Z" duration="0.071695" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1012" name="CommonLibTest" fullname="Script.EditorLib.Test.CommonLibTest" classname="Script.EditorLib.Test.CommonLibTest" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-29 06:25:50Z" end-time="2026-07-29 06:25:50Z" duration="0.066172" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1013" name="Test" fullname="Script.EditorLib.Test.CommonLibTest.Test" methodname="Test" classname="Script.EditorLib.Test.CommonLibTest" runstate="Runnable" seed="1313109421" result="Passed" start-time="2026-07-29 06:25:50Z" end-time="2026-07-29 06:25:50Z" duration="0.042658" asserts="0">
+                <properties />
+                <output><![CDATA[[BattleMapSimulatorDeterminismTest] Test succeed.
+[NodeVisitorTest] Test succeed.
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
