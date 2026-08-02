@@ -137,7 +137,7 @@ namespace Script.ClientLib
             obj.transform.localScale = new Vector3(modelData.modelScale.x, modelData.modelScale.y, modelData.modelScale.z);
             var entityView = obj.AddComponent<EntityView>();
             obj.name = $"{entity.name}_Model";
-            entityView.SetHp(entity.Hp);
+            entityView.Initialize(entity.Hp, entity.MaxHp, entity.GetTeamFlag(), modelData.healthBarOffset);
             entityView.OnMoveSpeedChanged(entity.MoveSpeed);
             entityView.OnAttackDelayMsChanged(entity.BasisAttackDelayMs, entity.AttackDelayMs);
             

@@ -33,6 +33,7 @@ namespace Script.CommonLib
         private ushort _moveSpeed;
 
         public uint Hp => _hp;
+        public uint MaxHp => _maxHp;
         public uint AttackDamage => _attackDamage;
         public ushort BasisAttackDelayMs => _basisAttackDelayMs;
         public ushort AttackDelayMs => _attackDelayMs;

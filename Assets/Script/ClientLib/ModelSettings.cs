@@ -13,6 +13,7 @@ namespace Script.ClientLib
             public string entityName;
             public string modelPath;
             public Vector3 modelScale = new Vector3(3.5f, 3.5f, 3.5f);
+            public Vector3 healthBarOffset = new Vector3(0f, 1f, 0f);
         }
         
         public List<ModelData> modelPaths;

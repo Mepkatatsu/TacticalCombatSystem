@@ -16,24 +16,32 @@ MonoBehaviour:
   - entityName: Entity1
     modelPath: Assets/Data/Model/prf_Set Costume_02 UTC WTD.prefab
     modelScale: {x: 3.5, y: 3.5, z: 3.5}
+    healthBarOffset: {x: 0, y: 1, z: 0}
   - entityName: Entity2
     modelPath: Assets/Data/Model/Set Costume 08 (8).prefab
     modelScale: {x: 3.5, y: 3.5, z: 3.5}
+    healthBarOffset: {x: 0, y: 1, z: 0}
   - entityName: Entity3
     modelPath: Assets/Data/Model/Set Costume_02 SD Unity-Chan WGS.prefab
     modelScale: {x: 3.5, y: 3.5, z: 3.5}
+    healthBarOffset: {x: 0, y: 1, z: 0}
   - entityName: Entity4
     modelPath: Assets/Data/Model/Set Costume_03 SD Yuko.prefab
     modelScale: {x: 3.5, y: 3.5, z: 3.5}
+    healthBarOffset: {x: 0, y: 1, z: 0}
   - entityName: Entity5
     modelPath: Assets/Data/Model/prf_Set Costume_02 UTC WTD.prefab
     modelScale: {x: 3.5, y: 3.5, z: 3.5}
+    healthBarOffset: {x: 0, y: 1, z: 0}
   - entityName: Entity6
     modelPath: Assets/Data/Model/Set Costume 08 (8).prefab
     modelScale: {x: 3.5, y: 3.5, z: 3.5}
+    healthBarOffset: {x: 0, y: 1, z: 0}
   - entityName: Entity7
     modelPath: Assets/Data/Model/Set Costume_02 SD Unity-Chan WGS.prefab
     modelScale: {x: 3.5, y: 3.5, z: 3.5}
+    healthBarOffset: {x: 0, y: 1, z: 0}
   - entityName: Entity8
     modelPath: Assets/Data/Model/Set Costume_03 SD Yuko.prefab
     modelScale: {x: 3.5, y: 3.5, z: 3.5}
+    healthBarOffset: {x: 0, y: 1, z: 0}
