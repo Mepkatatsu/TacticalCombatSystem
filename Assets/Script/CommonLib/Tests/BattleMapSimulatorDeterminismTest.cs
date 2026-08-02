@@ -9,7 +9,8 @@ namespace Script.CommonLib.Tests
         {
             return TestInsertionOrderDeterminism() &&
                    TestEntityRemovalKeepsUpdateOrder() &&
-                   TestProjectileRemovalKeepsRemainingProjectilesInIdOrder();
+                   TestProjectileRemovalKeepsRemainingProjectilesInIdOrder() &&
+                   TestMultipleProjectilesDoNotDamageOrRetireSameTargetTwice();
         }
 
         private static bool TestInsertionOrderDeterminism()
@@ -86,7 +87,36 @@ namespace Script.CommonLib.Tests
                    HasProjectileOrder(simulation.eventHandler.ProjectileTriggers, 1, 3);
         }
 
+        private static bool TestMultipleProjectilesDoNotDamageOrRetireSameTargetTwice()
+        {
+            var simulation = CreateSimulationWithAttackDamage(100, 1, 2);
+
+            simulation.simulator.RequestAttack(1, 2);
+            simulation.simulator.RequestAttack(1, 2);
+            simulation.simulator.OnProjectileTriggered(1);
+            simulation.simulator.OnProjectileTriggered(2);
+            simulation.simulator.OnEntityRetired(2);
+
+            if (simulation.entities[2].Hp != 0 ||
+                simulation.eventHandler.Damages.Count != 1 ||
+                simulation.eventHandler.Damages[0] != (2u, 100u) ||
+                simulation.eventHandler.RetiredEntityIds.Count != 1 ||
+                simulation.eventHandler.RetiredEntityIds[0] != 2 ||
+                simulation.eventHandler.ProjectileTriggers.Count != 2)
+            {
+                return false;
+            }
+
+            simulation.simulator.Update(1);
+            return HasAliveEntityIds(simulation.simulator, 1);
+        }
+
         private static (BattleMapSimulator simulator, RecordingEventHandler eventHandler, Dictionary<uint, Entity> entities) CreateSimulation(params uint[] entityIds)
+        {
+            return CreateSimulationWithAttackDamage(0, entityIds);
+        }
+
+        private static (BattleMapSimulator simulator, RecordingEventHandler eventHandler, Dictionary<uint, Entity> entities) CreateSimulationWithAttackDamage(uint attackDamage, params uint[] entityIds)
         {
             var eventHandler = new RecordingEventHandler();
             var entities = new Dictionary<uint, Entity>();
@@ -105,7 +135,7 @@ namespace Script.CommonLib.Tests
                 {
                     teamFlag = teamFlag,
                     maxHp = 100,
-                    attackDamage = 0,
+                    attackDamage = attackDamage,
                     attackRange = 1,
                     attackDelayMs = 0,
                 });
@@ -177,6 +207,8 @@ namespace Script.CommonLib.Tests
         private sealed class RecordingEventHandler : IBattleMapEventHandler
         {
             public List<(uint attackerId, uint targetId)> Attacks { get; } = new();
+            public List<(uint entityId, uint damage)> Damages { get; } = new();
+            public List<uint> RetiredEntityIds { get; } = new();
             public List<ulong> ProjectilePositionChanges { get; } = new();
             public List<ulong> ProjectileTriggers { get; } = new();
 
@@ -186,8 +218,8 @@ namespace Script.CommonLib.Tests
             public void OnEntityStartMove(uint entityId) { }
             public void OnEntityStopMove(uint entityId) { }
             public void OnEntityStartAttack(uint attackerId, uint targetId) => Attacks.Add((attackerId, targetId));
-            public void OnEntityGetDamage(uint entityId, uint damage) { }
-            public void OnEntityRetired(uint entityId) { }
+            public void OnEntityGetDamage(uint entityId, uint damage) => Damages.Add((entityId, damage));
+            public void OnEntityRetired(uint entityId) => RetiredEntityIds.Add(entityId);
             public void OnProjectileAdded(ulong projectileId, Projectile projectile) { }
             public void OnProjectilePositionChanged(ulong projectileId, FixedPos pos) => ProjectilePositionChanges.Add(projectileId);
             public void OnProjectileDirectionChanged(ulong projectileId, FixedDir dir) { }

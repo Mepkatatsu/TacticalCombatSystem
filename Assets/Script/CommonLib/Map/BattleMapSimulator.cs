@@ -22,6 +22,7 @@ namespace Script.CommonLib.Map
         
         private readonly List<uint> _removeEntityIds = new();
         private readonly List<ulong> _removeProjectileIds = new();
+        private readonly HashSet<uint> _retiringEntityIds = new();
         
         private uint _entityIdKey;
         private ulong _projectileIdKey;
@@ -99,6 +100,7 @@ namespace Script.CommonLib.Map
 
         public void OnEntityAdded(uint entityId, Entity entity)
         {
+            _retiringEntityIds.Remove(entityId);
             _entities.Add(entityId, entity);
             var insertIndex = _entityIds.BinarySearch(entityId);
             _entityIds.Insert(~insertIndex, entityId);
@@ -116,6 +118,9 @@ namespace Script.CommonLib.Map
 
         public void OnEntityRetired(uint entityId)
         {
+            if (!_entities.ContainsKey(entityId) || !_retiringEntityIds.Add(entityId))
+                return;
+
             _battleMapEventHandler.OnEntityRetired(entityId);
             RemoveEntity(entityId);
         }
@@ -207,7 +212,7 @@ namespace Script.CommonLib.Map
             RemoveProjectile(projectileId);
             _battleMapEventHandler.OnProjectileTriggered(projectileId);
 
-            if (!_entities.TryGetValue(projectile.Target.Id, out var target))
+            if (!_entities.TryGetValue(projectile.Target.Id, out var target) || !target.IsAlive())
                 return;
             
             target.Hit(projectile.Damage);
