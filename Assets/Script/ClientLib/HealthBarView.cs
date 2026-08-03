@@ -6,10 +6,10 @@ namespace Script.ClientLib
 {
     public class HealthBarView : MonoBehaviour
     {
-        [SerializeField] private Image _fillImage;
-        [SerializeField] private Image _backgroundImage;
-        [SerializeField] private Color _blueTeamColor = new(0.25f, 0.64f, 1f, 1f);
-        [SerializeField] private Color _redTeamColor = new(1f, 0.31f, 0.31f, 1f);
+        [SerializeField] private RawImage _fillImage;
+        [SerializeField] private RectTransform _fillMaskTransform;
+        [SerializeField] private Color _blueTeamColor = new(0.61f, 0.94f, 0.22f, 1f);
+        [SerializeField] private Color _redTeamColor = new(0.96f, 0.32f, 0.38f, 1f);
 
         public void Initialize(uint currentHp, uint maxHp, TeamFlag teamFlag)
         {
@@ -20,7 +20,8 @@ namespace Script.ClientLib
 
         public void SetHp(uint currentHp, uint maxHp)
         {
-            _fillImage.fillAmount = maxHp == 0 ? 0f : Mathf.Clamp01(currentHp / (float)maxHp);
+            float healthRatio = maxHp == 0 ? 0f : Mathf.Clamp01(currentHp / (float)maxHp);
+            _fillMaskTransform.anchorMax = new Vector2(healthRatio, 1f);
         }
 
         public void SetVisible(bool isVisible)
