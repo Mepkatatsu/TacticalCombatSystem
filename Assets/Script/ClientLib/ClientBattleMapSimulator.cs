@@ -16,6 +16,7 @@ namespace Script.ClientLib
         private BattleMapSimulator _battleMapSimulator;
         private Dictionary<uint, EntityView> _entityViews = new();
         private Dictionary<ulong, ProjectileView> _projectileViews = new();
+        private HealthBarOverlay _healthBarOverlay;
 
         public uint simulationSpeed = 1;
         public bool repeatTest;
@@ -25,6 +26,8 @@ namespace Script.ClientLib
         public GameObject redTeamWinText;
         public GameObject blueTeamWinText;
         public GameObject drawText;
+        public Canvas healthBarCanvas;
+        public Camera healthBarProjectionCamera;
 
         private readonly TestClientApp _clientApp = new();
         private readonly List<ushort> _updateIntervals = new();
@@ -37,9 +40,35 @@ namespace Script.ClientLib
 #if !UNITY_EDITOR
             repeatTest = false;
 #endif
+            InitializeHealthBarOverlay();
             var stageName = GetStageName();
             await InitBattleMap(stageName);
             await ConnectToServer(stageName);
+        }
+
+        private void InitializeHealthBarOverlay()
+        {
+            if (healthBarCanvas == null)
+            {
+                LogHelper.Error("ClientBattleMapSimulator.InitializeHealthBarOverlay: health bar Canvas is not assigned. Health bar UI is disabled.");
+                return;
+            }
+
+            if (healthBarProjectionCamera == null)
+            {
+                LogHelper.Error("ClientBattleMapSimulator.InitializeHealthBarOverlay: health bar projection camera is not assigned. Health bar UI is disabled.");
+                return;
+            }
+
+            try
+            {
+                _healthBarOverlay = new HealthBarOverlay(healthBarCanvas, healthBarProjectionCamera);
+            }
+            catch (Exception exception)
+            {
+                _healthBarOverlay = null;
+                LogHelper.Error($"ClientBattleMapSimulator.InitializeHealthBarOverlay: failed to create health bar overlay. Health bar UI is disabled. {exception}");
+            }
         }
 
         private void ReloadBattleMap()
@@ -52,6 +81,7 @@ namespace Script.ClientLib
         {
             _entityViews.Clear();
             _projectileViews.Clear();
+            _healthBarOverlay?.Clear();
         }
 
         private void ReloadScene()
@@ -120,6 +150,11 @@ namespace Script.ClientLib
             }
         }
 
+        private void LateUpdate()
+        {
+            _healthBarOverlay?.UpdatePositions();
+        }
+
         private ushort GetDeltaMs()
         {
             float deltaTime = Time.deltaTime;
@@ -137,11 +172,13 @@ namespace Script.ClientLib
             obj.transform.localScale = new Vector3(modelData.modelScale.x, modelData.modelScale.y, modelData.modelScale.z);
             var entityView = obj.AddComponent<EntityView>();
             obj.name = $"{entity.name}_Model";
-            entityView.Initialize(entity.Hp, entity.MaxHp, entity.GetTeamFlag(), modelData.healthBarOffset);
+            entityView.Initialize(entity.Hp, entity.MaxHp);
             entityView.OnMoveSpeedChanged(entity.MoveSpeed);
             entityView.OnAttackDelayMsChanged(entity.BasisAttackDelayMs, entity.AttackDelayMs);
             
             _entityViews.Add(entityId, entityView);
+            _healthBarOverlay?.Register(entityId, entityView.transform, modelData.healthBarOffset, entity.Hp,
+                entity.MaxHp, entity.GetTeamFlag());
         }
 
         public void OnEntityPositionChanged(uint entityId, FixedPos pos)
@@ -190,6 +227,7 @@ namespace Script.ClientLib
                 return;
             
             entityView.GetDamage(damage);
+            _healthBarOverlay?.SetHp(entityId, entityView.Hp, entityView.MaxHp);
         }
 
         public void OnEntityRetired(uint entityId)
@@ -198,6 +236,7 @@ namespace Script.ClientLib
                 return;
             
             entityView.OnRetired();
+            _healthBarOverlay?.Unregister(entityId);
         }
 
         public void OnProjectileAdded(ulong projectileId, Projectile projectile)

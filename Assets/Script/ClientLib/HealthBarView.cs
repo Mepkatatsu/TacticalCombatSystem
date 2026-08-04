@@ -29,11 +29,5 @@ namespace Script.ClientLib
             gameObject.SetActive(isVisible);
         }
 
-        private void LateUpdate()
-        {
-            var mainCamera = Camera.main;
-            if (mainCamera != null)
-                transform.rotation = mainCamera.transform.rotation;
-        }
     }
 }

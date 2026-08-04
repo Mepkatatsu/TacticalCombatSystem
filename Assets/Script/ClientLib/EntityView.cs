@@ -5,8 +5,6 @@ namespace Script.ClientLib
 {
     public class EntityView : MonoBehaviour
     {
-        private const string HealthBarPrefabPath = "Prefabs/HealthBar";
-
         private static readonly int IsMoving = Animator.StringToHash("IsMoving");
         private static readonly int IsAttack = Animator.StringToHash("IsAttack");
         private static readonly int IsRetired = Animator.StringToHash("IsRetired");
@@ -21,7 +19,6 @@ namespace Script.ClientLib
         
         private Animator _animator;
         private Animator Animator => _animator ??= GetComponent<Animator>();
-        private HealthBarView _healthBar;
 
         private ushort _attackDelayMs;
         private uint _comboMs;
@@ -39,29 +36,10 @@ namespace Script.ClientLib
             }
         }
 
-        public void Initialize(uint hp, uint maxHp, TeamFlag teamFlag, Vector3 healthBarOffset)
+        public void Initialize(uint hp, uint maxHp)
         {
             Hp = hp;
             MaxHp = maxHp;
-
-            var healthBarPrefab = Resources.Load<GameObject>(HealthBarPrefabPath);
-            if (healthBarPrefab == null)
-            {
-                Debug.LogError($"Health bar prefab not found at Resources/{HealthBarPrefabPath}.");
-                return;
-            }
-
-            var healthBarObject = Instantiate(healthBarPrefab, transform, false);
-            _healthBar = healthBarObject.GetComponent<HealthBarView>();
-            if (_healthBar == null)
-            {
-                Debug.LogError("Health bar prefab does not contain a HealthBarView component.");
-                Destroy(healthBarObject);
-                return;
-            }
-
-            _healthBar.transform.localPosition = healthBarOffset;
-            _healthBar.Initialize(Hp, MaxHp, teamFlag);
         }
         
         public void GetDamage(uint damage)
@@ -75,7 +53,6 @@ namespace Script.ClientLib
                 Hp -= damage;
             }
 
-            _healthBar?.SetHp(Hp, MaxHp);
         }
 
         public void OnPositionChanged(Vector3 position)
@@ -126,7 +103,6 @@ namespace Script.ClientLib
         public void OnRetired()
         {
             Animator.SetTrigger(IsRetired);
-            _healthBar?.SetVisible(false);
         }
 
         public void OnBattleEnd()
