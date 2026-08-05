@@ -253,7 +253,7 @@ namespace Script.ClientLib
             _healthBarOverlay?.SetHp(entityId, entityView.Hp, entityView.MaxHp);
 
             if (_damageNumberOffsets.TryGetValue(entityId, out var damageNumberOffset))
-                _damageNumberOverlay?.Show(entityView.transform, damageNumberOffset, damage);
+                _damageNumberOverlay?.Show(entityId, entityView.transform, damageNumberOffset, damage);
         }
 
         public void OnEntityRetired(uint entityId)
@@ -263,6 +263,7 @@ namespace Script.ClientLib
             
             entityView.OnRetired();
             _healthBarOverlay?.Unregister(entityId);
+            _damageNumberOverlay?.ForgetEntity(entityId);
             _damageNumberOffsets.Remove(entityId);
         }
 
