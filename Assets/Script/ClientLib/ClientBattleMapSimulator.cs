@@ -16,7 +16,9 @@ namespace Script.ClientLib
         private BattleMapSimulator _battleMapSimulator;
         private Dictionary<uint, EntityView> _entityViews = new();
         private Dictionary<ulong, ProjectileView> _projectileViews = new();
+        private Dictionary<uint, Vector3> _damageNumberOffsets = new();
         private HealthBarOverlay _healthBarOverlay;
+        private DamageNumberOverlay _damageNumberOverlay;
 
         public uint simulationSpeed = 1;
         public bool repeatTest;
@@ -41,6 +43,7 @@ namespace Script.ClientLib
             repeatTest = false;
 #endif
             InitializeHealthBarOverlay();
+            InitializeDamageNumberOverlay();
             var stageName = GetStageName();
             await InitBattleMap(stageName);
             await ConnectToServer(stageName);
@@ -71,6 +74,22 @@ namespace Script.ClientLib
             }
         }
 
+        private void InitializeDamageNumberOverlay()
+        {
+            if (healthBarCanvas == null || healthBarProjectionCamera == null)
+                return;
+
+            try
+            {
+                _damageNumberOverlay = new DamageNumberOverlay(healthBarCanvas, healthBarProjectionCamera);
+            }
+            catch (Exception exception)
+            {
+                _damageNumberOverlay = null;
+                LogHelper.Error($"ClientBattleMapSimulator.InitializeDamageNumberOverlay: failed to create damage number overlay. Damage number UI is disabled. {exception}");
+            }
+        }
+
         private void ReloadBattleMap()
         {
             Clear();
@@ -81,7 +100,9 @@ namespace Script.ClientLib
         {
             _entityViews.Clear();
             _projectileViews.Clear();
+            _damageNumberOffsets.Clear();
             _healthBarOverlay?.Clear();
+            _damageNumberOverlay?.Clear();
         }
 
         private void ReloadScene()
@@ -153,6 +174,7 @@ namespace Script.ClientLib
         private void LateUpdate()
         {
             _healthBarOverlay?.UpdatePositions();
+            _damageNumberOverlay?.Update(Time.deltaTime);
         }
 
         private ushort GetDeltaMs()
@@ -177,6 +199,7 @@ namespace Script.ClientLib
             entityView.OnAttackDelayMsChanged(entity.BasisAttackDelayMs, entity.AttackDelayMs);
             
             _entityViews.Add(entityId, entityView);
+            _damageNumberOffsets.Add(entityId, modelData.healthBarOffset + Vector3.up * 0.3f);
             _healthBarOverlay?.Register(entityId, entityView.transform, modelData.healthBarOffset, entity.Hp,
                 entity.MaxHp, entity.GetTeamFlag());
         }
@@ -228,6 +251,9 @@ namespace Script.ClientLib
             
             entityView.GetDamage(damage);
             _healthBarOverlay?.SetHp(entityId, entityView.Hp, entityView.MaxHp);
+
+            if (_damageNumberOffsets.TryGetValue(entityId, out var damageNumberOffset))
+                _damageNumberOverlay?.Show(entityView.transform, damageNumberOffset, damage);
         }
 
         public void OnEntityRetired(uint entityId)
@@ -237,6 +263,7 @@ namespace Script.ClientLib
             
             entityView.OnRetired();
             _healthBarOverlay?.Unregister(entityId);
+            _damageNumberOffsets.Remove(entityId);
         }
 
         public void OnProjectileAdded(ulong projectileId, Projectile projectile)
@@ -280,6 +307,10 @@ namespace Script.ClientLib
 
         public async void OnBattleEnd(TeamFlag winner)
         {
+            // Preserve numbers already on screen so the final hit can finish its animation,
+            // while preventing post-result callbacks from adding a new number.
+            _damageNumberOverlay?.StopAcceptingNewNumbers();
+
             foreach (var projectileView in _projectileViews.Values)
             {
                 Destroy(projectileView.gameObject);
