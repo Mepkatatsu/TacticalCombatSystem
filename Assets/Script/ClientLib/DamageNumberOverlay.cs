@@ -46,7 +46,7 @@ namespace Script.ClientLib
 
         public DamageNumberOverlay(Canvas canvas, Camera worldProjectionCamera)
         {
-            if (canvas == null)
+            if (!canvas)
             {
                 Debug.LogError("DamageNumberOverlay: Canvas is not assigned.");
                 return;
@@ -58,7 +58,7 @@ namespace Script.ClientLib
                 return;
             }
 
-            if (worldProjectionCamera == null)
+            if (!worldProjectionCamera)
             {
                 Debug.LogError("DamageNumberOverlay: world projection camera is not assigned.");
                 return;
@@ -67,7 +67,7 @@ namespace Script.ClientLib
             _canvasTransform = canvas.transform as RectTransform;
             _worldProjectionCamera = worldProjectionCamera;
 
-            if (_canvasTransform == null)
+            if (!_canvasTransform)
             {
                 Debug.LogError("DamageNumberOverlay: Canvas does not have a RectTransform.");
                 return;
@@ -82,7 +82,7 @@ namespace Script.ClientLib
 
         public void Show(Transform targetTransform, Vector3 localOffset, uint damage)
         {
-            if (!_isValid || !_acceptNewNumbers || targetTransform == null)
+            if (!_isValid || !_acceptNewNumbers || !targetTransform)
                 return;
 
             if (!EnsureDamageNumberContainer())
@@ -124,7 +124,7 @@ namespace Script.ClientLib
             if (!_isValid)
                 return;
 
-            if (_canvasTransform == null || _worldProjectionCamera == null || _damageNumberContainer == null)
+            if (!_canvasTransform || !_worldProjectionCamera || !_damageNumberContainer)
             {
                 Clear();
                 _isValid = false;
@@ -156,7 +156,7 @@ namespace Script.ClientLib
             _acceptNewNumbers = false;
             _isValid = false;
 
-            if (_damageNumberContainer == null)
+            if (!_damageNumberContainer)
                 return;
 
             UnityEngine.Object.Destroy(_damageNumberContainer.gameObject);
@@ -180,7 +180,7 @@ namespace Script.ClientLib
             while (_availableInstances.Count > 0)
             {
                 var instance = _availableInstances.Pop();
-                if (instance?.gameObject != null)
+                if (instance != null && instance.gameObject)
                     return instance;
             }
 
@@ -197,20 +197,20 @@ namespace Script.ClientLib
 
         private DamageNumberInstance CreateInstance()
         {
-            if (_damageNumberContainer == null)
+            if (!_damageNumberContainer)
                 return null;
 
             try
             {
                 var damageNumberPrefab = GetDamageNumberPrefab();
-                if (damageNumberPrefab == null)
+                if (!damageNumberPrefab)
                     return null;
 
                 var numberObject = UnityEngine.Object.Instantiate(damageNumberPrefab, _damageNumberContainer, false);
                 var rectTransform = numberObject.GetComponent<RectTransform>();
                 var text = numberObject.GetComponent<Text>();
                 var canvasGroup = numberObject.GetComponent<CanvasGroup>();
-                if (rectTransform == null || text == null || canvasGroup == null)
+                if (!rectTransform || !text || !canvasGroup)
                 {
                     Debug.LogError("DamageNumberOverlay: DamageNumber prefab requires RectTransform, Text, and CanvasGroup components.");
                     UnityEngine.Object.Destroy(numberObject);
@@ -242,7 +242,7 @@ namespace Script.ClientLib
                 _damageNumberPrefabLoadAttempted = true;
             }
 
-            if (_damageNumberPrefab == null)
+            if (!_damageNumberPrefab)
                 Debug.LogError($"DamageNumberOverlay: damage number prefab not found at Resources/{DamageNumberPrefabPath}.");
 
             return _damageNumberPrefab;
@@ -250,7 +250,7 @@ namespace Script.ClientLib
 
         private void Return(DamageNumberInstance instance)
         {
-            if (instance?.gameObject == null)
+            if (instance == null || !instance.gameObject)
                 return;
 
             instance.gameObject.SetActive(false);
@@ -277,7 +277,7 @@ namespace Script.ClientLib
 
         private bool EnsureDamageNumberContainer()
         {
-            if (_damageNumberContainer != null)
+            if (_damageNumberContainer)
                 return true;
 
             return CreateDamageNumberContainer();
@@ -285,7 +285,7 @@ namespace Script.ClientLib
 
         private bool CreateDamageNumberContainer()
         {
-            if (_canvasTransform == null)
+            if (!_canvasTransform)
                 return false;
 
             try

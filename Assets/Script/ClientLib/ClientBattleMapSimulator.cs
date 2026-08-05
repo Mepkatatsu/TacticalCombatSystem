@@ -51,13 +51,13 @@ namespace Script.ClientLib
 
         private void InitializeHealthBarOverlay()
         {
-            if (healthBarCanvas == null)
+            if (!healthBarCanvas)
             {
                 LogHelper.Error("ClientBattleMapSimulator.InitializeHealthBarOverlay: health bar Canvas is not assigned. Health bar UI is disabled.");
                 return;
             }
 
-            if (healthBarProjectionCamera == null)
+            if (!healthBarProjectionCamera)
             {
                 LogHelper.Error("ClientBattleMapSimulator.InitializeHealthBarOverlay: health bar projection camera is not assigned. Health bar UI is disabled.");
                 return;
@@ -76,7 +76,7 @@ namespace Script.ClientLib
 
         private void InitializeDamageNumberOverlay()
         {
-            if (healthBarCanvas == null || healthBarProjectionCamera == null)
+            if (!healthBarCanvas || !healthBarProjectionCamera)
                 return;
 
             try

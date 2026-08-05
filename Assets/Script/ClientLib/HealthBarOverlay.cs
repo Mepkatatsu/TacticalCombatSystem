@@ -28,7 +28,7 @@ namespace Script.ClientLib
 
         public HealthBarOverlay(Canvas canvas, Camera worldProjectionCamera)
         {
-            if (canvas == null)
+            if (!canvas)
             {
                 Debug.LogError("HealthBarOverlay: health bar Canvas is not assigned.");
                 return;
@@ -40,7 +40,7 @@ namespace Script.ClientLib
                 return;
             }
 
-            if (worldProjectionCamera == null)
+            if (!worldProjectionCamera)
             {
                 Debug.LogError("HealthBarOverlay: world projection camera is not assigned.");
                 return;
@@ -48,7 +48,7 @@ namespace Script.ClientLib
 
             _canvasTransform = canvas.transform as RectTransform;
             _worldProjectionCamera = worldProjectionCamera;
-            _isValid = _canvasTransform != null;
+            _isValid = _canvasTransform;
 
             if (!_isValid)
             {
@@ -62,7 +62,7 @@ namespace Script.ClientLib
         public void Register(uint entityId, Transform targetTransform, Vector3 localOffset, uint currentHp, uint maxHp,
             TeamFlag teamFlag)
         {
-            if (!_isValid || targetTransform == null)
+            if (!_isValid || !targetTransform)
                 return;
 
             Unregister(entityId);
@@ -71,7 +71,7 @@ namespace Script.ClientLib
                 return;
 
             var healthBarPrefab = GetHealthBarPrefab();
-            if (healthBarPrefab == null)
+            if (!healthBarPrefab)
                 return;
 
             GameObject healthBarObject = null;
@@ -81,7 +81,7 @@ namespace Script.ClientLib
                 healthBarObject = Object.Instantiate(healthBarPrefab, _healthBarContainer, false);
 
                 var healthBarView = healthBarObject.GetComponent<HealthBarView>();
-                if (healthBarView == null)
+                if (!healthBarView)
                 {
                     Debug.LogError("HealthBarOverlay.Register: health bar prefab does not contain a HealthBarView component.");
                     DestroyHealthBarObjectSafely(healthBarObject);
@@ -89,7 +89,7 @@ namespace Script.ClientLib
                 }
 
                 var rectTransform = healthBarObject.transform as RectTransform;
-                if (rectTransform == null)
+                if (!rectTransform)
                 {
                     Debug.LogError("HealthBarOverlay.Register: health bar prefab root does not have a RectTransform.");
                     DestroyHealthBarObjectSafely(healthBarObject);
@@ -114,7 +114,7 @@ namespace Script.ClientLib
 
         private static void DestroyHealthBarObjectSafely(GameObject healthBarObject)
         {
-            if (healthBarObject == null)
+            if (!healthBarObject)
                 return;
 
             try
@@ -132,7 +132,7 @@ namespace Script.ClientLib
             if (!_trackedHealthBars.TryGetValue(entityId, out var trackedHealthBar))
                 return;
 
-            if (trackedHealthBar.healthBarView == null)
+            if (!trackedHealthBar.healthBarView)
             {
                 Unregister(entityId);
                 return;
@@ -146,7 +146,7 @@ namespace Script.ClientLib
             if (!_trackedHealthBars.Remove(entityId, out var trackedHealthBar))
                 return;
 
-            if (trackedHealthBar.healthBarView != null)
+            if (trackedHealthBar.healthBarView)
                 Object.Destroy(trackedHealthBar.healthBarView.gameObject);
         }
 
@@ -155,7 +155,7 @@ namespace Script.ClientLib
             _trackedHealthBars.Clear();
             _removedEntityIds.Clear();
 
-            if (_healthBarContainer == null)
+            if (!_healthBarContainer)
                 return;
 
             Object.Destroy(_healthBarContainer.gameObject);
@@ -167,7 +167,7 @@ namespace Script.ClientLib
             if (!_isValid)
                 return;
 
-            if (_canvasTransform == null || _worldProjectionCamera == null || _healthBarContainer == null)
+            if (!_canvasTransform || !_worldProjectionCamera || !_healthBarContainer)
             {
                 Clear();
                 _isValid = false;
@@ -178,7 +178,7 @@ namespace Script.ClientLib
 
             foreach (var (entityId, trackedHealthBar) in _trackedHealthBars)
             {
-                if (trackedHealthBar.targetTransform == null || trackedHealthBar.healthBarView == null)
+                if (!trackedHealthBar.targetTransform || !trackedHealthBar.healthBarView)
                 {
                     _removedEntityIds.Add(entityId);
                     continue;
@@ -205,10 +205,10 @@ namespace Script.ClientLib
 
         private GameObject GetHealthBarPrefab()
         {
-            if (_healthBarPrefab == null)
+            if (!_healthBarPrefab)
                 _healthBarPrefab = Resources.Load<GameObject>(HealthBarPrefabPath);
 
-            if (_healthBarPrefab == null)
+            if (!_healthBarPrefab)
                 Debug.LogError($"Health bar prefab not found at Resources/{HealthBarPrefabPath}.");
 
             return _healthBarPrefab;
@@ -216,7 +216,7 @@ namespace Script.ClientLib
 
         private bool EnsureHealthBarContainer()
         {
-            if (_healthBarContainer != null)
+            if (_healthBarContainer)
                 return true;
 
             return CreateHealthBarContainer();
@@ -224,7 +224,7 @@ namespace Script.ClientLib
 
         private bool CreateHealthBarContainer()
         {
-            if (_canvasTransform == null)
+            if (!_canvasTransform)
                 return false;
 
             try
