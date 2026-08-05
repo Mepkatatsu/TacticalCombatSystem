@@ -20,6 +20,7 @@ namespace Script.ClientLib
         private const float SettleSeconds = 0.15f;
         private const float FadeStartSeconds = 0.18f;
         private const float RiseDistance = 26f;
+        private const float HorizontalDriftDistance = 14f;
         private const float HorizontalOffsetDistance = 16f;
         private const float InitialScale = 0.78f;
         private const float PeakScale = 1.10f;
@@ -44,6 +45,7 @@ namespace Script.ClientLib
             public Text text;
             public CanvasGroup canvasGroup;
             public Vector2 startPosition;
+            public Vector2 travelOffset;
             public float elapsedSeconds;
         }
 
@@ -107,6 +109,7 @@ namespace Script.ClientLib
             float horizontalOffset = (horizontalOffsetIndex - 1) * HorizontalOffsetDistance;
 
             instance.startPosition = localPosition + new Vector2(horizontalOffset, 0f);
+            instance.travelOffset = GetTravelOffset(localPosition);
             instance.elapsedSeconds = 0f;
             instance.rectTransform.anchoredPosition = instance.startPosition;
             instance.rectTransform.localScale = Vector3.one * InitialScale;
@@ -280,8 +283,8 @@ namespace Script.ClientLib
         private static void UpdatePresentation(DamageNumberInstance instance)
         {
             float normalizedTime = Mathf.Clamp01(instance.elapsedSeconds / LifetimeSeconds);
-            float rise = Mathf.SmoothStep(0f, RiseDistance, normalizedTime);
-            instance.rectTransform.anchoredPosition = instance.startPosition + Vector2.up * rise;
+            float travelProgress = 1f - Mathf.Pow(1f - normalizedTime, 2f);
+            instance.rectTransform.anchoredPosition = instance.startPosition + instance.travelOffset * travelProgress;
 
             instance.rectTransform.localScale = Vector3.one * GetPopScale(instance.elapsedSeconds);
 
@@ -301,6 +304,13 @@ namespace Script.ClientLib
                     (SettleSeconds - PopPeakSeconds));
 
             return 1f;
+        }
+
+        private static Vector2 GetTravelOffset(Vector2 startPosition)
+        {
+            // Damage numbers move away from the screen center so simultaneous left/right targets stay readable.
+            float horizontalDirection = startPosition.x < 0f ? -1f : 1f;
+            return new Vector2(horizontalDirection * HorizontalDriftDistance, RiseDistance);
         }
 
         private bool EnsureDamageNumberContainer()
