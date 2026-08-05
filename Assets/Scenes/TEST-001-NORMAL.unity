@@ -4718,8 +4718,8 @@ MonoBehaviour:
   redTeamWinText: {fileID: 889742237}
   blueTeamWinText: {fileID: 2042164397}
   drawText: {fileID: 127755451}
-  healthBarCanvas: {fileID: 4100529}
-  healthBarProjectionCamera: {fileID: 1704015173}
+  combatOverlayCanvas: {fileID: 4100529}
+  combatOverlayProjectionCamera: {fileID: 1704015173}
 --- !u!4 &1405512748
 Transform:
   m_ObjectHideFlags: 0

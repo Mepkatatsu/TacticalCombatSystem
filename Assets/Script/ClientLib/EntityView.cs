@@ -16,6 +16,7 @@ namespace Script.ClientLib
 
         public uint Hp { get; private set; }
         public uint MaxHp { get; private set; }
+        public TeamFlag TeamFlag { get; private set; }
         
         private Animator _animator;
         private Animator Animator => _animator ??= GetComponent<Animator>();
@@ -36,10 +37,11 @@ namespace Script.ClientLib
             }
         }
 
-        public void Initialize(uint hp, uint maxHp)
+        public void Initialize(uint hp, uint maxHp, TeamFlag teamFlag)
         {
             Hp = hp;
             MaxHp = maxHp;
+            TeamFlag = teamFlag;
         }
         
         public void GetDamage(uint damage)

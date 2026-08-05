@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Script.CommonLib;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Script.ClientLib
 {
     /// <summary>
-    /// Owns short-lived damage number UI independently from entity views.
-    /// The small local pool deliberately stays private until other transient combat UI needs the same policy.
+    /// EntityView와 독립적으로 짧은 수명의 피해 숫자 UI를 관리한다.
+    /// 다른 일시적 전투 UI에도 같은 정책이 필요해질 때까지 작은 로컬 풀은 private으로 유지한다.
     /// </summary>
     public class DamageNumberOverlay
     {
@@ -18,12 +19,35 @@ namespace Script.ClientLib
         private const float LifetimeSeconds = 0.45f;
         private const float PopPeakSeconds = 0.08f;
         private const float SettleSeconds = 0.15f;
-        private const float FadeStartSeconds = 0.18f;
-        private const float RiseDistance = 26f;
-        private const float HorizontalDriftDistance = 14f;
-        private const float HorizontalOffsetDistance = 16f;
+        private const float MovementDurationSeconds = 0.32f;
+        private const float FadeStartSeconds = MovementDurationSeconds;
+        private const float FadeDurationSeconds = LifetimeSeconds - FadeStartSeconds;
+        private const float RiseDistance = 52f;
+        private const float HorizontalDriftDistance = 30f;
         private const float InitialScale = 0.78f;
         private const float PeakScale = 1.10f;
+
+        private static readonly float[] BlueTeamHorizontalInitialOffsets =
+        {
+            -34f,
+            -29f,
+            -24f,
+            -19f,
+            -14f,
+            -9f,
+            -4f,
+        };
+
+        private static readonly float[] VerticalInitialOffsets =
+        {
+            -14f,
+            -8f,
+            -2f,
+            4f,
+            10f,
+            16f,
+            22f,
+        };
 
         private readonly RectTransform _canvasTransform;
         private readonly Camera _worldProjectionCamera;
@@ -34,7 +58,7 @@ namespace Script.ClientLib
         private GameObject _damageNumberPrefab;
         private bool _damageNumberPrefabLoadAttempted;
         private int _createdInstanceCount;
-        private readonly Dictionary<uint, int> _nextHorizontalOffsetIndexesByEntity = new();
+        private readonly System.Random _presentationRandom = new();
         private bool _isValid;
         private bool _acceptNewNumbers = true;
 
@@ -85,7 +109,7 @@ namespace Script.ClientLib
             Prewarm();
         }
 
-        public void Show(uint entityId, Transform targetTransform, Vector3 localOffset, uint damage)
+        public void Show(Transform targetTransform, Vector3 localOffset, TeamFlag teamFlag, uint damage)
         {
             if (!_isValid || !_acceptNewNumbers || !targetTransform)
                 return;
@@ -105,11 +129,8 @@ namespace Script.ClientLib
             if (instance == null)
                 return;
 
-            int horizontalOffsetIndex = GetNextHorizontalOffsetIndex(entityId);
-            float horizontalOffset = (horizontalOffsetIndex - 1) * HorizontalOffsetDistance;
-
-            instance.startPosition = localPosition + new Vector2(horizontalOffset, 0f);
-            instance.travelOffset = GetTravelOffset(localPosition);
+            instance.startPosition = localPosition + GetInitialOffset(teamFlag);
+            instance.travelOffset = GetTravelOffset(teamFlag);
             instance.elapsedSeconds = 0f;
             instance.rectTransform.anchoredPosition = instance.startPosition;
             instance.rectTransform.localScale = Vector3.one * InitialScale;
@@ -122,11 +143,6 @@ namespace Script.ClientLib
         public void StopAcceptingNewNumbers()
         {
             _acceptNewNumbers = false;
-        }
-
-        public void ForgetEntity(uint entityId)
-        {
-            _nextHorizontalOffsetIndexesByEntity.Remove(entityId);
         }
 
         public void Update(float deltaTime)
@@ -162,7 +178,6 @@ namespace Script.ClientLib
             _activeInstances.Clear();
             _availableInstances.Clear();
             _createdInstanceCount = 0;
-            _nextHorizontalOffsetIndexesByEntity.Clear();
             _acceptNewNumbers = false;
             _isValid = false;
 
@@ -267,31 +282,17 @@ namespace Script.ClientLib
             _availableInstances.Push(instance);
         }
 
-        private int GetNextHorizontalOffsetIndex(uint entityId)
-        {
-            // Spread consecutive hits on the same target across left, center, and right for readability.
-            if (!_nextHorizontalOffsetIndexesByEntity.TryGetValue(entityId, out var nextOffsetIndex))
-            {
-                _nextHorizontalOffsetIndexesByEntity.Add(entityId, 1);
-                return 0;
-            }
-
-            _nextHorizontalOffsetIndexesByEntity[entityId] = nextOffsetIndex + 1;
-            return nextOffsetIndex % 3;
-        }
-
         private static void UpdatePresentation(DamageNumberInstance instance)
         {
-            float normalizedTime = Mathf.Clamp01(instance.elapsedSeconds / LifetimeSeconds);
-            float travelProgress = 1f - Mathf.Pow(1f - normalizedTime, 2f);
+            float movementProgress = Mathf.Clamp01(instance.elapsedSeconds / MovementDurationSeconds);
+            float travelProgress = 1f - Mathf.Pow(1f - movementProgress, 2f);
             instance.rectTransform.anchoredPosition = instance.startPosition + instance.travelOffset * travelProgress;
 
             instance.rectTransform.localScale = Vector3.one * GetPopScale(instance.elapsedSeconds);
 
             instance.canvasGroup.alpha = instance.elapsedSeconds < FadeStartSeconds
                 ? 1f
-                : Mathf.Lerp(1f, 0f, (instance.elapsedSeconds - FadeStartSeconds) /
-                    (LifetimeSeconds - FadeStartSeconds));
+                : Mathf.Lerp(1f, 0f, (instance.elapsedSeconds - FadeStartSeconds) / FadeDurationSeconds);
         }
 
         private static float GetPopScale(float elapsedSeconds)
@@ -306,11 +307,31 @@ namespace Script.ClientLib
             return 1f;
         }
 
-        private static Vector2 GetTravelOffset(Vector2 startPosition)
+        private Vector2 GetInitialOffset(TeamFlag teamFlag)
         {
-            // Damage numbers move away from the screen center so simultaneous left/right targets stay readable.
-            float horizontalDirection = startPosition.x < 0f ? -1f : 1f;
-            return new Vector2(horizontalDirection * HorizontalDriftDistance, RiseDistance);
+            float horizontalOffset = BlueTeamHorizontalInitialOffsets[
+                _presentationRandom.Next(BlueTeamHorizontalInitialOffsets.Length)];
+            float verticalOffset = VerticalInitialOffsets[_presentationRandom.Next(VerticalInitialOffsets.Length)];
+
+            if (teamFlag == TeamFlag.Blue)
+                return new Vector2(horizontalOffset, verticalOffset);
+
+            if (teamFlag == TeamFlag.Red)
+                return new Vector2(-horizontalOffset, verticalOffset);
+
+            // Draw 또는 미설정 팀에는 전투 진영 방향이 없으므로 중립적이고 읽기 쉬운 위치를 사용한다.
+            return new Vector2(0f, verticalOffset);
+        }
+
+        private static Vector2 GetTravelOffset(TeamFlag teamFlag)
+        {
+            if (teamFlag == TeamFlag.Blue)
+                return new Vector2(-HorizontalDriftDistance, RiseDistance);
+
+            if (teamFlag == TeamFlag.Red)
+                return new Vector2(HorizontalDriftDistance, RiseDistance);
+
+            return Vector2.up * RiseDistance;
         }
 
         private bool EnsureDamageNumberContainer()
@@ -337,8 +358,9 @@ namespace Script.ClientLib
                 _damageNumberContainer.offsetMax = Vector2.zero;
                 _damageNumberContainer.pivot = new Vector2(0.5f, 0.5f);
 
-                // Scene-authored result UI must remain above transient damage numbers.
-                _damageNumberContainer.SetAsFirstSibling();
+                // Layer 순서: 0 = HealthBarOverlay, 1 = DamageNumberOverlay, 그 뒤에는 scene-authored result UI가 위치한다.
+                // TODO: 체력바·피해 숫자·결과 UI 레이어를 명시적으로 관리하는 구조를 도입하면 하드코딩한 sibling index를 제거한다.
+                _damageNumberContainer.SetSiblingIndex(1);
                 return true;
             }
             catch (Exception exception)

@@ -28,8 +28,8 @@ namespace Script.ClientLib
         public GameObject redTeamWinText;
         public GameObject blueTeamWinText;
         public GameObject drawText;
-        public Canvas healthBarCanvas;
-        public Camera healthBarProjectionCamera;
+        public Canvas combatOverlayCanvas;
+        public Camera combatOverlayProjectionCamera;
 
         private readonly TestClientApp _clientApp = new();
         private readonly List<ushort> _updateIntervals = new();
@@ -42,51 +42,44 @@ namespace Script.ClientLib
 #if !UNITY_EDITOR
             repeatTest = false;
 #endif
-            InitializeHealthBarOverlay();
-            InitializeDamageNumberOverlay();
+            InitializeCombatOverlays();
             var stageName = GetStageName();
             await InitBattleMap(stageName);
             await ConnectToServer(stageName);
         }
 
-        private void InitializeHealthBarOverlay()
+        private void InitializeCombatOverlays()
         {
-            if (!healthBarCanvas)
+            if (!combatOverlayCanvas)
             {
-                LogHelper.Error("ClientBattleMapSimulator.InitializeHealthBarOverlay: health bar Canvas is not assigned. Health bar UI is disabled.");
+                LogHelper.Error("ClientBattleMapSimulator.InitializeCombatOverlays: combat overlay Canvas is not assigned. Combat overlay UI is disabled.");
                 return;
             }
 
-            if (!healthBarProjectionCamera)
+            if (!combatOverlayProjectionCamera)
             {
-                LogHelper.Error("ClientBattleMapSimulator.InitializeHealthBarOverlay: health bar projection camera is not assigned. Health bar UI is disabled.");
+                LogHelper.Error("ClientBattleMapSimulator.InitializeCombatOverlays: combat overlay projection camera is not assigned. Combat overlay UI is disabled.");
                 return;
             }
 
             try
             {
-                _healthBarOverlay = new HealthBarOverlay(healthBarCanvas, healthBarProjectionCamera);
+                _healthBarOverlay = new HealthBarOverlay(combatOverlayCanvas, combatOverlayProjectionCamera);
             }
             catch (Exception exception)
             {
                 _healthBarOverlay = null;
-                LogHelper.Error($"ClientBattleMapSimulator.InitializeHealthBarOverlay: failed to create health bar overlay. Health bar UI is disabled. {exception}");
+                LogHelper.Error($"ClientBattleMapSimulator.InitializeCombatOverlays: failed to create health bar layer. Health bar UI is disabled. {exception}");
             }
-        }
-
-        private void InitializeDamageNumberOverlay()
-        {
-            if (!healthBarCanvas || !healthBarProjectionCamera)
-                return;
 
             try
             {
-                _damageNumberOverlay = new DamageNumberOverlay(healthBarCanvas, healthBarProjectionCamera);
+                _damageNumberOverlay = new DamageNumberOverlay(combatOverlayCanvas, combatOverlayProjectionCamera);
             }
             catch (Exception exception)
             {
                 _damageNumberOverlay = null;
-                LogHelper.Error($"ClientBattleMapSimulator.InitializeDamageNumberOverlay: failed to create damage number overlay. Damage number UI is disabled. {exception}");
+                LogHelper.Error($"ClientBattleMapSimulator.InitializeCombatOverlays: failed to create damage number layer. Damage number UI is disabled. {exception}");
             }
         }
 
@@ -194,14 +187,15 @@ namespace Script.ClientLib
             obj.transform.localScale = new Vector3(modelData.modelScale.x, modelData.modelScale.y, modelData.modelScale.z);
             var entityView = obj.AddComponent<EntityView>();
             obj.name = $"{entity.name}_Model";
-            entityView.Initialize(entity.Hp, entity.MaxHp);
+            var teamFlag = entity.GetTeamFlag();
+            entityView.Initialize(entity.Hp, entity.MaxHp, teamFlag);
             entityView.OnMoveSpeedChanged(entity.MoveSpeed);
             entityView.OnAttackDelayMsChanged(entity.BasisAttackDelayMs, entity.AttackDelayMs);
             
             _entityViews.Add(entityId, entityView);
-            _damageNumberOffsets.Add(entityId, modelData.healthBarOffset + Vector3.up * 0.3f);
+            _damageNumberOffsets.Add(entityId, modelData.healthBarOffset - Vector3.up * 0.3f);
             _healthBarOverlay?.Register(entityId, entityView.transform, modelData.healthBarOffset, entity.Hp,
-                entity.MaxHp, entity.GetTeamFlag());
+                entity.MaxHp, teamFlag);
         }
 
         public void OnEntityPositionChanged(uint entityId, FixedPos pos)
@@ -252,8 +246,10 @@ namespace Script.ClientLib
             entityView.GetDamage(damage);
             _healthBarOverlay?.SetHp(entityId, entityView.Hp, entityView.MaxHp);
 
-            if (_damageNumberOffsets.TryGetValue(entityId, out var damageNumberOffset))
-                _damageNumberOverlay?.Show(entityId, entityView.transform, damageNumberOffset, damage);
+            if (!_damageNumberOffsets.TryGetValue(entityId, out var damageNumberOffset))
+                return;
+
+            _damageNumberOverlay?.Show(entityView.transform, damageNumberOffset, entityView.TeamFlag, damage);
         }
 
         public void OnEntityRetired(uint entityId)
@@ -263,7 +259,6 @@ namespace Script.ClientLib
             
             entityView.OnRetired();
             _healthBarOverlay?.Unregister(entityId);
-            _damageNumberOverlay?.ForgetEntity(entityId);
             _damageNumberOffsets.Remove(entityId);
         }
 
@@ -308,8 +303,8 @@ namespace Script.ClientLib
 
         public async void OnBattleEnd(TeamFlag winner)
         {
-            // Preserve numbers already on screen so the final hit can finish its animation,
-            // while preventing post-result callbacks from adding a new number.
+            // 화면에 이미 표시된 숫자는 마지막 피격 연출까지 마칠 수 있게 유지하고,
+            // 결과 표시 뒤 콜백이 새 숫자를 추가하지 못하게 막는다.
             _damageNumberOverlay?.StopAcceptingNewNumbers();
 
             foreach (var projectileView in _projectileViews.Values)
