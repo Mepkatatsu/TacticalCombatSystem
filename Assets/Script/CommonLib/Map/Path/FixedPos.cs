@@ -5,9 +5,9 @@ namespace Script.CommonLib
     [Serializable]
     public readonly struct FixedPos : IEquatable<FixedPos>
     {
-        public readonly long X; // fixed-point position, 1000 unit == 1 world unit
-        public readonly long Y; // fixed-point position, 1000 unit == 1 world unit
-        public readonly long Z; // fixed-point position, 1000 unit == 1 world unit
+        public readonly long X; // 고정 소수점 좌표. 1000 unit은 1 world unit에 해당한다.
+        public readonly long Y; // 고정 소수점 좌표. 1000 unit은 1 world unit에 해당한다.
+        public readonly long Z; // 고정 소수점 좌표. 1000 unit은 1 world unit에 해당한다.
 
         public FixedPos(long x, long y, long z)
         {

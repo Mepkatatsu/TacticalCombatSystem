@@ -238,7 +238,7 @@ namespace Script.ClientLib
                 _healthBarContainer.offsetMax = Vector2.zero;
                 _healthBarContainer.pivot = new Vector2(0.5f, 0.5f);
 
-                // Keep dynamic health bars behind the Canvas' scene-authored result UI.
+                // 동적으로 생성한 체력바는 Canvas에 미리 배치된 결과 UI 뒤에 둔다.
                 _healthBarContainer.SetAsFirstSibling();
                 return true;
             }
