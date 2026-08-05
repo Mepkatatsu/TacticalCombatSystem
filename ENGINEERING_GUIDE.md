@@ -79,6 +79,9 @@
 - 우선순위가 있는 상태 판단은 `if-return`을 위에서 아래로 나열한다.
 - 반복문에서는 제외 조건을 먼저 `continue`하고, 남은 본문에는 처리 대상의 핵심 동작만 둔다.
 - Dictionary 조회는 인덱서보다 `TryGetValue`를 우선한다.
+- 새 key를 등록하는 경로에서는 `Dictionary.Add`를 우선한다. 중복 key가 계약 위반이라면 덮어쓰지 말고 즉시 드러나게 한다.
+- 기존 key 갱신 또는 의도적인 upsert에는 인덱서 대입을 사용한다.
+- 중복이 정상적으로 발생할 수 있고 예외가 불필요한 경우에는 `TryAdd`를 검토한다.
 - 계약 위반, 복구 불가능한 설정 오류, 서버 요청 오류는 명시적인 예외 또는 도메인 오류로 처리한다.
 - switch에서 다루지 못한 enum 값은 조용히 무시하지 않고 예외 또는 명시적인 fallback을 고려한다.
 
@@ -102,7 +105,8 @@
 - Update 계열에 매 프레임 Find, GetComponent, 정렬, LINQ, 새 컬렉션 생성을 추가하지 않는다.
 - Coroutine, Tween, 이벤트 구독은 비활성화·재시작·씬 전환 때 중복 실행과 해제를 확인한다.
 - `async void`는 Unity 이벤트 콜백처럼 Task를 반환할 수 없는 경계에서만 사용한다.
-- Unity Object의 null 검사는 Unity의 null semantics에 맞춰 작성한다.
+- UnityEngine.Object 계열의 null 검사는 Unity의 파괴 객체 semantics를 반영해 `if (!target)`, `if (view)` 같은 Unity bool 연산자 표기를 사용한다.
+- 일반 C# 참조형에는 `== null`/`!= null`을 유지한다. Unity Object 여부가 불명확한 값에 `!object` 표기를 기계적으로 적용하지 않는다.
 
 ### 오류, API, 비동기
 
