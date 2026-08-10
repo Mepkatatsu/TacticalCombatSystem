@@ -13,6 +13,7 @@ namespace Script.CommonLib
         public bool HasArrived();
         public bool HasMainTarget();
         public bool IsMainTargetInRange();
+        public bool ShouldPrioritizeMovement { get; }
         public void TryGetNearestEnemy();
         public FixedPos GetPos();
         public void SetPos(FixedPos pos);

@@ -182,6 +182,8 @@ namespace Script.CommonLib
             return _moveState.HasArrived();
         }
 
+        public bool ShouldPrioritizeMovement => _moveState.ShouldPrioritizeMovement;
+
         public void SetPos(GridPos gridPos)
         {
             SetPos(gridPos.ToFixedPos());
@@ -205,6 +207,19 @@ namespace Script.CommonLib
         {
             _moveState.SetDestination(pos);
         }
+
+        internal void SetTacticalDestination(FixedPos pos, List<GridPos> paths)
+        {
+            _moveState.SetTacticalDestination(pos, paths);
+        }
+
+        internal void SetPredictionDestination(FixedPos pos, List<GridPos> paths)
+        {
+            _moveState.SetPredictionDestination(pos, paths);
+        }
+
+        internal FixedPos GetDestinationForTest() => _moveState.GetDestination();
+        internal uint? GetMainTargetIdForTest() => _mainTarget?.Id;
 
         public void OnStartMove()
         {

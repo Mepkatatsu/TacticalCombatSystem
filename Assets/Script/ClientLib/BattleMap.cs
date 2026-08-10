@@ -7,6 +7,7 @@ public class BattleMap : MonoBehaviour
 {
     [Range(1, BattleMapData.MaxMapSize)] public int width = 1;
     [Range(1, BattleMapData.MaxMapSize)] public int height = 1;
+    public bool useInitialTacticalPositioning;
 
     public GridPos offset;
 

@@ -126,6 +126,121 @@ namespace Script.CommonLib.Map
             return Mathf.Abs(gridPos1.x - gridPos2.x) + Mathf.Abs(gridPos1.y - gridPos2.y);
         }
 
+        public bool IsStraightPathReachable(GridPos start, GridPos goal)
+        {
+            if (BlockedPoints.Contains(start) || BlockedPoints.Contains(goal))
+                return false;
+
+            return _visitor.VisitPath(start, goal, (x, y) => BlockedPoints.Contains(new GridPos(x, y)));
+        }
+
+        public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+        {
+            resultWaypoints.Clear();
+
+            if (BlockedPoints.Contains(start) || BlockedPoints.Contains(goal))
+                return false;
+
+            if (IsStraightPathReachable(start, goal))
+            {
+                resultWaypoints.Add(goal);
+                resultWaypoints.Add(start);
+                return true;
+            }
+
+            var openSet = new SortedSet<PathNode>(new PathNodeComparer());
+            var closedSet = new HashSet<PathNode>();
+            var nodeMap = new Dictionary<GridPos, PathNode>();
+            var startNode = new PathNode(start);
+
+            nodeMap.Add(start, startNode);
+            openSet.Add(startNode);
+
+            PathNode goalNode = null;
+
+            while (openSet.Count > 0)
+            {
+                var currentNode = openSet.First();
+                openSet.Remove(currentNode);
+
+                if (currentNode.GridPos == goal)
+                {
+                    goalNode = currentNode;
+                    break;
+                }
+
+                closedSet.Add(currentNode);
+                var neighbors = GetTransientNeighbors(currentNode.GridPos, start, goal);
+
+                for (var i = 0; i < neighbors.Count; i++)
+                {
+                    var gridPos = neighbors[i];
+                    if (!nodeMap.TryGetValue(gridPos, out var neighborNode))
+                    {
+                        neighborNode = new PathNode(gridPos, currentNode);
+                        nodeMap.Add(gridPos, neighborNode);
+                    }
+
+                    if (closedSet.Contains(neighborNode))
+                        continue;
+
+                    var newCost = currentNode.CurrentCost + currentNode.GridPos.GetDistance(gridPos);
+                    if (newCost >= neighborNode.CurrentCost && openSet.Contains(neighborNode))
+                        continue;
+
+                    if (openSet.Contains(neighborNode))
+                        openSet.Remove(neighborNode);
+
+                    neighborNode.CurrentCost = newCost;
+                    neighborNode.HeuristicCost = GetHeuristicCost(gridPos, goal);
+                    neighborNode.TotalCost = neighborNode.CurrentCost + neighborNode.HeuristicCost;
+                    neighborNode.Parent = currentNode;
+                    openSet.Add(neighborNode);
+                }
+            }
+
+            if (goalNode == null)
+                return false;
+
+            while (goalNode != null)
+            {
+                resultWaypoints.Add(goalNode.GridPos);
+                goalNode = goalNode.Parent;
+            }
+
+            return true;
+        }
+
+        private List<GridPos> GetTransientNeighbors(GridPos current, GridPos start, GridPos goal)
+        {
+            var neighbors = new List<GridPos>();
+
+            if (_fullNeighborGridPosDic.TryGetValue(current, out var authoredNeighbors))
+                neighbors.AddRange(authoredNeighbors);
+
+            if (current == start)
+            {
+                for (var i = 0; i < Waypoints.Count; i++)
+                {
+                    var waypoint = Waypoints[i];
+                    if (waypoint != start && IsStraightPathReachable(start, waypoint) && !neighbors.Contains(waypoint))
+                        neighbors.Add(waypoint);
+                }
+            }
+
+            if (current != goal && IsStraightPathReachable(current, goal) && !neighbors.Contains(goal))
+                neighbors.Add(goal);
+
+            neighbors.Sort(CompareGridPos);
+            return neighbors;
+        }
+
+        private static int CompareGridPos(GridPos first, GridPos second)
+        {
+            var xComparison = first.x.CompareTo(second.x);
+            return xComparison != 0 ? xComparison : first.y.CompareTo(second.y);
+        }
+
         private void AddNeighborNode(GridPos key, GridPos value)
         {
             if (!_fullNeighborGridPosDic.TryGetValue(key, out var list))

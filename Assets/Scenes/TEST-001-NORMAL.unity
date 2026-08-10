@@ -3467,6 +3467,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 259
   height: 29
+  useInitialTacticalPositioning: 1
   offset:
     x: 0
     y: 0

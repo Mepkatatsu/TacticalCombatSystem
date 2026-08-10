@@ -28,17 +28,47 @@ namespace Script.CommonLib.Map
         private ulong _projectileIdKey;
         
         private bool _battleEnded;
+        private bool _initialTacticalPositioningAttempted;
         
         public uint ElapsedMs { get; private set; }
 
         public void Init()
         {
             ElapsedMs = 0;
+            _initialTacticalPositioningAttempted = false;
             
             foreach (var entityData in _battleMapData.entities)
             {
                 AddEntity(entityData);
             }
+
+        }
+
+        private void TryApplyInitialTacticalPositioningOnEncounter()
+        {
+            if (!_battleMapData.useInitialTacticalPositioning || _initialTacticalPositioningAttempted)
+                return;
+
+            var blueEntities = new List<Entity>();
+            var redEntities = new List<Entity>();
+
+            for (var i = 0; i < _entityIds.Count; i++)
+            {
+                if (!_entities.TryGetValue(_entityIds[i], out var entity) || !entity.IsAlive())
+                    continue;
+
+                if (entity.GetTeamFlag() == TeamFlag.Blue)
+                    blueEntities.Add(entity);
+                else if (entity.GetTeamFlag() == TeamFlag.Red)
+                    redEntities.Add(entity);
+            }
+
+            if (!InitialEncounterDetector.HasEncounter(blueEntities, redEntities))
+                return;
+
+            _initialTacticalPositioningAttempted = true;
+            var planner = new InitialTacticalFormationPlanner(_battleMapData, _battleMapPathFinder);
+            planner.TryApply(blueEntities, redEntities);
         }
 
         public void Update(ushort deltaMs)
@@ -70,6 +100,8 @@ namespace Script.CommonLib.Map
                 if (_projectiles.TryGetValue(projectileId, out var projectile))
                     projectile.Update(deltaMs);
             }
+
+            TryApplyInitialTacticalPositioningOnEncounter();
             
             for (var i = 0; i < _entityIds.Count; i++)
             {
@@ -226,6 +258,8 @@ namespace Script.CommonLib.Map
         {
             return _projectileIds.Contains(projectileId);
         }
+
+        internal bool WasInitialTacticalPositioningAttemptedForTest => _initialTacticalPositioningAttempted;
 
         public void OnEntityStartMove(uint entityId)
         {
