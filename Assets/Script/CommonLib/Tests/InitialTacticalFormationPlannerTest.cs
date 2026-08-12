@@ -11,6 +11,9 @@ namespace Script.CommonLib.Tests
         {
             var success = true;
             success &= Verify(TestInitDoesNotApplyFormation(), nameof(TestInitDoesNotApplyFormation));
+            success &= Verify(TestEncounterStartsWithinFrontlineDetectionMargin(), nameof(TestEncounterStartsWithinFrontlineDetectionMargin));
+            success &= Verify(TestEncounterDoesNotStartOutsideFrontlineDetectionMargin(), nameof(TestEncounterDoesNotStartOutsideFrontlineDetectionMargin));
+            success &= Verify(TestLongRangeBacklineDoesNotStartEncounterEarly(), nameof(TestLongRangeBacklineDoesNotStartEncounterEarly));
             success &= Verify(TestFirstEncounterAppliesFormationOnce(), nameof(TestFirstEncounterAppliesFormationOnce));
             success &= Verify(TestPredictionKeepsAttackPriorityForUnequalRanges(), nameof(TestPredictionKeepsAttackPriorityForUnequalRanges));
             success &= Verify(TestPlannedEntityMovesEvenWhenEnemyIsInRange(), nameof(TestPlannedEntityMovesEvenWhenEnemyIsInRange));
@@ -24,6 +27,8 @@ namespace Script.CommonLib.Tests
             success &= Verify(TestArbitraryGoalUsesAuthoredWaypointDetour(), nameof(TestArbitraryGoalUsesAuthoredWaypointDetour));
             success &= Verify(TestPartialCandidateFailureKeepsWholeTeamDestinations(), nameof(TestPartialCandidateFailureKeepsWholeTeamDestinations));
             success &= Verify(TestDestinationsStayWithinSafeAttackRange(), nameof(TestDestinationsStayWithinSafeAttackRange));
+            success &= Verify(TestFourEntityTeamKeepsMinimumSpacing(), nameof(TestFourEntityTeamKeepsMinimumSpacing));
+            success &= Verify(TestFourEntityCandidateFailureKeepsWholeTeamDestinations(), nameof(TestFourEntityCandidateFailureKeepsWholeTeamDestinations));
             success &= Verify(TestPlacementPreservesCurrentLateralSide(), nameof(TestPlacementPreservesCurrentLateralSide));
             success &= Verify(TestRedPlacementPreservesCurrentLateralSide(), nameof(TestRedPlacementPreservesCurrentLateralSide));
             success &= Verify(TestDiagonalPlacementPreservesCurrentLateralSide(), nameof(TestDiagonalPlacementPreservesCurrentLateralSide));
@@ -55,11 +60,66 @@ namespace Script.CommonLib.Tests
                    HasAuthoredDestinations(simulator.GetAliveEntities());
         }
 
+        private static bool TestEncounterStartsWithinFrontlineDetectionMargin()
+        {
+            var mapData = CreateMapData(false);
+            mapData.entities[0].attackRange = 3000;
+            mapData.entities[3].attackRange = 5000;
+            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
+            simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            entities[0].SetPos(new FixedPos(0, 0, 0));
+            entities[3].SetPos(new FixedPos(20000, 0, 0));
+
+            return InitialEncounterDetector.HasEncounter(
+                       new List<Entity> { entities[2], entities[0], entities[1] },
+                       new List<Entity> { entities[5], entities[4], entities[3] }) &&
+                   InitialEncounterDetector.HasEncounter(
+                       new List<Entity> { entities[5], entities[4], entities[3] },
+                       new List<Entity> { entities[2], entities[0], entities[1] });
+        }
+
+        private static bool TestEncounterDoesNotStartOutsideFrontlineDetectionMargin()
+        {
+            var mapData = CreateMapData(false);
+            mapData.entities[0].attackRange = 3000;
+            mapData.entities[3].attackRange = 5000;
+            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
+            simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            entities[0].SetPos(new FixedPos(0, 0, 0));
+            entities[3].SetPos(new FixedPos(20001, 0, 0));
+
+            return !InitialEncounterDetector.HasEncounter(
+                new List<Entity> { entities[0], entities[1], entities[2] },
+                new List<Entity> { entities[3], entities[4], entities[5] });
+        }
+
+        private static bool TestLongRangeBacklineDoesNotStartEncounterEarly()
+        {
+            var mapData = CreateMapData(false);
+            mapData.entities[0].attackRange = 3000;
+            mapData.entities[1].attackRange = 20000;
+            mapData.entities[3].attackRange = 3000;
+            mapData.entities[4].attackRange = 20000;
+            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
+            simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            entities[0].SetPos(new FixedPos(0, 0, 0));
+            entities[1].SetPos(new FixedPos(0, 0, 0));
+            entities[3].SetPos(new FixedPos(20000, 0, 0));
+            entities[4].SetPos(new FixedPos(20000, 0, 0));
+
+            return !InitialEncounterDetector.HasEncounter(
+                new List<Entity> { entities[0], entities[1], entities[2] },
+                new List<Entity> { entities[3], entities[4], entities[5] });
+        }
+
         private static bool TestFirstEncounterAppliesFormationOnce()
         {
             var simulator = CreateSimulator(true);
             simulator.Init();
-            simulator.Update(50);
+            AdvanceUntilFormationAttempted(simulator);
 
             return simulator.WasInitialTacticalPositioningAttemptedForTest &&
                    !HasAuthoredDestinations(simulator.GetAliveEntities());
@@ -69,7 +129,7 @@ namespace Script.CommonLib.Tests
         {
             var simulator = CreateSimulator(true);
             simulator.Init();
-            simulator.Update(50);
+            AdvanceUntilFormationAttempted(simulator);
             var firstDestinations = GetDestinationsById(simulator.GetAliveEntities());
 
             for (var i = 0; i < 20; i++)
@@ -87,16 +147,11 @@ namespace Script.CommonLib.Tests
             var simulator = CreateSimulator(true);
             simulator.Init();
             var entities = GetEntities(simulator.GetAliveEntities());
-            var initialBlueRangedPosition = entities[1].GetPos();
-            var initialRedRangedPosition = entities[4].GetPos();
 
-            simulator.Update(50);
-            simulator.Update(50);
+            AdvanceUntilFormationAttempted(simulator);
 
-            return entities[1].GetPos() != initialBlueRangedPosition &&
-                   entities[4].GetPos() != initialRedRangedPosition &&
-                   entities[1].ShouldPrioritizeMovement &&
-                   entities[4].ShouldPrioritizeMovement;
+            return HasEntityPrioritizingMovementInAttackRange(entities, TeamFlag.Blue) &&
+                   HasEntityPrioritizingMovementInAttackRange(entities, TeamFlag.Red);
         }
 
         private static bool TestPredictionKeepsAttackPriorityForUnequalRanges()
@@ -141,7 +196,7 @@ namespace Script.CommonLib.Tests
         {
             var simulator = CreateSimulator(true);
             simulator.Init();
-            simulator.Update(50);
+            AdvanceUntilFormationAttempted(simulator);
             simulator.Update(50);
             var entities = GetEntities(simulator.GetAliveEntities());
             var blueRanged = entities[1];
@@ -199,8 +254,13 @@ namespace Script.CommonLib.Tests
             mapData.entities[1].moveSpeed = 0;
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
             simulator.Init();
-            simulator.Update(50);
+            AdvanceUntilFormationAttempted(simulator);
             var blueRanged = (Entity)simulator.GetAliveEntities()[1];
+
+            for (var i = 0; i < 20 && blueRanged.ShouldPrioritizeMovement; i++)
+            {
+                simulator.Update(50);
+            }
 
             return simulator.WasInitialTacticalPositioningAttemptedForTest &&
                    !blueRanged.ShouldPrioritizeMovement;
@@ -212,8 +272,13 @@ namespace Script.CommonLib.Tests
             mapData.entities[1].moveSpeed = 1;
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
             simulator.Init();
-            simulator.Update(50);
+            AdvanceUntilFormationAttempted(simulator);
             var blueRanged = (Entity)simulator.GetAliveEntities()[1];
+
+            for (var i = 0; i < 20 && blueRanged.ShouldPrioritizeMovement; i++)
+            {
+                simulator.Update(50);
+            }
 
             return simulator.WasInitialTacticalPositioningAttemptedForTest &&
                    !blueRanged.ShouldPrioritizeMovement;
@@ -249,6 +314,9 @@ namespace Script.CommonLib.Tests
 
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
             simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            entities[0].SetPos(new GridPos(-3, 0));
+            entities[3].SetPos(new GridPos(3, 0));
             simulator.Update(50);
 
             return simulator.WasInitialTacticalPositioningAttemptedForTest &&
@@ -318,11 +386,65 @@ namespace Script.CommonLib.Tests
                    entities[2].GetDestinationForTest().GetDistance(redFrontlinePosition) <= safeAttackRange;
         }
 
+        private static bool TestFourEntityTeamKeepsMinimumSpacing()
+        {
+            var mapData = CreateFourEntityTeamMapData();
+            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
+            simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            var blueEntities = new List<Entity> { entities[0], entities[1], entities[2], entities[3] };
+            var redEntities = new List<Entity> { entities[4], entities[5], entities[6], entities[7] };
+            var predictor = new FrontlineEncounterPredictor(mapData);
+            if (!predictor.TryPredict(
+                    blueEntities[0],
+                    redEntities[0],
+                    out var blueFrontlinePosition,
+                    out var redFrontlinePosition))
+            {
+                return false;
+            }
+
+            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
+            if (!planner.TryApply(blueEntities, redEntities))
+                return false;
+
+            var bluePositions = new List<FixedPos> { blueFrontlinePosition };
+            var redPositions = new List<FixedPos> { redFrontlinePosition };
+            for (var i = 1; i < 4; i++)
+            {
+                bluePositions.Add(blueEntities[i].GetDestinationForTest());
+                redPositions.Add(redEntities[i].GetDestinationForTest());
+            }
+
+            return HasMinimumSpacing(bluePositions, 4500) &&
+                   HasMinimumSpacing(redPositions, 4500);
+        }
+
+        private static bool TestFourEntityCandidateFailureKeepsWholeTeamDestinations()
+        {
+            var mapData = CreateFourEntityTeamMapData();
+            mapData.minGridPos = new GridPos(-30, -4);
+            mapData.maxGridPos = new GridPos(30, 4);
+            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
+            simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            var blueEntities = new List<Entity> { entities[0], entities[1], entities[2], entities[3] };
+            var redEntities = new List<Entity> { entities[4], entities[5], entities[6], entities[7] };
+            var authoredDestinations = GetDestinationsById(simulator.GetAliveEntities());
+            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
+
+            planner.TryApply(blueEntities, redEntities);
+
+            return HaveSameDestinations(
+                authoredDestinations,
+                GetDestinationsById(simulator.GetAliveEntities()));
+        }
+
         private static bool TestBlueAndRedPlacementIsSymmetric()
         {
             var simulator = CreateSimulator(true);
             simulator.Init();
-            simulator.Update(50);
+            AdvanceUntilFormationAttempted(simulator);
             var entities = GetEntities(simulator.GetAliveEntities());
 
             var blueFirst = entities[1].GetDestinationForTest();
@@ -421,51 +543,41 @@ namespace Script.CommonLib.Tests
 
         private static bool TestEntityResumesAuthoredDestinationAfterExecutedAttack()
         {
-            var mapData = CreateMapData(true);
-            mapData.entities[1].attackDelayMs = 0;
-            var eventHandler = new AttackRecordingEventHandler();
-            var simulator = new BattleMapSimulator(eventHandler, mapData);
-            simulator.Init();
-            simulator.Update(50);
-            var entities = GetEntities(simulator.GetAliveEntities());
-            var blueRanged = entities[1];
+            var context = new ResumePathTestContext(true);
+            var attackerData = CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000);
+            attackerData.attackDelayMs = 0;
+            var enemyData = CreateEntityData(TeamFlag.Red, string.Empty, string.Empty, 2000);
+            var attacker = new Entity(1, context, attackerData);
+            var enemy = new Entity(2, context, enemyData);
+            context.AddEntity(attacker);
+            context.AddEntity(enemy);
+            attacker.SetPos(new GridPos(-1, 0));
+            var authoredDestination = new GridPos(10, 0).ToFixedPos();
+            attacker.SetDestination(authoredDestination);
+            attacker.SetTacticalDestination(
+                new GridPos(0, 0).ToFixedPos(),
+                new List<GridPos> { new(0, 0) });
+            enemy.SetPos(new GridPos(1, 0));
+            enemy.SetDestination(enemy.GetPos());
 
-            for (var i = 0; i < 500 && blueRanged.ShouldPrioritizeMovement; i++)
+            for (var i = 0; i < 20 && context.AttackRequestCount == 0; i++)
             {
-                simulator.Update(50);
+                context.Update(attacker, 50);
             }
 
-            if (blueRanged.ShouldPrioritizeMovement)
+            if (context.AttackRequestCount == 0)
                 return false;
 
-            for (var i = 0; i < 500 && !eventHandler.HasAttackFrom(blueRanged.Id); i++)
+            var tacticalPosition = attacker.GetPos();
+            enemy.SetPos(new GridPos(8, 0));
+            for (var i = 0; i < 20 && attacker.GetPos() == tacticalPosition; i++)
             {
-                simulator.Update(50);
+                context.Update(attacker, 50);
             }
 
-            if (!eventHandler.HasAttackFrom(blueRanged.Id))
-                return false;
-
-            var tacticalPosition = blueRanged.GetPos();
-            var redSurvivor = entities[5];
-            for (var i = 3; i < 6; i++)
-            {
-                if (entities[i] != redSurvivor)
-                    entities[i].Hit(entities[i].MaxHp);
-            }
-
-            var survivorPosition = new GridPos(28, 0).ToFixedPos();
-            redSurvivor.SetPos(survivorPosition);
-            redSurvivor.SetDestination(survivorPosition);
-
-            for (var i = 0; i < 20 && blueRanged.GetPos() == tacticalPosition; i++)
-            {
-                simulator.Update(50);
-            }
-
-            return redSurvivor.IsAlive() &&
-                   blueRanged.GetDestinationForTest() == new GridPos(20, -4).ToFixedPos() &&
-                   blueRanged.GetPos() != tacticalPosition;
+            return context.ResumePathRequestCount == 1 &&
+                   attacker.GetDestinationForTest() == authoredDestination &&
+                   attacker.GetPos() != tacticalPosition;
         }
 
         private static bool TestEntityDoesNotResumeBeforeExecutingAttack()
@@ -474,7 +586,7 @@ namespace Script.CommonLib.Tests
             var eventHandler = new AttackRecordingEventHandler();
             var simulator = new BattleMapSimulator(eventHandler, mapData);
             simulator.Init();
-            simulator.Update(50);
+            AdvanceUntilFormationAttempted(simulator);
             var entities = GetEntities(simulator.GetAliveEntities());
             var blueRanged = entities[1];
 
@@ -567,6 +679,23 @@ namespace Script.CommonLib.Tests
             return startProjection != 0 &&
                    destinationProjection != 0 &&
                    (startProjection > 0) == (destinationProjection > 0);
+        }
+
+        private static bool HasEntityPrioritizingMovementInAttackRange(
+            List<Entity> entities,
+            TeamFlag teamFlag)
+        {
+            for (var i = 0; i < entities.Count; i++)
+            {
+                if (entities[i].GetTeamFlag() == teamFlag &&
+                    entities[i].ShouldPrioritizeMovement &&
+                    entities[i].IsMainTargetInRange())
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool TestPlacementOrderIsDeterministicWhenInputOrderChanges()
@@ -783,6 +912,73 @@ namespace Script.CommonLib.Tests
             return new BattleMapSimulator(
                 NullBattleMapEventHandler.Instance,
                 CreateMapData(useInitialTacticalPositioning));
+        }
+
+        private static bool AdvanceUntilFormationAttempted(BattleMapSimulator simulator)
+        {
+            for (var i = 0; i < 2000 && !simulator.WasInitialTacticalPositioningAttemptedForTest; i++)
+            {
+                simulator.Update(50);
+            }
+
+            return simulator.WasInitialTacticalPositioningAttemptedForTest;
+        }
+
+        private static bool HasMinimumSpacing(List<FixedPos> positions, long minimumSpacing)
+        {
+            for (var i = 0; i < positions.Count; i++)
+            {
+                for (var j = i + 1; j < positions.Count; j++)
+                {
+                    if (positions[i].GetDistance(positions[j]) < minimumSpacing)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static BattleMapData CreateFourEntityTeamMapData()
+        {
+            var battlePositions = new List<BattlePositionData>
+            {
+                CreateBattlePosition("BlueStart1", -10, 0),
+                CreateBattlePosition("BlueStart2", -10, -6),
+                CreateBattlePosition("BlueStart3", -10, 6),
+                CreateBattlePosition("BlueStart4", -10, 10),
+                CreateBattlePosition("RedStart1", 10, 0),
+                CreateBattlePosition("RedStart2", 10, -6),
+                CreateBattlePosition("RedStart3", 10, 6),
+                CreateBattlePosition("RedStart4", 10, 10),
+                CreateBattlePosition("BlueEnd1", 25, 0),
+                CreateBattlePosition("BlueEnd2", 25, -6),
+                CreateBattlePosition("BlueEnd3", 25, 6),
+                CreateBattlePosition("BlueEnd4", 25, 10),
+                CreateBattlePosition("RedEnd1", -25, 0),
+                CreateBattlePosition("RedEnd2", -25, -6),
+                CreateBattlePosition("RedEnd3", -25, 6),
+                CreateBattlePosition("RedEnd4", -25, 10),
+            };
+
+            return new BattleMapData
+            {
+                minGridPos = new GridPos(-30, -20),
+                maxGridPos = new GridPos(30, 20),
+                useInitialTacticalPositioning = false,
+                battlePositions = battlePositions,
+                obstacles = new List<ObstacleData>(),
+                entities = new List<EntityData>
+                {
+                    CreateEntityData(TeamFlag.Blue, "BlueStart1", "BlueEnd1", 5000),
+                    CreateEntityData(TeamFlag.Blue, "BlueStart2", "BlueEnd2", 12000),
+                    CreateEntityData(TeamFlag.Blue, "BlueStart3", "BlueEnd3", 12000),
+                    CreateEntityData(TeamFlag.Blue, "BlueStart4", "BlueEnd4", 12000),
+                    CreateEntityData(TeamFlag.Red, "RedStart1", "RedEnd1", 5000),
+                    CreateEntityData(TeamFlag.Red, "RedStart2", "RedEnd2", 12000),
+                    CreateEntityData(TeamFlag.Red, "RedStart3", "RedEnd3", 12000),
+                    CreateEntityData(TeamFlag.Red, "RedStart4", "RedEnd4", 12000),
+                },
+            };
         }
 
         private static BattleMapData CreateMapData(bool useInitialTacticalPositioning)

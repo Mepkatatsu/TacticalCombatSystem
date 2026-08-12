@@ -5,32 +5,27 @@ namespace Script.CommonLib.Map
 {
     internal static class InitialEncounterDetector
     {
+        private const int FrontlineDetectionMargin = 15000;
+
         public static bool HasEncounter(List<Entity> blueEntities, List<Entity> redEntities)
         {
-            for (var blueIndex = 0; blueIndex < blueEntities.Count; blueIndex++)
-            {
-                var blue = blueEntities[blueIndex];
+            var blueFrontline = InitialTacticalFormationPlanner.GetFrontlineEntity(blueEntities);
+            var redFrontline = InitialTacticalFormationPlanner.GetFrontlineEntity(redEntities);
+            if (blueFrontline == null || redFrontline == null)
+                return false;
 
-                for (var redIndex = 0; redIndex < redEntities.Count; redIndex++)
-                {
-                    var red = redEntities[redIndex];
-                    var distance = blue.GetPos().GetDistance(red.GetPos());
-
-                    if (distance <= blue.AttackRange || distance <= red.AttackRange)
-                        return true;
-                }
-            }
-
-            return false;
+            var distance = blueFrontline.GetPos().GetDistance(redFrontline.GetPos());
+            return distance <= blueFrontline.AttackRange + FrontlineDetectionMargin ||
+                   distance <= redFrontline.AttackRange + FrontlineDetectionMargin;
         }
     }
 
     internal sealed class InitialTacticalFormationPlanner
     {
         private const int SafeAttackRangePercent = 90;
-        private const int MinimumAllySpacing = 3000;
+        private const int MinimumAllySpacing = 4500;
         private const int PreferredAllySpacing = 6000;
-        private const int LateralCandidateStep = 3000;
+        private const int LateralCandidateStep = 4500;
         private const int MoveDistanceScoreWeight = 15;
         private const int LateralCrossingScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 2;
 
@@ -321,7 +316,7 @@ namespace Script.CommonLib.Map
             return nearestDistance;
         }
 
-        private static Entity GetFrontlineEntity(List<Entity> entities)
+        internal static Entity GetFrontlineEntity(List<Entity> entities)
         {
             Entity frontline = null;
 
