@@ -89,6 +89,8 @@ namespace Script.CommonLib
             {
                 _forceIdleLeftMs = 0;
             }
+
+            TryResumeAuthoredDestination();
             
             var nextStateType = _brain.ThinkNextStateType();
             var nextState = GetState(nextStateType);
@@ -118,6 +120,30 @@ namespace Script.CommonLib
             _lastStateMs = battleElapsedMs;
 
             nextState.Update(deltaMs);
+        }
+
+        private void TryResumeAuthoredDestination()
+        {
+            if (!IsAlive() || !_moveState.IsWaitingAtTacticalDestination)
+                return;
+
+            TryGetNearestEnemy();
+            if (IsMainTargetInRange())
+                return;
+
+            if (!_battleMapContext.HasAliveEnemy(Id) || !_moveState.TryBeginAuthoredDestinationResume())
+                return;
+
+            var paths = new List<GridPos>();
+            if (!_battleMapContext.TryFindWaypoints(
+                    GetPos().ToGridPos(),
+                    _moveState.GetAuthoredDestination().ToGridPos(),
+                    paths))
+            {
+                return;
+            }
+
+            _moveState.ResumeAuthoredDestination(paths);
         }
 
         private IState GetState(EntityStateType stateType)
@@ -244,6 +270,7 @@ namespace Script.CommonLib
         public void RequestAttack()
         {
             _battleMapContext.RequestAttack(Id, _mainTarget.Id);
+            _moveState.MarkTacticalDestinationAttackExecuted();
         }
     }
 }

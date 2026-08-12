@@ -31,6 +31,8 @@ namespace Script.CommonLib.Map
         private const int MinimumAllySpacing = 3000;
         private const int PreferredAllySpacing = 6000;
         private const int LateralCandidateStep = 3000;
+        private const int MoveDistanceScoreWeight = 15;
+        private const int LateralCrossingScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 2;
 
         private static readonly int[] CandidateRangePercents = { 90, 85, 80 };
         private static readonly int[] LateralCandidateIndices = { 0, 1, -1, 2, -2, 3, -3 };
@@ -252,12 +254,39 @@ namespace Script.CommonLib.Map
             var forwardProjection = (candidateDelta.X * frontlineDelta.X + candidateDelta.Z * frontlineDelta.Z) /
                                     Math.Max(1, frontlineDistance);
             var excessiveAdvance = Math.Max(0, forwardProjection);
+            var currentLateralProjection = GetLateralProjection(
+                currentPosition,
+                frontlinePosition,
+                frontlineDelta,
+                frontlineDistance);
+            var candidateLateralProjection = GetLateralProjection(
+                candidate,
+                frontlinePosition,
+                frontlineDelta,
+                frontlineDistance);
+            var lateralCrossingPenalty = currentLateralProjection != 0 &&
+                                         candidateLateralProjection != 0 &&
+                                         Math.Sign(currentLateralProjection) != Math.Sign(candidateLateralProjection)
+                ? LateralCrossingScorePenalty
+                : 0;
 
             return -attackRangeError * 100
                    - allySpacingError * 20
                    - excessiveAdvance * 200
-                   - moveDistance * 5
-                   - centerDistance * 10;
+                   - moveDistance * MoveDistanceScoreWeight
+                   - centerDistance * 10
+                   - lateralCrossingPenalty;
+        }
+
+        private static long GetLateralProjection(
+            FixedPos position,
+            FixedPos frontlinePosition,
+            FixedPos frontlineDelta,
+            long frontlineDistance)
+        {
+            var positionDelta = position - frontlinePosition;
+            return (-positionDelta.X * frontlineDelta.Z + positionDelta.Z * frontlineDelta.X) /
+                   Math.Max(1, frontlineDistance);
         }
 
         private static FixedPos CreateCandidatePosition(

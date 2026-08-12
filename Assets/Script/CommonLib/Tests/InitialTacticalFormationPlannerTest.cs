@@ -24,8 +24,14 @@ namespace Script.CommonLib.Tests
             success &= Verify(TestArbitraryGoalUsesAuthoredWaypointDetour(), nameof(TestArbitraryGoalUsesAuthoredWaypointDetour));
             success &= Verify(TestPartialCandidateFailureKeepsWholeTeamDestinations(), nameof(TestPartialCandidateFailureKeepsWholeTeamDestinations));
             success &= Verify(TestDestinationsStayWithinSafeAttackRange(), nameof(TestDestinationsStayWithinSafeAttackRange));
+            success &= Verify(TestPlacementPreservesCurrentLateralSide(), nameof(TestPlacementPreservesCurrentLateralSide));
+            success &= Verify(TestRedPlacementPreservesCurrentLateralSide(), nameof(TestRedPlacementPreservesCurrentLateralSide));
+            success &= Verify(TestDiagonalPlacementPreservesCurrentLateralSide(), nameof(TestDiagonalPlacementPreservesCurrentLateralSide));
             success &= Verify(TestBlueAndRedPlacementIsSymmetric(), nameof(TestBlueAndRedPlacementIsSymmetric));
             success &= Verify(TestPlacementOrderIsDeterministicWhenInputOrderChanges(), nameof(TestPlacementOrderIsDeterministicWhenInputOrderChanges));
+            success &= Verify(TestEntityResumesAuthoredDestinationAfterExecutedAttack(), nameof(TestEntityResumesAuthoredDestinationAfterExecutedAttack));
+            success &= Verify(TestEntityDoesNotResumeBeforeExecutingAttack(), nameof(TestEntityDoesNotResumeBeforeExecutingAttack));
+            success &= Verify(TestFailedAuthoredDestinationResumeIsAttemptedOnce(), nameof(TestFailedAuthoredDestinationResumeIsAttemptedOnce));
             success &= Verify(TestDisabledMapKeepsAuthoredDestinations(), nameof(TestDisabledMapKeepsAuthoredDestinations));
             success &= Verify(TestExistingFindWaypointsResultIsPreserved(), nameof(TestExistingFindWaypointsResultIsPreserved));
             success &= Verify(TestTest001RuntimeSimulationAppliesFormation(), nameof(TestTest001RuntimeSimulationAppliesFormation));
@@ -330,6 +336,239 @@ namespace Script.CommonLib.Tests
                    blueSecond.Z == redSecond.Z;
         }
 
+        private static bool TestPlacementPreservesCurrentLateralSide()
+        {
+            var mapData = CreateMapData(false);
+            mapData.battlePositions[1].gridPos = new GridPos(-6, 4);
+            mapData.battlePositions[2].gridPos = new GridPos(-6, -4);
+            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
+            simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            var blueUpperStart = entities[1].GetPos();
+            var blueLowerStart = entities[2].GetPos();
+            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
+
+            planner.TryApply(
+                new List<Entity> { entities[0], entities[1], entities[2] },
+                new List<Entity> { entities[3], entities[4], entities[5] });
+
+            return blueUpperStart.Z > 0 &&
+                   blueLowerStart.Z < 0 &&
+                   entities[1].GetDestinationForTest().Z > 0 &&
+                   entities[2].GetDestinationForTest().Z < 0;
+        }
+
+        private static bool TestRedPlacementPreservesCurrentLateralSide()
+        {
+            var mapData = CreateMapData(false);
+            mapData.battlePositions[4].gridPos = new GridPos(6, 4);
+            mapData.battlePositions[5].gridPos = new GridPos(6, -4);
+            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
+            simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            var redUpperStart = entities[4].GetPos();
+            var redLowerStart = entities[5].GetPos();
+            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
+
+            planner.TryApply(
+                new List<Entity> { entities[0], entities[1], entities[2] },
+                new List<Entity> { entities[3], entities[4], entities[5] });
+
+            return redUpperStart.Z > 0 &&
+                   redLowerStart.Z < 0 &&
+                   entities[4].GetDestinationForTest().Z > 0 &&
+                   entities[5].GetDestinationForTest().Z < 0;
+        }
+
+        private static bool TestDiagonalPlacementPreservesCurrentLateralSide()
+        {
+            var mapData = CreateMapData(false);
+            mapData.battlePositions[0].gridPos = new GridPos(-8, -2);
+            mapData.battlePositions[1].gridPos = new GridPos(-10, 4);
+            mapData.battlePositions[2].gridPos = new GridPos(-6, -8);
+            mapData.battlePositions[3].gridPos = new GridPos(8, 2);
+            mapData.battlePositions[4].gridPos = new GridPos(10, -4);
+            mapData.battlePositions[5].gridPos = new GridPos(6, 8);
+            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
+            simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            var starts = new FixedPos[entities.Count];
+            for (var i = 0; i < entities.Count; i++)
+            {
+                starts[i] = entities[i].GetPos();
+            }
+
+            var predictor = new FrontlineEncounterPredictor(mapData);
+            if (!predictor.TryPredict(
+                    entities[0],
+                    entities[3],
+                    out var blueFrontline,
+                    out var redFrontline))
+            {
+                return false;
+            }
+
+            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
+            planner.TryApply(
+                new List<Entity> { entities[0], entities[1], entities[2] },
+                new List<Entity> { entities[3], entities[4], entities[5] });
+
+            return HasSameLateralSide(starts[1], entities[1].GetDestinationForTest(), blueFrontline, redFrontline) &&
+                   HasSameLateralSide(starts[2], entities[2].GetDestinationForTest(), blueFrontline, redFrontline) &&
+                   HasSameLateralSide(starts[4], entities[4].GetDestinationForTest(), redFrontline, blueFrontline) &&
+                   HasSameLateralSide(starts[5], entities[5].GetDestinationForTest(), redFrontline, blueFrontline);
+        }
+
+        private static bool TestEntityResumesAuthoredDestinationAfterExecutedAttack()
+        {
+            var mapData = CreateMapData(true);
+            mapData.entities[1].attackDelayMs = 0;
+            var eventHandler = new AttackRecordingEventHandler();
+            var simulator = new BattleMapSimulator(eventHandler, mapData);
+            simulator.Init();
+            simulator.Update(50);
+            var entities = GetEntities(simulator.GetAliveEntities());
+            var blueRanged = entities[1];
+
+            for (var i = 0; i < 500 && blueRanged.ShouldPrioritizeMovement; i++)
+            {
+                simulator.Update(50);
+            }
+
+            if (blueRanged.ShouldPrioritizeMovement)
+                return false;
+
+            for (var i = 0; i < 500 && !eventHandler.HasAttackFrom(blueRanged.Id); i++)
+            {
+                simulator.Update(50);
+            }
+
+            if (!eventHandler.HasAttackFrom(blueRanged.Id))
+                return false;
+
+            var tacticalPosition = blueRanged.GetPos();
+            var redSurvivor = entities[5];
+            for (var i = 3; i < 6; i++)
+            {
+                if (entities[i] != redSurvivor)
+                    entities[i].Hit(entities[i].MaxHp);
+            }
+
+            var survivorPosition = new GridPos(28, 0).ToFixedPos();
+            redSurvivor.SetPos(survivorPosition);
+            redSurvivor.SetDestination(survivorPosition);
+
+            for (var i = 0; i < 20 && blueRanged.GetPos() == tacticalPosition; i++)
+            {
+                simulator.Update(50);
+            }
+
+            return redSurvivor.IsAlive() &&
+                   blueRanged.GetDestinationForTest() == new GridPos(20, -4).ToFixedPos() &&
+                   blueRanged.GetPos() != tacticalPosition;
+        }
+
+        private static bool TestEntityDoesNotResumeBeforeExecutingAttack()
+        {
+            var mapData = CreateMapData(true);
+            var eventHandler = new AttackRecordingEventHandler();
+            var simulator = new BattleMapSimulator(eventHandler, mapData);
+            simulator.Init();
+            simulator.Update(50);
+            var entities = GetEntities(simulator.GetAliveEntities());
+            var blueRanged = entities[1];
+
+            for (var i = 0; i < 500 && blueRanged.ShouldPrioritizeMovement; i++)
+            {
+                simulator.Update(50);
+            }
+
+            for (var i = 0; i < 20 && !blueRanged.IsMainTargetInRange(); i++)
+            {
+                simulator.Update(50);
+            }
+
+            if (!blueRanged.IsMainTargetInRange() || eventHandler.HasAttackFrom(blueRanged.Id))
+                return false;
+
+            var tacticalDestination = blueRanged.GetDestinationForTest();
+            var redSurvivor = entities[5];
+            for (var i = 3; i < 6; i++)
+            {
+                if (entities[i] != redSurvivor)
+                    entities[i].Hit(entities[i].MaxHp);
+            }
+
+            var survivorPosition = new GridPos(28, 0).ToFixedPos();
+            redSurvivor.SetPos(survivorPosition);
+            redSurvivor.SetDestination(survivorPosition);
+            for (var i = 0; i < 20; i++)
+            {
+                simulator.Update(50);
+            }
+
+            return !eventHandler.HasAttackFrom(blueRanged.Id) &&
+                   blueRanged.GetDestinationForTest() == tacticalDestination;
+        }
+
+        private static bool TestFailedAuthoredDestinationResumeIsAttemptedOnce()
+        {
+            var context = new ResumePathTestContext(false);
+            var attackerData = CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000);
+            attackerData.attackDelayMs = 0;
+            var enemyData = CreateEntityData(TeamFlag.Red, string.Empty, string.Empty, 2000);
+            var attacker = new Entity(1, context, attackerData);
+            var enemy = new Entity(2, context, enemyData);
+            context.AddEntity(attacker);
+            context.AddEntity(enemy);
+            attacker.SetPos(new GridPos(-1, 0));
+            attacker.SetDestination(new GridPos(10, 0).ToFixedPos());
+            attacker.SetTacticalDestination(
+                new GridPos(0, 0).ToFixedPos(),
+                new List<GridPos> { new(0, 0) });
+            enemy.SetPos(new GridPos(10, 0));
+            enemy.SetDestination(enemy.GetPos());
+
+            for (var i = 0; i < 20 && attacker.ShouldPrioritizeMovement; i++)
+            {
+                context.Update(attacker, 50);
+            }
+
+            enemy.SetPos(new GridPos(1, 0));
+            for (var i = 0; i < 20 && context.AttackRequestCount == 0; i++)
+            {
+                context.Update(attacker, 50);
+            }
+
+            if (context.AttackRequestCount == 0)
+                return false;
+
+            enemy.SetPos(new GridPos(8, 0));
+            for (var i = 0; i < 20; i++)
+            {
+                context.Update(attacker, 50);
+            }
+
+            return context.ResumePathRequestCount == 1 &&
+                   attacker.GetDestinationForTest() == new GridPos(0, 0).ToFixedPos();
+        }
+
+        private static bool HasSameLateralSide(
+            FixedPos start,
+            FixedPos destination,
+            FixedPos frontline,
+            FixedPos opposingFrontline)
+        {
+            var axis = opposingFrontline - frontline;
+            var startDelta = start - frontline;
+            var destinationDelta = destination - frontline;
+            var startProjection = -startDelta.X * axis.Z + startDelta.Z * axis.X;
+            var destinationProjection = -destinationDelta.X * axis.Z + destinationDelta.Z * axis.X;
+            return startProjection != 0 &&
+                   destinationProjection != 0 &&
+                   (startProjection > 0) == (destinationProjection > 0);
+        }
+
         private static bool TestPlacementOrderIsDeterministicWhenInputOrderChanges()
         {
             var firstMapData = CreateMapData(false);
@@ -611,6 +850,137 @@ namespace Script.CommonLib.Tests
                 attackRange = attackRange,
                 moveSpeed = 5000,
             };
+        }
+
+        private sealed class AttackRecordingEventHandler : IBattleMapEventHandler
+        {
+            private readonly List<uint> _attackerIds = new();
+
+            public bool HasAttackFrom(uint attackerId) => _attackerIds.Contains(attackerId);
+
+            public void OnEntityAdded(uint entityId, Entity entity) { }
+            public void OnEntityPositionChanged(uint entityId, FixedPos pos) { }
+            public void OnEntityDirectionChanged(uint entityId, FixedDir dir) { }
+            public void OnEntityStartMove(uint entityId) { }
+            public void OnEntityStopMove(uint entityId) { }
+            public void OnEntityStartAttack(uint attackerId, uint targetId) => _attackerIds.Add(attackerId);
+            public void OnEntityGetDamage(uint entityId, uint damage) { }
+            public void OnEntityRetired(uint entityId) { }
+            public void OnProjectileAdded(ulong projectileId, Projectile projectile) { }
+            public void OnProjectilePositionChanged(ulong projectileId, FixedPos pos) { }
+            public void OnProjectileDirectionChanged(ulong projectileId, FixedDir dir) { }
+            public void OnProjectileTriggered(ulong projectileId) { }
+            public void OnBattleEnd(TeamFlag winner) { }
+            public void OnBattleMapUpdated(ushort deltaMs) { }
+        }
+
+        private sealed class ResumePathTestContext : IBattleMapContext
+        {
+            private readonly bool _shouldFindResumePath;
+            private readonly List<Entity> _entities = new();
+
+            public ResumePathTestContext(bool shouldFindResumePath)
+            {
+                _shouldFindResumePath = shouldFindResumePath;
+            }
+
+            public int AttackRequestCount { get; private set; }
+            public int ResumePathRequestCount { get; private set; }
+            public uint ElapsedMs { get; private set; }
+
+            public void AddEntity(Entity entity)
+            {
+                _entities.Add(entity);
+            }
+
+            public void Update(Entity entity, ushort deltaMs)
+            {
+                ElapsedMs += deltaMs;
+                entity.Update(deltaMs);
+            }
+
+            public IEntityContext TryGetNearestEnemy(uint entityId, long maxDistance)
+            {
+                var entity = GetEntity(entityId);
+                Entity nearest = null;
+                var nearestDistance = long.MaxValue;
+
+                for (var i = 0; i < _entities.Count; i++)
+                {
+                    var otherEntity = _entities[i];
+                    if (otherEntity.Id == entityId ||
+                        !otherEntity.IsAlive() ||
+                        otherEntity.GetTeamFlag() == entity.GetTeamFlag())
+                    {
+                        continue;
+                    }
+
+                    var distance = entity.GetPos().GetDistance(otherEntity.GetPos());
+                    if (distance <= maxDistance && distance < nearestDistance)
+                    {
+                        nearest = otherEntity;
+                        nearestDistance = distance;
+                    }
+                }
+
+                return nearest;
+            }
+
+            public bool HasAliveEnemy(uint entityId)
+            {
+                var entity = GetEntity(entityId);
+                for (var i = 0; i < _entities.Count; i++)
+                {
+                    if (_entities[i].Id != entityId &&
+                        _entities[i].IsAlive() &&
+                        _entities[i].GetTeamFlag() != entity.GetTeamFlag())
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+            {
+                resultWaypoints.Add(goal);
+            }
+
+            public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+            {
+                ++ResumePathRequestCount;
+                if (!_shouldFindResumePath)
+                    return false;
+
+                resultWaypoints.Add(goal);
+                return true;
+            }
+
+            public void RequestAttack(uint attackerId, uint targetEntityId)
+            {
+                ++AttackRequestCount;
+            }
+
+            public void OnEntityPositionChanged(uint entityId, FixedPos pos) { }
+            public void OnEntityDirectionChanged(uint entityId, FixedDir dir) { }
+            public void OnEntityGetDamage(uint entityId, uint damage) { }
+            public void OnProjectilePositionChanged(ulong projectileId, FixedPos pos) { }
+            public void OnProjectileDirectionChanged(ulong projectileId, FixedDir dir) { }
+            public void OnProjectileTriggered(ulong projectileId) { }
+            public void OnEntityStartMove(uint entityId) { }
+            public void OnEntityStopMove(uint entityId) { }
+
+            private Entity GetEntity(uint entityId)
+            {
+                for (var i = 0; i < _entities.Count; i++)
+                {
+                    if (_entities[i].Id == entityId)
+                        return _entities[i];
+                }
+
+                return null;
+            }
         }
     }
 }

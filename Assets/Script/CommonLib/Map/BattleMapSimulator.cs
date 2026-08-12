@@ -333,9 +333,35 @@ namespace Script.CommonLib.Map
             return nearest;
         }
 
+        public bool HasAliveEnemy(uint entityId)
+        {
+            if (!_entities.TryGetValue(entityId, out var entity))
+                return false;
+
+            for (var i = 0; i < _entityIds.Count; i++)
+            {
+                if (!_entities.TryGetValue(_entityIds[i], out var otherEntity) ||
+                    otherEntity == entity ||
+                    !otherEntity.IsAlive() ||
+                    otherEntity.GetTeamFlag() == entity.GetTeamFlag())
+                {
+                    continue;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
         {
             _battleMapPathFinder.FindWaypoints(start, goal, resultWaypoints);
+        }
+
+        public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+        {
+            return _battleMapPathFinder.TryFindWaypoints(start, goal, resultWaypoints);
         }
         
         public List<IEntityContext> GetAliveEntities()

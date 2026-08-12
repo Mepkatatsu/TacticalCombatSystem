@@ -13,6 +13,11 @@ namespace Script.CommonLib
         private FixedPos _pos;
         private FixedDir _dir;
         private FixedPos _destination;
+        private FixedPos _authoredDestination;
+        private bool _hasAuthoredDestination;
+        private bool _hasActiveTacticalDestination;
+        private bool _hasExecutedAttackAtTacticalDestination;
+        private bool _hasAttemptedAuthoredDestinationResume;
         private bool _shouldPrioritizeMovement;
         private readonly List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
 
@@ -34,11 +39,20 @@ namespace Script.CommonLib
         public void SetDestination(FixedPos destination)
         {
             _destination = destination;
+            _hasAuthoredDestination = false;
+            _hasActiveTacticalDestination = false;
+            _hasExecutedAttackAtTacticalDestination = false;
+            _hasAttemptedAuthoredDestinationResume = false;
             _shouldPrioritizeMovement = false;
         }
 
         internal void SetTacticalDestination(FixedPos destination, List<GridPos> paths)
         {
+            _authoredDestination = _destination;
+            _hasAuthoredDestination = true;
+            _hasActiveTacticalDestination = true;
+            _hasExecutedAttackAtTacticalDestination = false;
+            _hasAttemptedAuthoredDestinationResume = false;
             SetDestinationWithPath(destination, paths, true);
         }
 
@@ -59,6 +73,46 @@ namespace Script.CommonLib
         }
 
         internal FixedPos GetDestination() => _destination;
+
+        internal bool IsWaitingAtTacticalDestination =>
+            _hasActiveTacticalDestination &&
+            !_shouldPrioritizeMovement &&
+            HasArrived();
+
+        internal FixedPos GetAuthoredDestination() => _authoredDestination;
+
+        internal void MarkTacticalDestinationAttackExecuted()
+        {
+            if (_hasActiveTacticalDestination)
+                _hasExecutedAttackAtTacticalDestination = true;
+        }
+
+        internal bool TryBeginAuthoredDestinationResume()
+        {
+            if (!_hasAuthoredDestination ||
+                !IsWaitingAtTacticalDestination ||
+                !_hasExecutedAttackAtTacticalDestination ||
+                _hasAttemptedAuthoredDestinationResume ||
+                _destination == _authoredDestination)
+            {
+                return false;
+            }
+
+            _hasAttemptedAuthoredDestinationResume = true;
+            return true;
+        }
+
+        internal void ResumeAuthoredDestination(List<GridPos> paths)
+        {
+            _destination = _authoredDestination;
+            _hasAuthoredDestination = false;
+            _hasActiveTacticalDestination = false;
+            _hasExecutedAttackAtTacticalDestination = false;
+            _hasAttemptedAuthoredDestinationResume = false;
+            _shouldPrioritizeMovement = false;
+            _paths.Clear();
+            _paths.AddRange(paths);
+        }
 
         public void Enter()
         {
