@@ -25,6 +25,12 @@ namespace Script.CommonLib.Tests
             success &= Verify(TestRepeatedUpdateDoesNotReapplyFormation(), nameof(TestRepeatedUpdateDoesNotReapplyFormation));
             success &= Verify(TestPredictionFailureKeepsAuthoredDestinations(), nameof(TestPredictionFailureKeepsAuthoredDestinations));
             success &= Verify(TestArbitraryGoalUsesAuthoredWaypointDetour(), nameof(TestArbitraryGoalUsesAuthoredWaypointDetour));
+            success &= Verify(TestSmoothPathTransitionSplitsCornerDeterministically(), nameof(TestSmoothPathTransitionSplitsCornerDeterministically));
+            success &= Verify(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked(), nameof(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked));
+            success &= Verify(TestSmoothPathTransitionKeepsExactUTurn(), nameof(TestSmoothPathTransitionKeepsExactUTurn));
+            success &= Verify(TestSmoothPathTransitionKeepsNearUTurn(), nameof(TestSmoothPathTransitionKeepsNearUTurn));
+            success &= Verify(TestIntegerAngleOrderingBoundaries(), nameof(TestIntegerAngleOrderingBoundaries));
+            success &= Verify(TestEntityAppliesSmoothingToTacticalDestination(), nameof(TestEntityAppliesSmoothingToTacticalDestination));
             success &= Verify(TestPartialCandidateFailureKeepsWholeTeamDestinations(), nameof(TestPartialCandidateFailureKeepsWholeTeamDestinations));
             success &= Verify(TestDestinationsStayWithinSafeAttackRange(), nameof(TestDestinationsStayWithinSafeAttackRange));
             success &= Verify(TestFourEntityTeamKeepsMinimumSpacing(), nameof(TestFourEntityTeamKeepsMinimumSpacing));
@@ -35,6 +41,7 @@ namespace Script.CommonLib.Tests
             success &= Verify(TestBlueAndRedPlacementIsSymmetric(), nameof(TestBlueAndRedPlacementIsSymmetric));
             success &= Verify(TestPlacementOrderIsDeterministicWhenInputOrderChanges(), nameof(TestPlacementOrderIsDeterministicWhenInputOrderChanges));
             success &= Verify(TestEntityResumesAuthoredDestinationAfterExecutedAttack(), nameof(TestEntityResumesAuthoredDestinationAfterExecutedAttack));
+            success &= Verify(TestEntityAppliesSmoothingToAuthoredDestinationResume(), nameof(TestEntityAppliesSmoothingToAuthoredDestinationResume));
             success &= Verify(TestEntityDoesNotResumeBeforeExecutingAttack(), nameof(TestEntityDoesNotResumeBeforeExecutingAttack));
             success &= Verify(TestFailedAuthoredDestinationResumeIsAttemptedOnce(), nameof(TestFailedAuthoredDestinationResumeIsAttemptedOnce));
             success &= Verify(TestDisabledMapKeepsAuthoredDestinations(), nameof(TestDisabledMapKeepsAuthoredDestinations));
@@ -338,6 +345,111 @@ namespace Script.CommonLib.Tests
                    paths[paths.Count - 1] == new GridPos(-20, 0);
         }
 
+        private static bool TestSmoothPathTransitionSplitsCornerDeterministically()
+        {
+            var mapData = CreateMapData(false);
+            var pathFinder = new BattleMapPathFinder(mapData);
+            var start = new GridPos(0, 0).ToFixedPos();
+            var incomingDirection = new FixedDir(new GridPos(-1, 0).ToFixedPos(), start);
+            var firstPath = new List<GridPos> { new(10, 10), new(0, 0) };
+            var secondPath = new List<GridPos> { new(10, 10), new(0, 0) };
+
+            pathFinder.SmoothPathTransition(start, incomingDirection, firstPath);
+            pathFinder.SmoothPathTransition(start, incomingDirection, secondPath);
+
+            return firstPath.Count >= 3 &&
+                   HaveSamePath(firstPath, secondPath) &&
+                   HasReachableSegments(pathFinder, firstPath) &&
+                   HasAllTurnsSmallerThanOriginal(incomingDirection, firstPath, new GridPos(10, 10));
+        }
+
+        private static bool TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked()
+        {
+            var mapData = CreateMapData(false);
+            mapData.obstacles.Add(new ObstacleData
+            {
+                blockedPoints = new List<GridPos> { new(2, 2), new(1, 1) },
+                waypoints = new List<GridPos>(),
+            });
+            var pathFinder = new BattleMapPathFinder(mapData);
+            var start = new GridPos(0, 0).ToFixedPos();
+            var path = new List<GridPos> { new(0, 10), new(0, 0) };
+
+            pathFinder.SmoothPathTransition(
+                start,
+                new FixedDir(new GridPos(-1, 0).ToFixedPos(), start),
+                path);
+
+            return path.Count == 2;
+        }
+
+        private static bool TestSmoothPathTransitionKeepsExactUTurn()
+        {
+            var pathFinder = new BattleMapPathFinder(CreateMapData(false));
+            var start = new GridPos(0, 0).ToFixedPos();
+            var path = new List<GridPos> { new(-10, 0), new(0, 0) };
+            var originalPath = new List<GridPos>(path);
+
+            pathFinder.SmoothPathTransition(
+                start,
+                new FixedDir(new GridPos(-1, 0).ToFixedPos(), start),
+                path);
+
+            return HaveSamePath(path, originalPath);
+        }
+
+        private static bool TestSmoothPathTransitionKeepsNearUTurn()
+        {
+            var pathFinder = new BattleMapPathFinder(CreateMapData(false));
+            var start = new GridPos(0, 0).ToFixedPos();
+            var path = new List<GridPos> { new(-10, 1), new(0, 0) };
+            var originalPath = new List<GridPos>(path);
+
+            pathFinder.SmoothPathTransition(
+                start,
+                new FixedDir(new GridPos(-1, 0).ToFixedPos(), start),
+                path);
+
+            return HaveSamePath(path, originalPath);
+        }
+
+        private static bool TestIntegerAngleOrderingBoundaries()
+        {
+            var forward = new FixedPos(1, 0, 0);
+            var shallow = new FixedPos(2, 0, 1);
+            var diagonal = new FixedPos(1, 0, 1);
+            var perpendicular = new FixedPos(0, 0, 1);
+            var obtuse = new FixedPos(-1, 0, 1);
+            var deeperObtuse = new FixedPos(-2, 0, 1);
+
+            return BattleMapPathFinder.IsAngleLessThan(forward, shallow, forward, diagonal) &&
+                   !BattleMapPathFinder.IsAngleLessThan(forward, diagonal, forward, shallow) &&
+                   !BattleMapPathFinder.IsAngleLessThan(forward, diagonal, forward, diagonal * 2) &&
+                   BattleMapPathFinder.IsAngleLessThan(forward, perpendicular, forward, obtuse) &&
+                   BattleMapPathFinder.IsAngleLessThan(forward, obtuse, forward, deeperObtuse) &&
+                   !BattleMapPathFinder.IsAngleLessThan(forward, deeperObtuse, forward, obtuse);
+        }
+
+        private static bool TestEntityAppliesSmoothingToTacticalDestination()
+        {
+            var context = new ResumePathTestContext(true);
+            var entity = new Entity(
+                1,
+                context,
+                CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000));
+            context.AddEntity(entity);
+            entity.SetPos(new GridPos(-5, 0));
+            entity.SetDestination(new GridPos(5, 0).ToFixedPos());
+            context.Update(entity, 50);
+
+            var currentGridPosition = entity.GetPos().ToGridPos();
+            var tacticalPath = new List<GridPos> { new(5, 5), currentGridPosition };
+            entity.SetTacticalDestination(new GridPos(5, 5).ToFixedPos(), tacticalPath);
+
+            return context.PathSmoothingCallCount == 1 &&
+                   tacticalPath.Count > 2;
+        }
+
         private static bool TestPartialCandidateFailureKeepsWholeTeamDestinations()
         {
             var mapData = CreateMapData(false);
@@ -416,8 +528,8 @@ namespace Script.CommonLib.Tests
                 redPositions.Add(redEntities[i].GetDestinationForTest());
             }
 
-            return HasMinimumSpacing(bluePositions, 4500) &&
-                   HasMinimumSpacing(redPositions, 4500);
+            return HasMinimumSpacing(bluePositions, 5500) &&
+                   HasMinimumSpacing(redPositions, 5500);
         }
 
         private static bool TestFourEntityCandidateFailureKeepsWholeTeamDestinations()
@@ -578,6 +690,41 @@ namespace Script.CommonLib.Tests
             return context.ResumePathRequestCount == 1 &&
                    attacker.GetDestinationForTest() == authoredDestination &&
                    attacker.GetPos() != tacticalPosition;
+        }
+
+        private static bool TestEntityAppliesSmoothingToAuthoredDestinationResume()
+        {
+            var context = new ResumePathTestContext(true);
+            var attackerData = CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000);
+            attackerData.attackDelayMs = 0;
+            var attacker = new Entity(1, context, attackerData);
+            var enemy = new Entity(
+                2,
+                context,
+                CreateEntityData(TeamFlag.Red, string.Empty, string.Empty, 2000));
+            context.AddEntity(attacker);
+            context.AddEntity(enemy);
+            attacker.SetPos(new GridPos(-1, 0));
+            attacker.SetDestination(new GridPos(10, 10).ToFixedPos());
+            attacker.SetTacticalDestination(
+                new GridPos(0, 0).ToFixedPos(),
+                new List<GridPos> { new(0, 0) });
+            enemy.SetPos(new GridPos(1, 0));
+            enemy.SetDestination(enemy.GetPos());
+
+            for (var i = 0; i < 20 && context.AttackRequestCount == 0; i++)
+                context.Update(attacker, 50);
+
+            if (context.AttackRequestCount == 0)
+                return false;
+
+            enemy.SetPos(new GridPos(20, 20));
+            for (var i = 0; i < 20 && context.ResumePathRequestCount == 0; i++)
+                context.Update(attacker, 50);
+
+            return context.ResumePathRequestCount == 1 &&
+                   context.PathSmoothingCallCount == 1 &&
+                   context.LastSmoothedWaypointCount > 2;
         }
 
         private static bool TestEntityDoesNotResumeBeforeExecutingAttack()
@@ -938,6 +1085,59 @@ namespace Script.CommonLib.Tests
             return true;
         }
 
+        private static bool HaveSamePath(List<GridPos> first, List<GridPos> second)
+        {
+            if (first.Count != second.Count)
+                return false;
+
+            for (var i = 0; i < first.Count; i++)
+            {
+                if (first[i] != second[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool HasReachableSegments(BattleMapPathFinder pathFinder, List<GridPos> path)
+        {
+            for (var i = path.Count - 1; i > 0; i--)
+            {
+                if (!pathFinder.IsStraightPathReachable(path[i], path[i - 1]))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool HasAllTurnsSmallerThanOriginal(
+            FixedDir incomingDirection,
+            List<GridPos> path,
+            GridPos originalNext)
+        {
+            var previousDirection = incomingDirection.targetFixedPos - incomingDirection.currentFixedPos;
+            var originalDirection = originalNext.ToFixedPos() - path[path.Count - 1].ToFixedPos();
+
+            for (var i = path.Count - 1; i > 0; i--)
+            {
+                var current = path[i].ToFixedPos();
+                var next = path[i - 1].ToFixedPos();
+                var direction = next - current;
+                if (!BattleMapPathFinder.IsAngleLessThan(
+                        previousDirection,
+                        direction,
+                        incomingDirection.targetFixedPos - incomingDirection.currentFixedPos,
+                        originalDirection))
+                {
+                    return false;
+                }
+
+                previousDirection = direction;
+            }
+
+            return true;
+        }
+
         private static BattleMapData CreateFourEntityTeamMapData()
         {
             var battlePositions = new List<BattlePositionData>
@@ -1074,14 +1274,18 @@ namespace Script.CommonLib.Tests
         {
             private readonly bool _shouldFindResumePath;
             private readonly List<Entity> _entities = new();
+            private readonly BattleMapPathFinder _pathFinder;
 
             public ResumePathTestContext(bool shouldFindResumePath)
             {
                 _shouldFindResumePath = shouldFindResumePath;
+                _pathFinder = new BattleMapPathFinder(CreateMapData(false));
             }
 
             public int AttackRequestCount { get; private set; }
             public int ResumePathRequestCount { get; private set; }
+            public int PathSmoothingCallCount { get; private set; }
+            public int LastSmoothedWaypointCount { get; private set; }
             public uint ElapsedMs { get; private set; }
 
             public void AddEntity(Entity entity)
@@ -1150,7 +1354,15 @@ namespace Script.CommonLib.Tests
                     return false;
 
                 resultWaypoints.Add(goal);
+                resultWaypoints.Add(start);
                 return true;
+            }
+
+            public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
+            {
+                ++PathSmoothingCallCount;
+                _pathFinder.SmoothPathTransition(start, incomingDirection, waypoints);
+                LastSmoothedWaypointCount = waypoints.Count;
             }
 
             public void RequestAttack(uint attackerId, uint targetEntityId)

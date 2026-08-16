@@ -143,6 +143,8 @@ namespace Script.CommonLib
                 return;
             }
 
+            SmoothPathTransition(paths);
+
             _moveState.ResumeAuthoredDestination(paths);
         }
 
@@ -236,7 +238,14 @@ namespace Script.CommonLib
 
         internal void SetTacticalDestination(FixedPos pos, List<GridPos> paths)
         {
+            SmoothPathTransition(paths);
             _moveState.SetTacticalDestination(pos, paths);
+        }
+
+        private void SmoothPathTransition(List<GridPos> paths)
+        {
+            if (_moveState.TryGetLastMoveDirection(out var incomingDirection))
+                _battleMapContext.SmoothPathTransition(GetPos(), incomingDirection, paths);
         }
 
         internal void SetPredictionDestination(FixedPos pos, List<GridPos> paths)

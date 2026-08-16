@@ -363,6 +363,11 @@ namespace Script.CommonLib.Map
         {
             return _battleMapPathFinder.TryFindWaypoints(start, goal, resultWaypoints);
         }
+
+        public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
+        {
+            _battleMapPathFinder.SmoothPathTransition(start, incomingDirection, waypoints);
+        }
         
         public List<IEntityContext> GetAliveEntities()
         {

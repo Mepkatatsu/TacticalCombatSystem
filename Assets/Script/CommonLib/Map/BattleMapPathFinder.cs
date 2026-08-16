@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Script.CommonLib.Map.Path;
 using UnityEngine;
 
@@ -7,6 +9,9 @@ namespace Script.CommonLib.Map
 {
     public class BattleMapPathFinder
     {
+        private const int DirectionScale = 1000;
+        private const int TransitionDistance = 3000;
+
         public BattleMapPathFinder(BattleMapData battleMapData)
         {
             _battleMapData = battleMapData;
@@ -209,6 +214,165 @@ namespace Script.CommonLib.Map
             }
 
             return true;
+        }
+
+        public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
+        {
+            var startGridPosition = start.ToGridPos();
+            if (waypoints.Count < 2 || waypoints[waypoints.Count - 1] != startGridPosition)
+                return;
+
+            var nextGridPosition = waypoints[waypoints.Count - 2];
+            var nextPosition = nextGridPosition.ToFixedPos();
+            var incomingDelta = incomingDirection.targetFixedPos - incomingDirection.currentFixedPos;
+            var outgoingDelta = nextPosition - start;
+            var incomingDistance = incomingDirection.currentFixedPos.GetDistance(incomingDirection.targetFixedPos);
+            var outgoingDistance = start.GetDistance(nextPosition);
+            if (incomingDistance == 0 || outgoingDistance < PositionConverter.FixedPosMultiplier * 2)
+                return;
+
+            var incomingX = incomingDelta.X * DirectionScale / incomingDistance;
+            var incomingZ = incomingDelta.Z * DirectionScale / incomingDistance;
+            var outgoingX = outgoingDelta.X * DirectionScale / outgoingDistance;
+            var outgoingZ = outgoingDelta.Z * DirectionScale / outgoingDistance;
+            var dot = incomingX * outgoingX + incomingZ * outgoingZ;
+            var cross = Math.Abs(incomingX * outgoingZ - incomingZ * outgoingX);
+
+            // 거의 직선인 경로에는 불필요한 waypoint를 추가하지 않는다.
+            if (dot > 0 && cross * 6 < dot)
+                return;
+
+            // 120도 이상의 U-turn은 짧은 waypoint로 완화하면 되돌아가는 loop가 생길 수 있다.
+            if (dot <= -(long)DirectionScale * DirectionScale / 2)
+                return;
+
+            // 기존 진행 방향에서 새 경로 방향으로 두 번에 나눠 완만하게 전환한다.
+            var firstBlendX = incomingX * 2 + outgoingX;
+            var firstBlendZ = incomingZ * 2 + outgoingZ;
+            var secondBlendX = incomingX + outgoingX * 2;
+            var secondBlendZ = incomingZ + outgoingZ * 2;
+            var firstBlendLength = MathHelper.IntSqrt(firstBlendX * firstBlendX + firstBlendZ * firstBlendZ);
+            var secondBlendLength = MathHelper.IntSqrt(secondBlendX * secondBlendX + secondBlendZ * secondBlendZ);
+            var twoStageMaximumDistance = Math.Min(TransitionDistance, outgoingDistance / 3);
+
+            for (var distance = twoStageMaximumDistance;
+                 distance >= PositionConverter.FixedPosMultiplier;
+                 distance -= PositionConverter.FixedPosMultiplier)
+            {
+                var firstPosition = new FixedPos(
+                    start.X + firstBlendX * distance / firstBlendLength,
+                    start.Y,
+                    start.Z + firstBlendZ * distance / firstBlendLength);
+                var secondPosition = new FixedPos(
+                    firstPosition.X + secondBlendX * distance / secondBlendLength,
+                    start.Y,
+                    firstPosition.Z + secondBlendZ * distance / secondBlendLength);
+                var firstGridPosition = firstPosition.ToGridPos();
+                var secondGridPosition = secondPosition.ToGridPos();
+                if (!IsTransitionPositionValid(startGridPosition, firstGridPosition, nextGridPosition) ||
+                    !IsTransitionPositionValid(firstGridPosition, secondGridPosition, nextGridPosition) ||
+                    secondGridPosition == startGridPosition ||
+                    !IsStraightPathReachable(secondGridPosition, nextGridPosition))
+                {
+                    continue;
+                }
+
+                if (!HasImprovedMaximumTurn(
+                        start,
+                        incomingDelta,
+                        nextPosition,
+                        firstGridPosition.ToFixedPos(),
+                        secondGridPosition.ToFixedPos()))
+                {
+                    continue;
+                }
+
+                waypoints.Insert(waypoints.Count - 1, secondGridPosition);
+                waypoints.Insert(waypoints.Count - 1, firstGridPosition);
+                return;
+            }
+        }
+
+        private static bool HasImprovedMaximumTurn(
+            FixedPos start,
+            FixedPos incomingDirection,
+            FixedPos originalNext,
+            FixedPos firstTransition,
+            FixedPos secondTransition)
+        {
+            var originalOutgoing = originalNext - start;
+            var firstSegment = firstTransition - start;
+            var secondSegment = secondTransition - firstTransition;
+            var finalSegment = originalNext - secondTransition;
+            if (IsZero(incomingDirection) ||
+                IsZero(originalOutgoing) ||
+                IsZero(firstSegment) ||
+                IsZero(secondSegment) ||
+                IsZero(finalSegment))
+            {
+                return false;
+            }
+
+            var maximumLeft = incomingDirection;
+            var maximumRight = firstSegment;
+            if (IsAngleLessThan(maximumLeft, maximumRight, firstSegment, secondSegment))
+            {
+                maximumLeft = firstSegment;
+                maximumRight = secondSegment;
+            }
+
+            if (IsAngleLessThan(maximumLeft, maximumRight, secondSegment, finalSegment))
+            {
+                maximumLeft = secondSegment;
+                maximumRight = finalSegment;
+            }
+
+            return IsAngleLessThan(maximumLeft, maximumRight, incomingDirection, originalOutgoing);
+        }
+
+        internal static bool IsAngleLessThan(
+            FixedPos firstLeft,
+            FixedPos firstRight,
+            FixedPos secondLeft,
+            FixedPos secondRight)
+        {
+            var firstDot = GetDot(firstLeft, firstRight);
+            var secondDot = GetDot(secondLeft, secondRight);
+            if (firstDot.Sign != secondDot.Sign)
+                return firstDot.Sign > secondDot.Sign;
+
+            if (firstDot.IsZero)
+                return false;
+
+            var firstSquaredCosineNumerator = firstDot * firstDot;
+            var secondSquaredCosineNumerator = secondDot * secondDot;
+            var firstLengthProduct = GetLengthSquared(firstLeft) * GetLengthSquared(firstRight);
+            var secondLengthProduct = GetLengthSquared(secondLeft) * GetLengthSquared(secondRight);
+            var firstComparison = firstSquaredCosineNumerator * secondLengthProduct;
+            var secondComparison = secondSquaredCosineNumerator * firstLengthProduct;
+
+            return firstDot.Sign > 0
+                ? firstComparison > secondComparison
+                : firstComparison < secondComparison;
+        }
+
+        private static BigInteger GetDot(FixedPos first, FixedPos second) =>
+            (BigInteger)first.X * second.X + (BigInteger)first.Z * second.Z;
+
+        private static BigInteger GetLengthSquared(FixedPos value) =>
+            (BigInteger)value.X * value.X + (BigInteger)value.Z * value.Z;
+
+        private static bool IsZero(FixedPos value) => value.X == 0 && value.Z == 0;
+
+        private bool IsTransitionPositionValid(GridPos start, GridPos transition, GridPos next)
+        {
+            return transition != start &&
+                   transition != next &&
+                   transition.x >= _battleMapData.minGridPos.x &&
+                   transition.x <= _battleMapData.maxGridPos.x &&
+                   transition.y >= _battleMapData.minGridPos.y &&
+                   transition.y <= _battleMapData.maxGridPos.y &&
+                   IsStraightPathReachable(start, transition);
         }
 
         private List<GridPos> GetTransientNeighbors(GridPos current, GridPos start, GridPos goal)

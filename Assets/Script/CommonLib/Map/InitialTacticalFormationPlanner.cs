@@ -23,7 +23,7 @@ namespace Script.CommonLib.Map
     internal sealed class InitialTacticalFormationPlanner
     {
         private const int SafeAttackRangePercent = 90;
-        private const int MinimumAllySpacing = 4500;
+        private const int MinimumAllySpacing = 5500;
         private const int PreferredAllySpacing = 6000;
         private const int LateralCandidateStep = 4500;
         private const int MoveDistanceScoreWeight = 15;
