@@ -62,68 +62,7 @@ namespace Script.CommonLib.Map
 
         public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
         {
-            _openSet.Clear();
-            _closedSet.Clear();
-            _nodeMap.Clear();
-            
-            // TODO: 풀링으로 메모리 할당 적게 수정하면 좋을 듯 Ex)PathNode.Create(gridPos)
-            var startNode = new PathNode(start);
-            
-            _nodeMap.Add(start, startNode);
-            _openSet.Add(startNode);
-
-            PathNode currentNode = null;
-            
-            while (_openSet.Count > 0)
-            {
-                currentNode = _openSet.First();
-                _openSet.Remove(currentNode);
-
-                if (currentNode.GridPos == goal)
-                {
-                    break;
-                }
-
-                _closedSet.Add(currentNode);
-
-                if (!_fullNeighborGridPosDic.TryGetValue(currentNode.GridPos, out var neighborGridPosList))
-                    continue;
-                
-                foreach (var gridPos in neighborGridPosList)
-                {
-                    if (!_nodeMap.TryGetValue(gridPos, out var neighborNode))
-                    {
-                        neighborNode = new PathNode(gridPos, currentNode);
-                        _nodeMap.Add(gridPos, neighborNode);
-                    }
-                    
-                    if (_closedSet.Contains(neighborNode))
-                        continue;
-
-                    var newCost = currentNode.CurrentCost + currentNode.GridPos.GetDistance(neighborNode.GridPos);
-                    
-                    if (newCost < neighborNode.CurrentCost || !_openSet.Contains(neighborNode))
-                    {
-                        if (_openSet.Contains(neighborNode))
-                            _openSet.Remove(neighborNode);
-                        
-                        neighborNode.CurrentCost = newCost;
-                        neighborNode.HeuristicCost = GetHeuristicCost(neighborNode.GridPos, goal);
-                        neighborNode.TotalCost = neighborNode.CurrentCost + neighborNode.HeuristicCost;
-                        neighborNode.Parent = currentNode;
-
-                        _openSet.Add(neighborNode);
-                    }
-                }
-            }
-
-            resultWaypoints.Clear();
-            
-            while (currentNode != null)
-            {
-                resultWaypoints.Add(currentNode.GridPos);
-                currentNode = currentNode.Parent;
-            }
+            FindWaypointsCore(start, goal, resultWaypoints, false, true);
         }
 
         private static long GetHeuristicCost(GridPos gridPos1, GridPos gridPos2)
@@ -153,20 +92,34 @@ namespace Script.CommonLib.Map
                 return true;
             }
 
-            var openSet = new SortedSet<PathNode>(new PathNodeComparer());
-            var closedSet = new HashSet<PathNode>();
-            var nodeMap = new Dictionary<GridPos, PathNode>();
+            return FindWaypointsCore(start, goal, resultWaypoints, true, false);
+        }
+
+        private bool FindWaypointsCore(
+            GridPos start,
+            GridPos goal,
+            List<GridPos> resultWaypoints,
+            bool useTransientNeighbors,
+            bool keepPartialPath)
+        {
+            _openSet.Clear();
+            _closedSet.Clear();
+            _nodeMap.Clear();
+            resultWaypoints.Clear();
+
+            // TODO: 풀링으로 메모리 할당 적게 수정하면 좋을 듯 Ex)PathNode.Create(gridPos)
             var startNode = new PathNode(start);
+            _nodeMap.Add(start, startNode);
+            _openSet.Add(startNode);
 
-            nodeMap.Add(start, startNode);
-            openSet.Add(startNode);
-
+            PathNode lastVisitedNode = null;
             PathNode goalNode = null;
 
-            while (openSet.Count > 0)
+            while (_openSet.Count > 0)
             {
-                var currentNode = openSet.First();
-                openSet.Remove(currentNode);
+                var currentNode = _openSet.First();
+                _openSet.Remove(currentNode);
+                lastVisitedNode = currentNode;
 
                 if (currentNode.GridPos == goal)
                 {
@@ -174,46 +127,58 @@ namespace Script.CommonLib.Map
                     break;
                 }
 
-                closedSet.Add(currentNode);
-                var neighbors = GetTransientNeighbors(currentNode.GridPos, start, goal);
+                _closedSet.Add(currentNode);
 
-                for (var i = 0; i < neighbors.Count; i++)
+                if (useTransientNeighbors)
                 {
-                    var gridPos = neighbors[i];
-                    if (!nodeMap.TryGetValue(gridPos, out var neighborNode))
-                    {
-                        neighborNode = new PathNode(gridPos, currentNode);
-                        nodeMap.Add(gridPos, neighborNode);
-                    }
-
-                    if (closedSet.Contains(neighborNode))
-                        continue;
-
-                    var newCost = currentNode.CurrentCost + currentNode.GridPos.GetDistance(gridPos);
-                    if (newCost >= neighborNode.CurrentCost && openSet.Contains(neighborNode))
-                        continue;
-
-                    if (openSet.Contains(neighborNode))
-                        openSet.Remove(neighborNode);
-
-                    neighborNode.CurrentCost = newCost;
-                    neighborNode.HeuristicCost = GetHeuristicCost(gridPos, goal);
-                    neighborNode.TotalCost = neighborNode.CurrentCost + neighborNode.HeuristicCost;
-                    neighborNode.Parent = currentNode;
-                    openSet.Add(neighborNode);
+                    UpdateNeighborNodes(
+                        currentNode,
+                        GetTransientNeighbors(currentNode.GridPos, start, goal),
+                        goal);
+                }
+                else if (_fullNeighborGridPosDic.TryGetValue(currentNode.GridPos, out var authoredNeighbors))
+                {
+                    UpdateNeighborNodes(currentNode, authoredNeighbors, goal);
                 }
             }
 
-            if (goalNode == null)
-                return false;
-
-            while (goalNode != null)
+            var resultNode = goalNode ?? (keepPartialPath ? lastVisitedNode : null);
+            while (resultNode != null)
             {
-                resultWaypoints.Add(goalNode.GridPos);
-                goalNode = goalNode.Parent;
+                resultWaypoints.Add(resultNode.GridPos);
+                resultNode = resultNode.Parent;
             }
 
-            return true;
+            return goalNode != null;
+        }
+
+        private void UpdateNeighborNodes(PathNode currentNode, List<GridPos> neighbors, GridPos goal)
+        {
+            for (var i = 0; i < neighbors.Count; i++)
+            {
+                var gridPos = neighbors[i];
+                if (!_nodeMap.TryGetValue(gridPos, out var neighborNode))
+                {
+                    neighborNode = new PathNode(gridPos, currentNode);
+                    _nodeMap.Add(gridPos, neighborNode);
+                }
+
+                if (_closedSet.Contains(neighborNode))
+                    continue;
+
+                var newCost = currentNode.CurrentCost + currentNode.GridPos.GetDistance(gridPos);
+                if (newCost >= neighborNode.CurrentCost && _openSet.Contains(neighborNode))
+                    continue;
+
+                if (_openSet.Contains(neighborNode))
+                    _openSet.Remove(neighborNode);
+
+                neighborNode.CurrentCost = newCost;
+                neighborNode.HeuristicCost = GetHeuristicCost(gridPos, goal);
+                neighborNode.TotalCost = neighborNode.CurrentCost + neighborNode.HeuristicCost;
+                neighborNode.Parent = currentNode;
+                _openSet.Add(neighborNode);
+            }
         }
 
         public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)

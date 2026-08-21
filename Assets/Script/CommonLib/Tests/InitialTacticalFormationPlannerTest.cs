@@ -12,8 +12,7 @@ namespace Script.CommonLib.Tests
         {
             var success = true;
             success &= Verify(TestInitDoesNotApplyFormation(), nameof(TestInitDoesNotApplyFormation));
-            success &= Verify(TestEncounterStartsWithinFrontlineDetectionMargin(), nameof(TestEncounterStartsWithinFrontlineDetectionMargin));
-            success &= Verify(TestEncounterDoesNotStartOutsideFrontlineDetectionMargin(), nameof(TestEncounterDoesNotStartOutsideFrontlineDetectionMargin));
+            success &= Verify(TestEncounterDetectionMarginBoundary(), nameof(TestEncounterDetectionMarginBoundary));
             success &= Verify(TestLongRangeBacklineDoesNotStartEncounterEarly(), nameof(TestLongRangeBacklineDoesNotStartEncounterEarly));
             success &= Verify(TestFirstEncounterAppliesFormationOnce(), nameof(TestFirstEncounterAppliesFormationOnce));
             success &= Verify(TestPredictionKeepsAttackPriorityForUnequalRanges(), nameof(TestPredictionKeepsAttackPriorityForUnequalRanges));
@@ -28,8 +27,7 @@ namespace Script.CommonLib.Tests
             success &= Verify(TestArbitraryGoalUsesAuthoredWaypointDetour(), nameof(TestArbitraryGoalUsesAuthoredWaypointDetour));
             success &= Verify(TestSmoothPathTransitionSplitsCornerDeterministically(), nameof(TestSmoothPathTransitionSplitsCornerDeterministically));
             success &= Verify(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked(), nameof(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked));
-            success &= Verify(TestSmoothPathTransitionKeepsExactUTurn(), nameof(TestSmoothPathTransitionKeepsExactUTurn));
-            success &= Verify(TestSmoothPathTransitionKeepsNearUTurn(), nameof(TestSmoothPathTransitionKeepsNearUTurn));
+            success &= Verify(TestSmoothPathTransitionKeepsUTurns(), nameof(TestSmoothPathTransitionKeepsUTurns));
             success &= Verify(TestSmoothPathTransitionReducesInternalCorner(), nameof(TestSmoothPathTransitionReducesInternalCorner));
             success &= Verify(TestIntegerAngleOrderingBoundaries(), nameof(TestIntegerAngleOrderingBoundaries));
             success &= Verify(TestEntityAppliesSmoothingToTacticalDestination(), nameof(TestEntityAppliesSmoothingToTacticalDestination));
@@ -70,7 +68,7 @@ namespace Script.CommonLib.Tests
                    HasAuthoredDestinations(simulator.GetAliveEntities());
         }
 
-        private static bool TestEncounterStartsWithinFrontlineDetectionMargin()
+        private static bool TestEncounterDetectionMarginBoundary()
         {
             var mapData = CreateMapData(false);
             mapData.entities[0].attackRange = 3000;
@@ -81,28 +79,12 @@ namespace Script.CommonLib.Tests
             entities[0].SetPos(new FixedPos(0, 0, 0));
             entities[3].SetPos(new FixedPos(20000, 0, 0));
 
-            return InitialEncounterDetector.HasEncounter(
-                       new List<Entity> { entities[2], entities[0], entities[1] },
-                       new List<Entity> { entities[5], entities[4], entities[3] }) &&
-                   InitialEncounterDetector.HasEncounter(
-                       new List<Entity> { entities[5], entities[4], entities[3] },
-                       new List<Entity> { entities[2], entities[0], entities[1] });
-        }
-
-        private static bool TestEncounterDoesNotStartOutsideFrontlineDetectionMargin()
-        {
-            var mapData = CreateMapData(false);
-            mapData.entities[0].attackRange = 3000;
-            mapData.entities[3].attackRange = 5000;
-            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
-            simulator.Init();
-            var entities = GetEntities(simulator.GetAliveEntities());
-            entities[0].SetPos(new FixedPos(0, 0, 0));
+            var blueEntities = new List<Entity> { entities[2], entities[0], entities[1] };
+            var redEntities = new List<Entity> { entities[5], entities[4], entities[3] };
+            var startsAtBoundary = InitialEncounterDetector.HasEncounter(blueEntities, redEntities) &&
+                                   InitialEncounterDetector.HasEncounter(redEntities, blueEntities);
             entities[3].SetPos(new FixedPos(20001, 0, 0));
-
-            return !InitialEncounterDetector.HasEncounter(
-                new List<Entity> { entities[0], entities[1], entities[2] },
-                new List<Entity> { entities[3], entities[4], entities[5] });
+            return startsAtBoundary && !InitialEncounterDetector.HasEncounter(blueEntities, redEntities);
         }
 
         private static bool TestLongRangeBacklineDoesNotStartEncounterEarly()
@@ -260,26 +242,18 @@ namespace Script.CommonLib.Tests
 
         private static bool TestImmobilePlannedEntityReleasesMovementPriority()
         {
-            var mapData = CreateMapData(true);
-            mapData.entities[1].moveSpeed = 0;
-            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
-            simulator.Init();
-            AdvanceUntilFormationAttempted(simulator);
-            var blueRanged = (Entity)simulator.GetAliveEntities()[1];
-
-            for (var i = 0; i < 20 && blueRanged.ShouldPrioritizeMovement; i++)
-            {
-                simulator.Update(50);
-            }
-
-            return simulator.WasInitialTacticalPositioningAttemptedForTest &&
-                   !blueRanged.ShouldPrioritizeMovement;
+            return TestInvalidMovementReleasesPriority(0);
         }
 
         private static bool TestSubStepTacticalMovementReleasesMovementPriority()
         {
+            return TestInvalidMovementReleasesPriority(1);
+        }
+
+        private static bool TestInvalidMovementReleasesPriority(ushort moveSpeed)
+        {
             var mapData = CreateMapData(true);
-            mapData.entities[1].moveSpeed = 1;
+            mapData.entities[1].moveSpeed = moveSpeed;
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
             simulator.Init();
             AdvanceUntilFormationAttempted(simulator);
@@ -386,34 +360,22 @@ namespace Script.CommonLib.Tests
             return path.Count == 1 && path[0] == new GridPos(0, 10);
         }
 
-        private static bool TestSmoothPathTransitionKeepsExactUTurn()
+        private static bool TestSmoothPathTransitionKeepsUTurns()
         {
             var pathFinder = new BattleMapPathFinder(CreateMapData(false));
             var start = new GridPos(0, 0).ToFixedPos();
-            var path = new List<GridPos> { new(-10, 0), new(0, 0) };
-            var expectedPath = new List<GridPos> { new(-10, 0) };
+            var incomingDirection = new FixedDir(new GridPos(-1, 0).ToFixedPos(), start);
+            var destinations = new[] { new GridPos(-10, 0), new GridPos(-10, 1) };
 
-            pathFinder.SmoothPathTransition(
-                start,
-                new FixedDir(new GridPos(-1, 0).ToFixedPos(), start),
-                path);
+            for (var i = 0; i < destinations.Length; i++)
+            {
+                var path = new List<GridPos> { destinations[i], new(0, 0) };
+                pathFinder.SmoothPathTransition(start, incomingDirection, path);
+                if (path.Count != 1 || path[0] != destinations[i])
+                    return false;
+            }
 
-            return HaveSamePath(path, expectedPath);
-        }
-
-        private static bool TestSmoothPathTransitionKeepsNearUTurn()
-        {
-            var pathFinder = new BattleMapPathFinder(CreateMapData(false));
-            var start = new GridPos(0, 0).ToFixedPos();
-            var path = new List<GridPos> { new(-10, 1), new(0, 0) };
-            var expectedPath = new List<GridPos> { new(-10, 1) };
-
-            pathFinder.SmoothPathTransition(
-                start,
-                new FixedDir(new GridPos(-1, 0).ToFixedPos(), start),
-                path);
-
-            return HaveSamePath(path, expectedPath);
+            return true;
         }
 
         private static bool TestSmoothPathTransitionReducesInternalCorner()
@@ -610,24 +572,7 @@ namespace Script.CommonLib.Tests
 
         private static bool TestPlacementPreservesCurrentLateralSide()
         {
-            var mapData = CreateMapData(false);
-            mapData.battlePositions[1].gridPos = new GridPos(-6, 4);
-            mapData.battlePositions[2].gridPos = new GridPos(-6, -4);
-            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
-            simulator.Init();
-            var entities = GetEntities(simulator.GetAliveEntities());
-            var blueUpperStart = entities[1].GetPos();
-            var blueLowerStart = entities[2].GetPos();
-            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
-
-            planner.TryApply(
-                new List<Entity> { entities[0], entities[1], entities[2] },
-                new List<Entity> { entities[3], entities[4], entities[5] });
-
-            return blueUpperStart.Z > 0 &&
-                   blueLowerStart.Z < 0 &&
-                   entities[1].GetDestinationForTest().Z > 0 &&
-                   entities[2].GetDestinationForTest().Z < 0;
+            return TestPlacementPreservesCurrentLateralSide(TeamFlag.Blue);
         }
 
         private static bool TestPlacementPreservesRelativeLateralOrder()
@@ -655,24 +600,32 @@ namespace Script.CommonLib.Tests
 
         private static bool TestRedPlacementPreservesCurrentLateralSide()
         {
+            return TestPlacementPreservesCurrentLateralSide(TeamFlag.Red);
+        }
+
+        private static bool TestPlacementPreservesCurrentLateralSide(TeamFlag teamFlag)
+        {
             var mapData = CreateMapData(false);
-            mapData.battlePositions[4].gridPos = new GridPos(6, 4);
-            mapData.battlePositions[5].gridPos = new GridPos(6, -4);
+            var firstIndex = teamFlag == TeamFlag.Blue ? 1 : 4;
+            var secondIndex = firstIndex + 1;
+            var startX = teamFlag == TeamFlag.Blue ? -6 : 6;
+            mapData.battlePositions[firstIndex].gridPos = new GridPos(startX, 4);
+            mapData.battlePositions[secondIndex].gridPos = new GridPos(startX, -4);
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
             simulator.Init();
             var entities = GetEntities(simulator.GetAliveEntities());
-            var redUpperStart = entities[4].GetPos();
-            var redLowerStart = entities[5].GetPos();
+            var upperStart = entities[firstIndex].GetPos();
+            var lowerStart = entities[secondIndex].GetPos();
             var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
 
             planner.TryApply(
                 new List<Entity> { entities[0], entities[1], entities[2] },
                 new List<Entity> { entities[3], entities[4], entities[5] });
 
-            return redUpperStart.Z > 0 &&
-                   redLowerStart.Z < 0 &&
-                   entities[4].GetDestinationForTest().Z > 0 &&
-                   entities[5].GetDestinationForTest().Z < 0;
+            return upperStart.Z > 0 &&
+                   lowerStart.Z < 0 &&
+                   entities[firstIndex].GetDestinationForTest().Z > 0 &&
+                   entities[secondIndex].GetDestinationForTest().Z < 0;
         }
 
         private static bool TestDiagonalPlacementPreservesCurrentLateralSide()
