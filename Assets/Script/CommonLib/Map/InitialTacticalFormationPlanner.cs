@@ -28,6 +28,7 @@ namespace Script.CommonLib.Map
         private const int LateralCandidateStep = 4500;
         private const int MoveDistanceScoreWeight = 15;
         private const int LateralCrossingScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 2;
+        private const int RelativeLateralOrderScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 8;
 
         private static readonly int[] CandidateRangePercents = { 90, 85, 80 };
         private static readonly int[] LateralCandidateIndices = { 0, 1, -1, 2, -2, 3, -3 };
@@ -91,7 +92,11 @@ namespace Script.CommonLib.Map
                     placementOrder.Add(entity);
             }
 
-            placementOrder.Sort(ComparePlacementOrder);
+            placementOrder.Sort((first, second) => ComparePlacementOrder(
+                first,
+                second,
+                frontlinePosition,
+                enemyFrontlinePosition));
 
             var plannedDestinations = new List<PlannedDestination>();
 
@@ -103,6 +108,7 @@ namespace Script.CommonLib.Map
                         frontlinePosition,
                         enemyFrontlinePosition,
                         reservedPositions,
+                        plannedDestinations,
                         out var destination,
                         out var paths))
                 {
@@ -129,6 +135,7 @@ namespace Script.CommonLib.Map
             FixedPos frontlinePosition,
             FixedPos enemyFrontlinePosition,
             List<FixedPos> reservedPositions,
+            List<PlannedDestination> plannedDestinations,
             out FixedPos bestPosition,
             out List<GridPos> bestPaths)
         {
@@ -174,12 +181,14 @@ namespace Script.CommonLib.Map
                         continue;
 
                     var score = EvaluateCandidate(
+                        entity,
                         currentPosition,
                         candidate,
                         frontlinePosition,
                         enemyFrontlinePosition,
                         safeAttackRange,
-                        reservedPositions);
+                        reservedPositions,
+                        plannedDestinations);
 
                     if (!hasBestPosition || score > bestScore ||
                         score == bestScore && IsPositionBefore(candidate, bestPosition))
@@ -229,12 +238,14 @@ namespace Script.CommonLib.Map
         }
 
         private long EvaluateCandidate(
+            Entity entity,
             FixedPos currentPosition,
             FixedPos candidate,
             FixedPos frontlinePosition,
             FixedPos enemyFrontlinePosition,
             long safeAttackRange,
-            List<FixedPos> reservedPositions)
+            List<FixedPos> reservedPositions,
+            List<PlannedDestination> plannedDestinations)
         {
             var attackRangeError = Math.Abs(safeAttackRange - candidate.GetDistance(enemyFrontlinePosition));
             var nearestAllyDistance = GetNearestDistance(candidate, reservedPositions);
@@ -264,13 +275,55 @@ namespace Script.CommonLib.Map
                                          Math.Sign(currentLateralProjection) != Math.Sign(candidateLateralProjection)
                 ? LateralCrossingScorePenalty
                 : 0;
+            var relativeOrderPenalty = GetRelativeLateralOrderInversionCount(
+                                           entity,
+                                           candidate,
+                                           frontlinePosition,
+                                           enemyFrontlinePosition,
+                                           plannedDestinations) *
+                                       RelativeLateralOrderScorePenalty;
 
             return -attackRangeError * 100
                    - allySpacingError * 20
                    - excessiveAdvance * 200
                    - moveDistance * MoveDistanceScoreWeight
                    - centerDistance * 10
-                   - lateralCrossingPenalty;
+                   - lateralCrossingPenalty
+                   - relativeOrderPenalty;
+        }
+
+        private static int GetRelativeLateralOrderInversionCount(
+            Entity entity,
+            FixedPos candidate,
+            FixedPos frontlinePosition,
+            FixedPos enemyFrontlinePosition,
+            List<PlannedDestination> plannedDestinations)
+        {
+            var frontlineDelta = enemyFrontlinePosition - frontlinePosition;
+            var frontlineDistance = frontlinePosition.GetDistance(enemyFrontlinePosition);
+            if (frontlineDistance == 0)
+                return plannedDestinations.Count;
+
+            var currentProjection = GetLateralProjection(
+                entity.GetPos(), frontlinePosition, frontlineDelta, frontlineDistance);
+            var candidateProjection = GetLateralProjection(
+                candidate, frontlinePosition, frontlineDelta, frontlineDistance);
+            var inversionCount = 0;
+
+            for (var i = 0; i < plannedDestinations.Count; i++)
+            {
+                var other = plannedDestinations[i];
+                var otherCurrentProjection = GetLateralProjection(
+                    other.Entity.GetPos(), frontlinePosition, frontlineDelta, frontlineDistance);
+                var otherCandidateProjection = GetLateralProjection(
+                    other.Destination, frontlinePosition, frontlineDelta, frontlineDistance);
+                var currentOrder = currentProjection.CompareTo(otherCurrentProjection);
+                var candidateOrder = candidateProjection.CompareTo(otherCandidateProjection);
+                if (currentOrder != 0 && candidateOrder != 0 && Math.Sign(currentOrder) != Math.Sign(candidateOrder))
+                    inversionCount++;
+            }
+
+            return inversionCount;
         }
 
         private static long GetLateralProjection(
@@ -333,10 +386,33 @@ namespace Script.CommonLib.Map
             return frontline;
         }
 
-        private static int ComparePlacementOrder(Entity first, Entity second)
+        private static int ComparePlacementOrder(
+            Entity first,
+            Entity second)
         {
             var rangeComparison = first.AttackRange.CompareTo(second.AttackRange);
             return rangeComparison != 0 ? rangeComparison : first.Id.CompareTo(second.Id);
+        }
+
+        private static int ComparePlacementOrder(
+            Entity first,
+            Entity second,
+            FixedPos frontlinePosition,
+            FixedPos enemyFrontlinePosition)
+        {
+            var rangeComparison = first.AttackRange.CompareTo(second.AttackRange);
+            if (rangeComparison != 0)
+                return rangeComparison;
+
+            var frontlineDelta = enemyFrontlinePosition - frontlinePosition;
+            var frontlineDistance = frontlinePosition.GetDistance(enemyFrontlinePosition);
+            frontlineDistance = Math.Max(1, frontlineDistance);
+            var firstProjection = Math.Abs(GetLateralProjection(
+                first.GetPos(), frontlinePosition, frontlineDelta, frontlineDistance));
+            var secondProjection = Math.Abs(GetLateralProjection(
+                second.GetPos(), frontlinePosition, frontlineDelta, frontlineDistance));
+            var lateralComparison = firstProjection.CompareTo(secondProjection);
+            return lateralComparison != 0 ? lateralComparison : first.Id.CompareTo(second.Id);
         }
 
         private static bool IsPositionBefore(FixedPos first, FixedPos second)

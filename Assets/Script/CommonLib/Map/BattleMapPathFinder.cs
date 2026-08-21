@@ -219,10 +219,20 @@ namespace Script.CommonLib.Map
         public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
         {
             var startGridPosition = start.ToGridPos();
-            if (waypoints.Count < 2 || waypoints[waypoints.Count - 1] != startGridPosition)
+            while (waypoints.Count > 0 && waypoints[waypoints.Count - 1] == startGridPosition)
+                waypoints.RemoveAt(waypoints.Count - 1);
+
+            SmoothPathCorners(startGridPosition, waypoints);
+            SmoothInitialPathTransition(start, incomingDirection, waypoints);
+        }
+
+        private void SmoothInitialPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
+        {
+            if (waypoints.Count == 0)
                 return;
 
-            var nextGridPosition = waypoints[waypoints.Count - 2];
+            var startGridPosition = start.ToGridPos();
+            var nextGridPosition = waypoints[waypoints.Count - 1];
             var nextPosition = nextGridPosition.ToFixedPos();
             var incomingDelta = incomingDirection.targetFixedPos - incomingDirection.currentFixedPos;
             var outgoingDelta = nextPosition - start;
@@ -287,10 +297,129 @@ namespace Script.CommonLib.Map
                     continue;
                 }
 
-                waypoints.Insert(waypoints.Count - 1, secondGridPosition);
-                waypoints.Insert(waypoints.Count - 1, firstGridPosition);
+                waypoints.Add(secondGridPosition);
+                waypoints.Add(firstGridPosition);
                 return;
             }
+        }
+
+        private void SmoothPathCorners(GridPos start, List<GridPos> waypoints)
+        {
+            if (waypoints.Count < 2)
+                return;
+
+            var forwardPath = new List<GridPos> { start };
+            for (var i = waypoints.Count - 1; i >= 0; i--)
+                forwardPath.Add(waypoints[i]);
+            var smoothedPath = new List<GridPos> { forwardPath[0] };
+
+            for (var i = 1; i < forwardPath.Count - 1; i++)
+            {
+                var previous = smoothedPath[smoothedPath.Count - 1];
+                var corner = forwardPath[i];
+                var next = forwardPath[i + 1];
+
+                if (TryCreateCornerTransition(previous, corner, next, out var entry, out var exit))
+                {
+                    smoothedPath.Add(entry);
+                    smoothedPath.Add(exit);
+                }
+                else
+                {
+                    smoothedPath.Add(corner);
+                }
+            }
+
+            smoothedPath.Add(forwardPath[forwardPath.Count - 1]);
+            smoothedPath.RemoveAt(0);
+            smoothedPath.Reverse();
+            waypoints.Clear();
+            waypoints.AddRange(smoothedPath);
+        }
+
+        private bool TryCreateCornerTransition(
+            GridPos previous,
+            GridPos corner,
+            GridPos next,
+            out GridPos entry,
+            out GridPos exit)
+        {
+            entry = default;
+            exit = default;
+
+            var previousPosition = previous.ToFixedPos();
+            var cornerPosition = corner.ToFixedPos();
+            var nextPosition = next.ToFixedPos();
+            var incoming = cornerPosition - previousPosition;
+            var outgoing = nextPosition - cornerPosition;
+            var incomingDistance = previousPosition.GetDistance(cornerPosition);
+            var outgoingDistance = cornerPosition.GetDistance(nextPosition);
+            if (incomingDistance < PositionConverter.FixedPosMultiplier * 2 ||
+                outgoingDistance < PositionConverter.FixedPosMultiplier * 2 ||
+                IsZero(incoming) ||
+                IsZero(outgoing))
+            {
+                return false;
+            }
+
+            var incomingX = incoming.X * DirectionScale / incomingDistance;
+            var incomingZ = incoming.Z * DirectionScale / incomingDistance;
+            var outgoingX = outgoing.X * DirectionScale / outgoingDistance;
+            var outgoingZ = outgoing.Z * DirectionScale / outgoingDistance;
+            var dot = incomingX * outgoingX + incomingZ * outgoingZ;
+            var cross = Math.Abs(incomingX * outgoingZ - incomingZ * outgoingX);
+            if (dot > 0 && cross * 6 < dot)
+                return false;
+
+            if (dot <= -(long)DirectionScale * DirectionScale / 2)
+                return false;
+
+            var maximumDistance = Math.Min(
+                TransitionDistance,
+                Math.Min(incomingDistance, outgoingDistance) / 3);
+
+            for (var distance = maximumDistance;
+                 distance >= PositionConverter.FixedPosMultiplier;
+                 distance -= PositionConverter.FixedPosMultiplier)
+            {
+                var entryPosition = new FixedPos(
+                    cornerPosition.X - incoming.X * distance / incomingDistance,
+                    cornerPosition.Y,
+                    cornerPosition.Z - incoming.Z * distance / incomingDistance);
+                var exitPosition = new FixedPos(
+                    cornerPosition.X + outgoing.X * distance / outgoingDistance,
+                    cornerPosition.Y,
+                    cornerPosition.Z + outgoing.Z * distance / outgoingDistance);
+                var candidateEntry = entryPosition.ToGridPos();
+                var candidateExit = exitPosition.ToGridPos();
+                if (candidateEntry == previous ||
+                    candidateEntry == corner ||
+                    candidateEntry == next ||
+                    candidateExit == previous ||
+                    candidateExit == corner ||
+                    candidateExit == next ||
+                    candidateEntry == candidateExit)
+                {
+                    continue;
+                }
+
+                var chord = candidateExit.ToFixedPos() - candidateEntry.ToFixedPos();
+                if (IsZero(chord) ||
+                    !IsAngleLessThan(incoming, chord, incoming, outgoing) ||
+                    !IsAngleLessThan(chord, outgoing, incoming, outgoing) ||
+                    !IsStraightPathReachable(previous, candidateEntry) ||
+                    !IsStraightPathReachable(candidateEntry, candidateExit) ||
+                    !IsStraightPathReachable(candidateExit, next))
+                {
+                    continue;
+                }
+
+                entry = candidateEntry;
+                exit = candidateExit;
+                return true;
+            }
+
+            return false;
         }
 
         private static bool HasImprovedMaximumTurn(

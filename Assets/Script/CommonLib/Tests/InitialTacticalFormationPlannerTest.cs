@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
@@ -29,6 +30,7 @@ namespace Script.CommonLib.Tests
             success &= Verify(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked(), nameof(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked));
             success &= Verify(TestSmoothPathTransitionKeepsExactUTurn(), nameof(TestSmoothPathTransitionKeepsExactUTurn));
             success &= Verify(TestSmoothPathTransitionKeepsNearUTurn(), nameof(TestSmoothPathTransitionKeepsNearUTurn));
+            success &= Verify(TestSmoothPathTransitionReducesInternalCorner(), nameof(TestSmoothPathTransitionReducesInternalCorner));
             success &= Verify(TestIntegerAngleOrderingBoundaries(), nameof(TestIntegerAngleOrderingBoundaries));
             success &= Verify(TestEntityAppliesSmoothingToTacticalDestination(), nameof(TestEntityAppliesSmoothingToTacticalDestination));
             success &= Verify(TestPartialCandidateFailureKeepsWholeTeamDestinations(), nameof(TestPartialCandidateFailureKeepsWholeTeamDestinations));
@@ -36,6 +38,7 @@ namespace Script.CommonLib.Tests
             success &= Verify(TestFourEntityTeamKeepsMinimumSpacing(), nameof(TestFourEntityTeamKeepsMinimumSpacing));
             success &= Verify(TestFourEntityCandidateFailureKeepsWholeTeamDestinations(), nameof(TestFourEntityCandidateFailureKeepsWholeTeamDestinations));
             success &= Verify(TestPlacementPreservesCurrentLateralSide(), nameof(TestPlacementPreservesCurrentLateralSide));
+            success &= Verify(TestPlacementPreservesRelativeLateralOrder(), nameof(TestPlacementPreservesRelativeLateralOrder));
             success &= Verify(TestRedPlacementPreservesCurrentLateralSide(), nameof(TestRedPlacementPreservesCurrentLateralSide));
             success &= Verify(TestDiagonalPlacementPreservesCurrentLateralSide(), nameof(TestDiagonalPlacementPreservesCurrentLateralSide));
             success &= Verify(TestBlueAndRedPlacementIsSymmetric(), nameof(TestBlueAndRedPlacementIsSymmetric));
@@ -380,7 +383,7 @@ namespace Script.CommonLib.Tests
                 new FixedDir(new GridPos(-1, 0).ToFixedPos(), start),
                 path);
 
-            return path.Count == 2;
+            return path.Count == 1 && path[0] == new GridPos(0, 10);
         }
 
         private static bool TestSmoothPathTransitionKeepsExactUTurn()
@@ -388,14 +391,14 @@ namespace Script.CommonLib.Tests
             var pathFinder = new BattleMapPathFinder(CreateMapData(false));
             var start = new GridPos(0, 0).ToFixedPos();
             var path = new List<GridPos> { new(-10, 0), new(0, 0) };
-            var originalPath = new List<GridPos>(path);
+            var expectedPath = new List<GridPos> { new(-10, 0) };
 
             pathFinder.SmoothPathTransition(
                 start,
                 new FixedDir(new GridPos(-1, 0).ToFixedPos(), start),
                 path);
 
-            return HaveSamePath(path, originalPath);
+            return HaveSamePath(path, expectedPath);
         }
 
         private static bool TestSmoothPathTransitionKeepsNearUTurn()
@@ -403,14 +406,49 @@ namespace Script.CommonLib.Tests
             var pathFinder = new BattleMapPathFinder(CreateMapData(false));
             var start = new GridPos(0, 0).ToFixedPos();
             var path = new List<GridPos> { new(-10, 1), new(0, 0) };
-            var originalPath = new List<GridPos>(path);
+            var expectedPath = new List<GridPos> { new(-10, 1) };
 
             pathFinder.SmoothPathTransition(
                 start,
                 new FixedDir(new GridPos(-1, 0).ToFixedPos(), start),
                 path);
 
-            return HaveSamePath(path, originalPath);
+            return HaveSamePath(path, expectedPath);
+        }
+
+        private static bool TestSmoothPathTransitionReducesInternalCorner()
+        {
+            var pathFinder = new BattleMapPathFinder(CreateMapData(false));
+            var start = new GridPos(0, 0).ToFixedPos();
+            var path = new List<GridPos> { new(10, 10), new(10, 0), new(0, 0) };
+            var originalIncoming = new FixedPos(10, 0, 0);
+            var originalOutgoing = new FixedPos(0, 0, 10);
+
+            pathFinder.SmoothPathTransition(
+                start,
+                new FixedDir(new GridPos(-1, 0).ToFixedPos(), start),
+                path);
+
+            if (path.Count < 3 || !HasReachableSegments(pathFinder, path))
+                return false;
+
+            var previousDirection = path[path.Count - 2].ToFixedPos() - path[path.Count - 1].ToFixedPos();
+            for (var i = path.Count - 2; i > 0; i--)
+            {
+                var direction = path[i - 1].ToFixedPos() - path[i].ToFixedPos();
+                if (!BattleMapPathFinder.IsAngleLessThan(
+                        previousDirection,
+                        direction,
+                        originalIncoming,
+                        originalOutgoing))
+                {
+                    return false;
+                }
+
+                previousDirection = direction;
+            }
+
+            return true;
         }
 
         private static bool TestIntegerAngleOrderingBoundaries()
@@ -590,6 +628,29 @@ namespace Script.CommonLib.Tests
                    blueLowerStart.Z < 0 &&
                    entities[1].GetDestinationForTest().Z > 0 &&
                    entities[2].GetDestinationForTest().Z < 0;
+        }
+
+        private static bool TestPlacementPreservesRelativeLateralOrder()
+        {
+            var mapData = CreateMapData(false);
+            mapData.battlePositions[1].gridPos = new GridPos(-6, -4);
+            mapData.battlePositions[2].gridPos = new GridPos(-6, 0);
+            mapData.battlePositions[4].gridPos = new GridPos(6, -4);
+            mapData.battlePositions[5].gridPos = new GridPos(6, 0);
+            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
+            simulator.Init();
+            var entities = GetEntities(simulator.GetAliveEntities());
+            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
+
+            if (!planner.TryApply(
+                    new List<Entity> { entities[0], entities[1], entities[2] },
+                    new List<Entity> { entities[3], entities[4], entities[5] }))
+            {
+                return false;
+            }
+
+            return entities[1].GetDestinationForTest().Z < entities[2].GetDestinationForTest().Z &&
+                   entities[4].GetDestinationForTest().Z < entities[5].GetDestinationForTest().Z;
         }
 
         private static bool TestRedPlacementPreservesCurrentLateralSide()
@@ -948,6 +1009,8 @@ namespace Script.CommonLib.Tests
             if (plannedEntities.Count == 0)
                 return false;
 
+            var minimumObservedAllySpacing = GetMinimumSameTeamSpacing(entities);
+
             for (var tick = 0; tick < 2000; tick++)
             {
                 var hasMovingEntity = false;
@@ -964,6 +1027,9 @@ namespace Script.CommonLib.Tests
                     break;
 
                 simulator.Update(50);
+                minimumObservedAllySpacing = Math.Min(
+                    minimumObservedAllySpacing,
+                    GetMinimumSameTeamSpacing(GetEntities(simulator.GetAliveEntities())));
             }
 
             for (var i = 0; i < plannedEntities.Count; i++)
@@ -977,7 +1043,7 @@ namespace Script.CommonLib.Tests
                 }
             }
 
-            return true;
+            return minimumObservedAllySpacing >= 3000;
         }
 
         private static ObstacleData CreateCenterObstacle()
@@ -1083,6 +1149,26 @@ namespace Script.CommonLib.Tests
             }
 
             return true;
+        }
+
+        private static long GetMinimumSameTeamSpacing(List<Entity> entities)
+        {
+            var minimumSpacing = long.MaxValue;
+
+            for (var i = 0; i < entities.Count; i++)
+            {
+                for (var j = i + 1; j < entities.Count; j++)
+                {
+                    if (entities[i].GetTeamFlag() != entities[j].GetTeamFlag())
+                        continue;
+
+                    minimumSpacing = Math.Min(
+                        minimumSpacing,
+                        entities[i].GetPos().GetDistance(entities[j].GetPos()));
+                }
+            }
+
+            return minimumSpacing;
         }
 
         private static bool HaveSamePath(List<GridPos> first, List<GridPos> second)
