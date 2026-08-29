@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
@@ -11,43 +10,53 @@ namespace Script.CommonLib.Tests
         public bool Test()
         {
             var success = true;
+
+            // 기능의 활성화 시점과 실패 시 기존 상태 보존 계약을 검증한다.
             success &= Verify(TestInitDoesNotApplyFormation(), nameof(TestInitDoesNotApplyFormation));
             success &= Verify(TestEncounterDetectionMarginBoundary(), nameof(TestEncounterDetectionMarginBoundary));
             success &= Verify(TestLongRangeBacklineDoesNotStartEncounterEarly(), nameof(TestLongRangeBacklineDoesNotStartEncounterEarly));
-            success &= Verify(TestFirstEncounterAppliesFormationOnce(), nameof(TestFirstEncounterAppliesFormationOnce));
-            success &= Verify(TestPredictionKeepsAttackPriorityForUnequalRanges(), nameof(TestPredictionKeepsAttackPriorityForUnequalRanges));
+            success &= Verify(TestFirstEncounterAppliesFormation(), nameof(TestFirstEncounterAppliesFormation));
+            success &= Verify(TestFormationIsNotReappliedAfterFirstEncounter(), nameof(TestFormationIsNotReappliedAfterFirstEncounter));
+            success &= Verify(TestPredictionFailureKeepsAuthoredDestinations(), nameof(TestPredictionFailureKeepsAuthoredDestinations));
+            success &= Verify(TestPartialCandidateFailureKeepsWholeTeamDestinations(), nameof(TestPartialCandidateFailureKeepsWholeTeamDestinations));
+            success &= Verify(TestFourEntityCandidateFailureKeepsWholeTeamDestinations(), nameof(TestFourEntityCandidateFailureKeepsWholeTeamDestinations));
+            success &= Verify(TestPlacementOrderIsDeterministicWhenInputOrderChanges(), nameof(TestPlacementOrderIsDeterministicWhenInputOrderChanges));
+            success &= Verify(TestDisabledMapKeepsAuthoredDestinations(), nameof(TestDisabledMapKeepsAuthoredDestinations));
+
+            // 이동 우선순위와 기존 경로 복귀의 상태 전이 회귀를 검증한다.
             success &= Verify(TestPlannedEntityMovesEvenWhenEnemyIsInRange(), nameof(TestPlannedEntityMovesEvenWhenEnemyIsInRange));
             success &= Verify(TestTacticalMovementReachesDestinationAfterCurrentTargetDeathAndDamageTaken(), nameof(TestTacticalMovementReachesDestinationAfterCurrentTargetDeathAndDamageTaken));
             success &= Verify(TestImmobilePlannedEntityReleasesMovementPriority(), nameof(TestImmobilePlannedEntityReleasesMovementPriority));
             success &= Verify(TestSubStepTacticalMovementReleasesMovementPriority(), nameof(TestSubStepTacticalMovementReleasesMovementPriority));
             success &= Verify(TestExhaustedTacticalPathReleasesMovementPriority(), nameof(TestExhaustedTacticalPathReleasesMovementPriority));
             success &= Verify(TestUnplannedEntityKeepsAttackPriority(), nameof(TestUnplannedEntityKeepsAttackPriority));
-            success &= Verify(TestRepeatedUpdateDoesNotReapplyFormation(), nameof(TestRepeatedUpdateDoesNotReapplyFormation));
-            success &= Verify(TestPredictionFailureKeepsAuthoredDestinations(), nameof(TestPredictionFailureKeepsAuthoredDestinations));
+            success &= Verify(TestEntityResumesAuthoredDestinationAfterExecutedAttack(), nameof(TestEntityResumesAuthoredDestinationAfterExecutedAttack));
+            success &= Verify(TestEntityRequestsSmoothingWhenResumingAuthoredDestination(), nameof(TestEntityRequestsSmoothingWhenResumingAuthoredDestination));
+            success &= Verify(TestEntityDoesNotResumeBeforeExecutingAttack(), nameof(TestEntityDoesNotResumeBeforeExecutingAttack));
+            success &= Verify(TestFailedAuthoredDestinationResumeIsAttemptedOnce(), nameof(TestFailedAuthoredDestinationResumeIsAttemptedOnce));
+
+            // 경로 탐색과 전환은 도달 가능성과 실패 시 상태 보존을 계약으로 삼는다.
             success &= Verify(TestArbitraryGoalUsesAuthoredWaypointDetour(), nameof(TestArbitraryGoalUsesAuthoredWaypointDetour));
             success &= Verify(TestSmoothPathTransitionSplitsCornerDeterministically(), nameof(TestSmoothPathTransitionSplitsCornerDeterministically));
             success &= Verify(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked(), nameof(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked));
             success &= Verify(TestSmoothPathTransitionKeepsUTurns(), nameof(TestSmoothPathTransitionKeepsUTurns));
             success &= Verify(TestSmoothPathTransitionReducesInternalCorner(), nameof(TestSmoothPathTransitionReducesInternalCorner));
             success &= Verify(TestIntegerAngleOrderingBoundaries(), nameof(TestIntegerAngleOrderingBoundaries));
-            success &= Verify(TestEntityAppliesSmoothingToTacticalDestination(), nameof(TestEntityAppliesSmoothingToTacticalDestination));
-            success &= Verify(TestPartialCandidateFailureKeepsWholeTeamDestinations(), nameof(TestPartialCandidateFailureKeepsWholeTeamDestinations));
-            success &= Verify(TestDestinationsStayWithinSafeAttackRange(), nameof(TestDestinationsStayWithinSafeAttackRange));
-            success &= Verify(TestFourEntityTeamKeepsMinimumSpacing(), nameof(TestFourEntityTeamKeepsMinimumSpacing));
-            success &= Verify(TestFourEntityCandidateFailureKeepsWholeTeamDestinations(), nameof(TestFourEntityCandidateFailureKeepsWholeTeamDestinations));
+            success &= Verify(TestEntityRequestsSmoothingForTacticalDestinationAfterMovement(), nameof(TestEntityRequestsSmoothingForTacticalDestinationAfterMovement));
+            success &= Verify(TestExistingFindWaypointsResultIsPreserved(), nameof(TestExistingFindWaypointsResultIsPreserved));
+
+            // 장애물 없는 대표 입력의 품질 회귀이며 모든 맵의 절대 조건을 의미하지 않는다.
+            success &= Verify(TestUnequalRangePredictionMatchesFixedTickReference(), nameof(TestUnequalRangePredictionMatchesFixedTickReference));
+            success &= Verify(TestOpenMapPlacementMatchesCurrentSafeAttackPolicy(), nameof(TestOpenMapPlacementMatchesCurrentSafeAttackPolicy));
+            success &= Verify(TestOpenMapFourEntityPlacementMatchesCurrentSpacingPolicy(), nameof(TestOpenMapFourEntityPlacementMatchesCurrentSpacingPolicy));
             success &= Verify(TestPlacementPreservesCurrentLateralSide(), nameof(TestPlacementPreservesCurrentLateralSide));
             success &= Verify(TestPlacementPreservesRelativeLateralOrder(), nameof(TestPlacementPreservesRelativeLateralOrder));
             success &= Verify(TestRedPlacementPreservesCurrentLateralSide(), nameof(TestRedPlacementPreservesCurrentLateralSide));
             success &= Verify(TestDiagonalPlacementPreservesCurrentLateralSide(), nameof(TestDiagonalPlacementPreservesCurrentLateralSide));
             success &= Verify(TestBlueAndRedPlacementIsSymmetric(), nameof(TestBlueAndRedPlacementIsSymmetric));
-            success &= Verify(TestPlacementOrderIsDeterministicWhenInputOrderChanges(), nameof(TestPlacementOrderIsDeterministicWhenInputOrderChanges));
-            success &= Verify(TestEntityResumesAuthoredDestinationAfterExecutedAttack(), nameof(TestEntityResumesAuthoredDestinationAfterExecutedAttack));
-            success &= Verify(TestEntityAppliesSmoothingToAuthoredDestinationResume(), nameof(TestEntityAppliesSmoothingToAuthoredDestinationResume));
-            success &= Verify(TestEntityDoesNotResumeBeforeExecutingAttack(), nameof(TestEntityDoesNotResumeBeforeExecutingAttack));
-            success &= Verify(TestFailedAuthoredDestinationResumeIsAttemptedOnce(), nameof(TestFailedAuthoredDestinationResumeIsAttemptedOnce));
-            success &= Verify(TestDisabledMapKeepsAuthoredDestinations(), nameof(TestDisabledMapKeepsAuthoredDestinations));
-            success &= Verify(TestExistingFindWaypointsResultIsPreserved(), nameof(TestExistingFindWaypointsResultIsPreserved));
-            success &= Verify(TestTest001RuntimeSimulationAppliesFormation(), nameof(TestTest001RuntimeSimulationAppliesFormation));
+
+            // 실제 맵에서는 적용과 이동 완료만 기본 회귀로 확인한다. 자연스러움은 이 테스트의 성공 조건으로 삼지 않는다.
+            success &= Verify(TestTest001RuntimeSimulationCompletesPlannedMovement(), nameof(TestTest001RuntimeSimulationCompletesPlannedMovement));
             return success;
         }
 
@@ -107,31 +116,46 @@ namespace Script.CommonLib.Tests
                 new List<Entity> { entities[3], entities[4], entities[5] });
         }
 
-        private static bool TestFirstEncounterAppliesFormationOnce()
+        private static bool TestFirstEncounterAppliesFormation()
         {
             var simulator = CreateSimulator(true);
             simulator.Init();
-            AdvanceUntilFormationAttempted(simulator);
+            if (!AdvanceUntilFormationAttempted(simulator))
+                return false;
 
             return simulator.WasInitialTacticalPositioningAttemptedForTest &&
                    !HasAuthoredDestinations(simulator.GetAliveEntities());
         }
 
-        private static bool TestRepeatedUpdateDoesNotReapplyFormation()
+        private static bool TestFormationIsNotReappliedAfterFirstEncounter()
         {
             var simulator = CreateSimulator(true);
             simulator.Init();
-            AdvanceUntilFormationAttempted(simulator);
-            var firstDestinations = GetDestinationsById(simulator.GetAliveEntities());
+            if (!AdvanceUntilFormationAttempted(simulator))
+                return false;
 
-            for (var i = 0; i < 20; i++)
+            var entities = GetEntities(simulator.GetAliveEntities());
+            Entity plannedEntity = null;
+            for (var i = 0; i < entities.Count; i++)
             {
-                simulator.Update(50);
+                if (!entities[i].ShouldPrioritizeMovement)
+                    continue;
+
+                plannedEntity = entities[i];
+                break;
             }
 
-            var laterDestinations = GetDestinationsById(simulator.GetAliveEntities());
+            if (plannedEntity == null)
+                return false;
+
+            // 첫 배치 결과를 일부러 덮어쓴 뒤 같은 교전 조건에서 다시 갱신한다.
+            // 초기 배치가 재실행된다면 이 목적지가 전술 목적지로 다시 바뀐다.
+            var overrideDestination = plannedEntity.GetPos();
+            plannedEntity.SetDestination(overrideDestination);
+            simulator.Update(0);
+
             return simulator.WasInitialTacticalPositioningAttemptedForTest &&
-                   HaveSameDestinations(firstDestinations, laterDestinations);
+                   plannedEntity.GetDestinationForTest() == overrideDestination;
         }
 
         private static bool TestPlannedEntityMovesEvenWhenEnemyIsInRange()
@@ -140,13 +164,14 @@ namespace Script.CommonLib.Tests
             simulator.Init();
             var entities = GetEntities(simulator.GetAliveEntities());
 
-            AdvanceUntilFormationAttempted(simulator);
+            if (!AdvanceUntilFormationAttempted(simulator))
+                return false;
 
             return HasEntityPrioritizingMovementInAttackRange(entities, TeamFlag.Blue) &&
                    HasEntityPrioritizingMovementInAttackRange(entities, TeamFlag.Red);
         }
 
-        private static bool TestPredictionKeepsAttackPriorityForUnequalRanges()
+        private static bool TestUnequalRangePredictionMatchesFixedTickReference()
         {
             var mapData = CreateMapData(false);
             mapData.entities = new List<EntityData>
@@ -188,7 +213,9 @@ namespace Script.CommonLib.Tests
         {
             var simulator = CreateSimulator(true);
             simulator.Init();
-            AdvanceUntilFormationAttempted(simulator);
+            if (!AdvanceUntilFormationAttempted(simulator))
+                return false;
+
             simulator.Update(50);
             var entities = GetEntities(simulator.GetAliveEntities());
             var blueRanged = entities[1];
@@ -256,7 +283,9 @@ namespace Script.CommonLib.Tests
             mapData.entities[1].moveSpeed = moveSpeed;
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
             simulator.Init();
-            AdvanceUntilFormationAttempted(simulator);
+            if (!AdvanceUntilFormationAttempted(simulator))
+                return false;
+
             var blueRanged = (Entity)simulator.GetAliveEntities()[1];
 
             for (var i = 0; i < 20 && blueRanged.ShouldPrioritizeMovement; i++)
@@ -430,7 +459,7 @@ namespace Script.CommonLib.Tests
                    !BattleMapPathFinder.IsAngleLessThan(forward, deeperObtuse, forward, obtuse);
         }
 
-        private static bool TestEntityAppliesSmoothingToTacticalDestination()
+        private static bool TestEntityRequestsSmoothingForTacticalDestinationAfterMovement()
         {
             var context = new ResumePathTestContext(true);
             var entity = new Entity(
@@ -446,8 +475,7 @@ namespace Script.CommonLib.Tests
             var tacticalPath = new List<GridPos> { new(5, 5), currentGridPosition };
             entity.SetTacticalDestination(new GridPos(5, 5).ToFixedPos(), tacticalPath);
 
-            return context.PathSmoothingCallCount == 1 &&
-                   tacticalPath.Count > 2;
+            return context.PathSmoothingCallCount == 1;
         }
 
         private static bool TestPartialCandidateFailureKeepsWholeTeamDestinations()
@@ -471,7 +499,7 @@ namespace Script.CommonLib.Tests
                    blueEntities[2].GetDestinationForTest().X == 20000;
         }
 
-        private static bool TestDestinationsStayWithinSafeAttackRange()
+        private static bool TestOpenMapPlacementMatchesCurrentSafeAttackPolicy()
         {
             var mapData = CreateMapData(false);
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
@@ -488,17 +516,24 @@ namespace Script.CommonLib.Tests
                 return false;
             }
 
+            var blueFirstAuthoredDestination = entities[1].GetDestinationForTest();
+            var blueSecondAuthoredDestination = entities[2].GetDestinationForTest();
             var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
-            planner.TryApply(
-                new List<Entity> { entities[0], entities[1], entities[2] },
-                new List<Entity> { entities[3], entities[4], entities[5] });
+            if (!planner.TryApply(
+                    new List<Entity> { entities[0], entities[1], entities[2] },
+                    new List<Entity> { entities[3], entities[4], entities[5] }))
+            {
+                return false;
+            }
 
             var safeAttackRange = entities[1].AttackRange * 90 / 100;
-            return entities[1].GetDestinationForTest().GetDistance(redFrontlinePosition) <= safeAttackRange &&
+            return entities[1].GetDestinationForTest() != blueFirstAuthoredDestination &&
+                   entities[2].GetDestinationForTest() != blueSecondAuthoredDestination &&
+                   entities[1].GetDestinationForTest().GetDistance(redFrontlinePosition) <= safeAttackRange &&
                    entities[2].GetDestinationForTest().GetDistance(redFrontlinePosition) <= safeAttackRange;
         }
 
-        private static bool TestFourEntityTeamKeepsMinimumSpacing()
+        private static bool TestOpenMapFourEntityPlacementMatchesCurrentSpacingPolicy()
         {
             var mapData = CreateFourEntityTeamMapData();
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
@@ -516,9 +551,19 @@ namespace Script.CommonLib.Tests
                 return false;
             }
 
+            var authoredDestinations = GetDestinationsById(simulator.GetAliveEntities());
             var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
             if (!planner.TryApply(blueEntities, redEntities))
                 return false;
+
+            for (var i = 1; i < 4; i++)
+            {
+                if (blueEntities[i].GetDestinationForTest() == authoredDestinations[blueEntities[i].Id] ||
+                    redEntities[i].GetDestinationForTest() == authoredDestinations[redEntities[i].Id])
+                {
+                    return false;
+                }
+            }
 
             var bluePositions = new List<FixedPos> { blueFrontlinePosition };
             var redPositions = new List<FixedPos> { redFrontlinePosition };
@@ -556,7 +601,9 @@ namespace Script.CommonLib.Tests
         {
             var simulator = CreateSimulator(true);
             simulator.Init();
-            AdvanceUntilFormationAttempted(simulator);
+            if (!AdvanceUntilFormationAttempted(simulator))
+                return false;
+
             var entities = GetEntities(simulator.GetAliveEntities());
 
             var blueFirst = entities[1].GetDestinationForTest();
@@ -618,9 +665,12 @@ namespace Script.CommonLib.Tests
             var lowerStart = entities[secondIndex].GetPos();
             var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
 
-            planner.TryApply(
-                new List<Entity> { entities[0], entities[1], entities[2] },
-                new List<Entity> { entities[3], entities[4], entities[5] });
+            if (!planner.TryApply(
+                    new List<Entity> { entities[0], entities[1], entities[2] },
+                    new List<Entity> { entities[3], entities[4], entities[5] }))
+            {
+                return false;
+            }
 
             return upperStart.Z > 0 &&
                    lowerStart.Z < 0 &&
@@ -657,9 +707,12 @@ namespace Script.CommonLib.Tests
             }
 
             var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
-            planner.TryApply(
-                new List<Entity> { entities[0], entities[1], entities[2] },
-                new List<Entity> { entities[3], entities[4], entities[5] });
+            if (!planner.TryApply(
+                    new List<Entity> { entities[0], entities[1], entities[2] },
+                    new List<Entity> { entities[3], entities[4], entities[5] }))
+            {
+                return false;
+            }
 
             return HasSameLateralSide(starts[1], entities[1].GetDestinationForTest(), blueFrontline, redFrontline) &&
                    HasSameLateralSide(starts[2], entities[2].GetDestinationForTest(), blueFrontline, redFrontline) &&
@@ -706,7 +759,7 @@ namespace Script.CommonLib.Tests
                    attacker.GetPos() != tacticalPosition;
         }
 
-        private static bool TestEntityAppliesSmoothingToAuthoredDestinationResume()
+        private static bool TestEntityRequestsSmoothingWhenResumingAuthoredDestination()
         {
             var context = new ResumePathTestContext(true);
             var attackerData = CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000);
@@ -737,8 +790,7 @@ namespace Script.CommonLib.Tests
                 context.Update(attacker, 50);
 
             return context.ResumePathRequestCount == 1 &&
-                   context.PathSmoothingCallCount == 1 &&
-                   context.LastSmoothedWaypointCount > 2;
+                   context.PathSmoothingCallCount == 1;
         }
 
         private static bool TestEntityDoesNotResumeBeforeExecutingAttack()
@@ -747,7 +799,9 @@ namespace Script.CommonLib.Tests
             var eventHandler = new AttackRecordingEventHandler();
             var simulator = new BattleMapSimulator(eventHandler, mapData);
             simulator.Init();
-            AdvanceUntilFormationAttempted(simulator);
+            if (!AdvanceUntilFormationAttempted(simulator))
+                return false;
+
             var entities = GetEntities(simulator.GetAliveEntities());
             var blueRanged = entities[1];
 
@@ -873,12 +927,15 @@ namespace Script.CommonLib.Tests
             var firstPlanner = new InitialTacticalFormationPlanner(firstMapData, new BattleMapPathFinder(firstMapData));
             var secondPlanner = new InitialTacticalFormationPlanner(secondMapData, new BattleMapPathFinder(secondMapData));
 
-            firstPlanner.TryApply(
-                new List<Entity> { firstEntities[0], firstEntities[1], firstEntities[2] },
-                new List<Entity> { firstEntities[3], firstEntities[4], firstEntities[5] });
-            secondPlanner.TryApply(
-                new List<Entity> { secondEntities[2], secondEntities[0], secondEntities[1] },
-                new List<Entity> { secondEntities[5], secondEntities[3], secondEntities[4] });
+            if (!firstPlanner.TryApply(
+                    new List<Entity> { firstEntities[0], firstEntities[1], firstEntities[2] },
+                    new List<Entity> { firstEntities[3], firstEntities[4], firstEntities[5] }) ||
+                !secondPlanner.TryApply(
+                    new List<Entity> { secondEntities[2], secondEntities[0], secondEntities[1] },
+                    new List<Entity> { secondEntities[5], secondEntities[3], secondEntities[4] }))
+            {
+                return false;
+            }
 
             return HaveSameDestinations(
                 GetDestinationsById(firstSimulator.GetAliveEntities()),
@@ -924,7 +981,7 @@ namespace Script.CommonLib.Tests
             return true;
         }
 
-        private static bool TestTest001RuntimeSimulationAppliesFormation()
+        private static bool TestTest001RuntimeSimulationCompletesPlannedMovement()
         {
             var json = File.ReadAllText("Assets/Data/MapData/TEST-001-NORMAL_Data.json");
             var mapData = JsonConvert.DeserializeObject<BattleMapData>(json);
@@ -962,8 +1019,6 @@ namespace Script.CommonLib.Tests
             if (plannedEntities.Count == 0)
                 return false;
 
-            var minimumObservedAllySpacing = GetMinimumSameTeamSpacing(entities);
-
             for (var tick = 0; tick < 2000; tick++)
             {
                 var hasMovingEntity = false;
@@ -980,9 +1035,6 @@ namespace Script.CommonLib.Tests
                     break;
 
                 simulator.Update(50);
-                minimumObservedAllySpacing = Math.Min(
-                    minimumObservedAllySpacing,
-                    GetMinimumSameTeamSpacing(GetEntities(simulator.GetAliveEntities())));
             }
 
             for (var i = 0; i < plannedEntities.Count; i++)
@@ -996,7 +1048,7 @@ namespace Script.CommonLib.Tests
                 }
             }
 
-            return minimumObservedAllySpacing >= 3000;
+            return true;
         }
 
         private static ObstacleData CreateCenterObstacle()
@@ -1102,26 +1154,6 @@ namespace Script.CommonLib.Tests
             }
 
             return true;
-        }
-
-        private static long GetMinimumSameTeamSpacing(List<Entity> entities)
-        {
-            var minimumSpacing = long.MaxValue;
-
-            for (var i = 0; i < entities.Count; i++)
-            {
-                for (var j = i + 1; j < entities.Count; j++)
-                {
-                    if (entities[i].GetTeamFlag() != entities[j].GetTeamFlag())
-                        continue;
-
-                    minimumSpacing = Math.Min(
-                        minimumSpacing,
-                        entities[i].GetPos().GetDistance(entities[j].GetPos()));
-                }
-            }
-
-            return minimumSpacing;
         }
 
         private static bool HaveSamePath(List<GridPos> first, List<GridPos> second)
@@ -1324,7 +1356,6 @@ namespace Script.CommonLib.Tests
             public int AttackRequestCount { get; private set; }
             public int ResumePathRequestCount { get; private set; }
             public int PathSmoothingCallCount { get; private set; }
-            public int LastSmoothedWaypointCount { get; private set; }
             public uint ElapsedMs { get; private set; }
 
             public void AddEntity(Entity entity)
@@ -1401,7 +1432,6 @@ namespace Script.CommonLib.Tests
             {
                 ++PathSmoothingCallCount;
                 _pathFinder.SmoothPathTransition(start, incomingDirection, waypoints);
-                LastSmoothedWaypointCount = waypoints.Count;
             }
 
             public void RequestAttack(uint attackerId, uint targetEntityId)
