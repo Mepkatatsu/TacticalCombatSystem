@@ -5,17 +5,12 @@ namespace Script.CommonLib.Tests
 {
     internal static class TacticalPositioningTestData
     {
-        internal static bool HasAuthoredDestinations(IReadOnlyList<IEntityContext> entityContexts)
+        internal static bool Verify<TTest>(bool result, string testName)
         {
-            for (var i = 0; i < entityContexts.Count; i++)
-            {
-                var entity = (Entity)entityContexts[i];
-                var expectedX = entity.GetTeamFlag() == TeamFlag.Blue ? 20000 : -20000;
-                if (entity.GetDestinationForTest().X != expectedX)
-                    return false;
-            }
+            if (!result)
+                LogHelper.Error($"[{typeof(TTest).Name}] {testName} failed.");
 
-            return true;
+            return result;
         }
 
         internal static Dictionary<uint, FixedPos> GetDestinationsById(IReadOnlyList<IEntityContext> entityContexts)
@@ -78,80 +73,68 @@ namespace Script.CommonLib.Tests
 
         internal static BattleMapData CreateFourEntityTeamMapData()
         {
-            var battlePositions = new List<BattlePositionData>
-            {
-                CreateBattlePosition("BlueStart1", -10, 0),
-                CreateBattlePosition("BlueStart2", -10, -6),
-                CreateBattlePosition("BlueStart3", -10, 6),
-                CreateBattlePosition("BlueStart4", -10, 10),
-                CreateBattlePosition("RedStart1", 10, 0),
-                CreateBattlePosition("RedStart2", 10, -6),
-                CreateBattlePosition("RedStart3", 10, 6),
-                CreateBattlePosition("RedStart4", 10, 10),
-                CreateBattlePosition("BlueEnd1", 25, 0),
-                CreateBattlePosition("BlueEnd2", 25, -6),
-                CreateBattlePosition("BlueEnd3", 25, 6),
-                CreateBattlePosition("BlueEnd4", 25, 10),
-                CreateBattlePosition("RedEnd1", -25, 0),
-                CreateBattlePosition("RedEnd2", -25, -6),
-                CreateBattlePosition("RedEnd3", -25, 6),
-                CreateBattlePosition("RedEnd4", -25, 10),
-            };
-
-            return new BattleMapData
-            {
-                minGridPos = new GridPos(-30, -20),
-                maxGridPos = new GridPos(30, 20),
-                battlePositions = battlePositions,
-                obstacles = new List<ObstacleData>(),
-                entities = new List<EntityData>
-                {
-                    CreateEntityData(TeamFlag.Blue, "BlueStart1", "BlueEnd1", 5000),
-                    CreateEntityData(TeamFlag.Blue, "BlueStart2", "BlueEnd2", 12000),
-                    CreateEntityData(TeamFlag.Blue, "BlueStart3", "BlueEnd3", 12000),
-                    CreateEntityData(TeamFlag.Blue, "BlueStart4", "BlueEnd4", 12000),
-                    CreateEntityData(TeamFlag.Red, "RedStart1", "RedEnd1", 5000),
-                    CreateEntityData(TeamFlag.Red, "RedStart2", "RedEnd2", 12000),
-                    CreateEntityData(TeamFlag.Red, "RedStart3", "RedEnd3", 12000),
-                    CreateEntityData(TeamFlag.Red, "RedStart4", "RedEnd4", 12000),
-                },
-            };
+            return CreateMapData(new[] { 0, -6, 6, 10 }, 10, 25, 20);
         }
 
         internal static BattleMapData CreateMapData()
         {
-            var battlePositions = new List<BattlePositionData>
-            {
-                CreateBattlePosition("BlueStart1", -6, 0),
-                CreateBattlePosition("BlueStart2", -6, -4),
-                CreateBattlePosition("BlueStart3", -6, 4),
-                CreateBattlePosition("RedStart1", 6, 0),
-                CreateBattlePosition("RedStart2", 6, -4),
-                CreateBattlePosition("RedStart3", 6, 4),
-                CreateBattlePosition("BlueEnd1", 20, 0),
-                CreateBattlePosition("BlueEnd2", 20, -4),
-                CreateBattlePosition("BlueEnd3", 20, 4),
-                CreateBattlePosition("RedEnd1", -20, 0),
-                CreateBattlePosition("RedEnd2", -20, -4),
-                CreateBattlePosition("RedEnd3", -20, 4),
-            };
+            return CreateMapData(new[] { 0, -4, 4 }, 6, 20, 15);
+        }
 
+        private static BattleMapData CreateMapData(
+            int[] lateralPositions,
+            int startX,
+            int destinationX,
+            int mapHalfHeight)
+        {
+            var battlePositions = new List<BattlePositionData>();
+            AddBattlePositions(battlePositions, "BlueStart", -startX, lateralPositions);
+            AddBattlePositions(battlePositions, "RedStart", startX, lateralPositions);
+            AddBattlePositions(battlePositions, "BlueEnd", destinationX, lateralPositions);
+            AddBattlePositions(battlePositions, "RedEnd", -destinationX, lateralPositions);
+
+            var entities = new List<EntityData>();
+            AddTeamEntities(entities, TeamFlag.Blue, lateralPositions.Length);
+            AddTeamEntities(entities, TeamFlag.Red, lateralPositions.Length);
             return new BattleMapData
             {
-                minGridPos = new GridPos(-30, -15),
-                maxGridPos = new GridPos(30, 15),
+                minGridPos = new GridPos(-30, -mapHalfHeight),
+                maxGridPos = new GridPos(30, mapHalfHeight),
                 battlePositions = battlePositions,
                 obstacles = new List<ObstacleData>(),
-                entities = new List<EntityData>
-                {
-                    CreateEntityData(TeamFlag.Blue, "BlueStart1", "BlueEnd1", 5000),
-                    CreateEntityData(TeamFlag.Blue, "BlueStart2", "BlueEnd2", 12000),
-                    CreateEntityData(TeamFlag.Blue, "BlueStart3", "BlueEnd3", 12000),
-                    CreateEntityData(TeamFlag.Red, "RedStart1", "RedEnd1", 5000),
-                    CreateEntityData(TeamFlag.Red, "RedStart2", "RedEnd2", 12000),
-                    CreateEntityData(TeamFlag.Red, "RedStart3", "RedEnd3", 12000),
-                },
+                entities = entities,
             };
+        }
+
+        private static void AddBattlePositions(
+            List<BattlePositionData> battlePositions,
+            string namePrefix,
+            int x,
+            int[] lateralPositions)
+        {
+            for (var i = 0; i < lateralPositions.Length; i++)
+            {
+                battlePositions.Add(CreateBattlePosition(
+                    $"{namePrefix}{i + 1}",
+                    x,
+                    lateralPositions[i]));
+            }
+        }
+
+        private static void AddTeamEntities(
+            List<EntityData> entities,
+            TeamFlag teamFlag,
+            int entityCount)
+        {
+            var teamName = teamFlag == TeamFlag.Blue ? "Blue" : "Red";
+            for (var i = 0; i < entityCount; i++)
+            {
+                entities.Add(CreateEntityData(
+                    teamFlag,
+                    $"{teamName}Start{i + 1}",
+                    $"{teamName}End{i + 1}",
+                    i == 0 ? (ushort)5000 : (ushort)12000));
+            }
         }
 
         internal static ObstacleData CreateCenterObstacle()

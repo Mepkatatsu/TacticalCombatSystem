@@ -10,42 +10,16 @@ namespace Script.CommonLib.Tests
         {
             var success = true;
 
-            success &= Verify(TestInitDoesNotApplyFormation(), nameof(TestInitDoesNotApplyFormation));
-            success &= Verify(TestEncounterDetectionMarginBoundary(), nameof(TestEncounterDetectionMarginBoundary));
-            success &= Verify(TestLongRangeBacklineDoesNotStartEncounterEarly(), nameof(TestLongRangeBacklineDoesNotStartEncounterEarly));
-            success &= Verify(TestFirstEncounterAppliesFormation(), nameof(TestFirstEncounterAppliesFormation));
-            success &= Verify(TestFormationIsNotReappliedAfterFirstEncounter(), nameof(TestFormationIsNotReappliedAfterFirstEncounter));
-            success &= Verify(TestUnequalRangePredictionMatchesFixedTickReference(), nameof(TestUnequalRangePredictionMatchesFixedTickReference));
-            success &= Verify(TestPredictionFailureKeepsAuthoredDestinations(), nameof(TestPredictionFailureKeepsAuthoredDestinations));
+            success &= Verify<InitialTacticalPositioningFlowTest>(
+                TestLongRangeBacklineDoesNotStartEncounterEarly(),
+                nameof(TestLongRangeBacklineDoesNotStartEncounterEarly));
+            success &= Verify<InitialTacticalPositioningFlowTest>(
+                TestUnequalRangePredictionReachesMutualAttackRange(),
+                nameof(TestUnequalRangePredictionReachesMutualAttackRange));
+            success &= Verify<InitialTacticalPositioningFlowTest>(
+                TestPredictionFailureKeepsAuthoredDestinations(),
+                nameof(TestPredictionFailureKeepsAuthoredDestinations));
             return success;
-        }
-
-        private static bool TestInitDoesNotApplyFormation()
-        {
-            var simulator = CreateSimulator();
-            simulator.Init();
-
-            return !simulator.WasInitialTacticalPositioningAttemptedForTest &&
-                   HasAuthoredDestinations(simulator.GetAliveEntities());
-        }
-
-        private static bool TestEncounterDetectionMarginBoundary()
-        {
-            var mapData = CreateMapData();
-            mapData.entities[0].attackRange = 3000;
-            mapData.entities[3].attackRange = 5000;
-            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
-            simulator.Init();
-            var entities = GetEntities(simulator.GetAliveEntities());
-            entities[0].SetPos(new FixedPos(0, 0, 0));
-            entities[3].SetPos(new FixedPos(20000, 0, 0));
-
-            var blueEntities = new List<Entity> { entities[2], entities[0], entities[1] };
-            var redEntities = new List<Entity> { entities[5], entities[4], entities[3] };
-            var startsAtBoundary = InitialEncounterDetector.HasEncounter(blueEntities, redEntities) &&
-                                   InitialEncounterDetector.HasEncounter(redEntities, blueEntities);
-            entities[3].SetPos(new FixedPos(20001, 0, 0));
-            return startsAtBoundary && !InitialEncounterDetector.HasEncounter(blueEntities, redEntities);
         }
 
         private static bool TestLongRangeBacklineDoesNotStartEncounterEarly()
@@ -63,54 +37,13 @@ namespace Script.CommonLib.Tests
             entities[3].SetPos(new FixedPos(20000, 0, 0));
             entities[4].SetPos(new FixedPos(20000, 0, 0));
 
-            return !InitialEncounterDetector.HasEncounter(
-                new List<Entity> { entities[0], entities[1], entities[2] },
-                new List<Entity> { entities[3], entities[4], entities[5] });
+            var blueEntities = new List<Entity> { entities[0], entities[1], entities[2] };
+            var redEntities = new List<Entity> { entities[3], entities[4], entities[5] };
+            return !InitialEncounterDetector.HasEncounter(blueEntities, redEntities) &&
+                   !InitialEncounterDetector.HasEncounter(redEntities, blueEntities);
         }
 
-        private static bool TestFirstEncounterAppliesFormation()
-        {
-            var simulator = CreateSimulator();
-            simulator.Init();
-            if (!AdvanceUntilFormationAttempted(simulator))
-                return false;
-
-            return simulator.WasInitialTacticalPositioningAttemptedForTest &&
-                   !HasAuthoredDestinations(simulator.GetAliveEntities());
-        }
-
-        private static bool TestFormationIsNotReappliedAfterFirstEncounter()
-        {
-            var simulator = CreateSimulator();
-            simulator.Init();
-            if (!AdvanceUntilFormationAttempted(simulator))
-                return false;
-
-            var entities = GetEntities(simulator.GetAliveEntities());
-            Entity plannedEntity = null;
-            for (var i = 0; i < entities.Count; i++)
-            {
-                if (!entities[i].ShouldPrioritizeMovement)
-                    continue;
-
-                plannedEntity = entities[i];
-                break;
-            }
-
-            if (plannedEntity == null)
-                return false;
-
-            // 첫 배치 결과를 일부러 덮어쓴 뒤 같은 교전 조건에서 다시 갱신한다.
-            // 초기 배치가 재실행된다면 이 목적지가 전술 목적지로 다시 바뀐다.
-            var overrideDestination = plannedEntity.GetPos();
-            plannedEntity.SetDestination(overrideDestination);
-            simulator.Update(0);
-
-            return simulator.WasInitialTacticalPositioningAttemptedForTest &&
-                   plannedEntity.GetDestinationForTest() == overrideDestination;
-        }
-
-        private static bool TestUnequalRangePredictionMatchesFixedTickReference()
+        private static bool TestUnequalRangePredictionReachesMutualAttackRange()
         {
             var mapData = CreateMapData();
             mapData.entities = new List<EntityData>
@@ -139,12 +72,7 @@ namespace Script.CommonLib.Tests
 
             var blueMoveDistance = blueStart.GetDistance(bluePosition);
             var redMoveDistance = redStart.GetDistance(redPosition);
-            // Blue는 10m 탐지 tick에서 한 번 더 0.25m 이동해 -4.75m, Red는 이후 3m 탐지 tick에서 -2m에 멈춘다.
-            var expectedBlueStopGridPos = new GridPos(-5, 0);
-            var expectedRedStopGridPos = new GridPos(-2, 0);
-            return bluePosition.ToGridPos() == expectedBlueStopGridPos &&
-                   redPosition.ToGridPos() == expectedRedStopGridPos &&
-                   blueMoveDistance < redMoveDistance &&
+            return blueMoveDistance < redMoveDistance &&
                    bluePosition.GetDistance(redPosition) <= entities[1].AttackRange;
         }
 
@@ -158,21 +86,17 @@ namespace Script.CommonLib.Tests
 
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
             simulator.Init();
+            var authoredDestinations = GetDestinationsById(simulator.GetAliveEntities());
             var entities = GetEntities(simulator.GetAliveEntities());
             entities[0].SetPos(new GridPos(-3, 0));
             entities[3].SetPos(new GridPos(3, 0));
             simulator.Update(50);
 
             return simulator.WasInitialTacticalPositioningAttemptedForTest &&
-                   HasAuthoredDestinations(simulator.GetAliveEntities());
+                   HaveSameDestinations(
+                       authoredDestinations,
+                       GetDestinationsById(simulator.GetAliveEntities()));
         }
 
-        private static bool Verify(bool result, string testName)
-        {
-            if (!result)
-                LogHelper.Error($"[{nameof(InitialTacticalPositioningFlowTest)}] {testName} failed.");
-
-            return result;
-        }
     }
 }

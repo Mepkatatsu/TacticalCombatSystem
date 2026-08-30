@@ -10,9 +10,15 @@ namespace Script.CommonLib.Tests
     {
         public bool Test()
         {
-            return Verify(
-                TestRuntimeSimulationCompletesPlannedMovement(),
-                nameof(TestRuntimeSimulationCompletesPlannedMovement));
+            return Verify<InitialTacticalPositioningRuntimeTest>(
+                TestRuntimeLifecycleAppliesOnceAndCompletesPlannedMovement(),
+                nameof(TestRuntimeLifecycleAppliesOnceAndCompletesPlannedMovement));
+        }
+
+        private static bool TestRuntimeLifecycleAppliesOnceAndCompletesPlannedMovement()
+        {
+            return TestRuntimeSimulationCompletesPlannedMovement() &&
+                   TestFormationIsNotReappliedAfterFirstEncounter();
         }
 
         private static bool TestRuntimeSimulationCompletesPlannedMovement()
@@ -24,14 +30,12 @@ namespace Script.CommonLib.Tests
 
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
             simulator.Init();
+            if (simulator.WasInitialTacticalPositioningAttemptedForTest)
+                return false;
+
             var authoredDestinations = GetDestinationsById(simulator.GetAliveEntities());
 
-            for (var i = 0; i < 2000 && !simulator.WasInitialTacticalPositioningAttemptedForTest; i++)
-            {
-                simulator.Update(50);
-            }
-
-            if (!simulator.WasInitialTacticalPositioningAttemptedForTest)
+            if (!AdvanceUntilFormationAttempted(simulator))
                 return false;
 
             var plannedDestinations = GetDestinationsById(simulator.GetAliveEntities());
@@ -85,12 +89,34 @@ namespace Script.CommonLib.Tests
             return true;
         }
 
-        private static bool Verify(bool result, string testName)
+        private static bool TestFormationIsNotReappliedAfterFirstEncounter()
         {
-            if (!result)
-                LogHelper.Error($"[{nameof(InitialTacticalPositioningRuntimeTest)}] {testName} failed.");
+            var simulator = CreateSimulator();
+            simulator.Init();
+            if (!AdvanceUntilFormationAttempted(simulator))
+                return false;
 
-            return result;
+            var entities = GetEntities(simulator.GetAliveEntities());
+            Entity plannedEntity = null;
+            for (var i = 0; i < entities.Count; i++)
+            {
+                if (!entities[i].ShouldPrioritizeMovement)
+                    continue;
+
+                plannedEntity = entities[i];
+                break;
+            }
+
+            if (plannedEntity == null)
+                return false;
+
+            // 첫 배치 결과를 덮어쓴 뒤에도 같은 교전에서 다시 계획하지 않아야 한다.
+            var overrideDestination = plannedEntity.GetPos();
+            plannedEntity.SetDestination(overrideDestination);
+            simulator.Update(0);
+
+            return plannedEntity.GetDestinationForTest() == overrideDestination;
         }
+
     }
 }

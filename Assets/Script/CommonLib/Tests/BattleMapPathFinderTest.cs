@@ -10,56 +10,59 @@ namespace Script.CommonLib.Tests
         {
             var success = true;
 
-            success &= Verify(TestArbitraryGoalUsesAuthoredWaypointDetour(), nameof(TestArbitraryGoalUsesAuthoredWaypointDetour));
-            success &= Verify(TestExistingFindWaypointsResultIsPreserved(), nameof(TestExistingFindWaypointsResultIsPreserved));
-            success &= Verify(TestFailedPathReturnsEmptyResult(), nameof(TestFailedPathReturnsEmptyResult));
+            success &= Verify<BattleMapPathFinderTest>(
+                TestArbitraryGoalDetourPreservesAuthoredQueryResult(),
+                nameof(TestArbitraryGoalDetourPreservesAuthoredQueryResult));
+            success &= Verify<BattleMapPathFinderTest>(
+                TestFailedPathReturnsEmptyResult(),
+                nameof(TestFailedPathReturnsEmptyResult));
             return success;
         }
 
-        private static bool TestArbitraryGoalUsesAuthoredWaypointDetour()
+        private static bool TestArbitraryGoalDetourPreservesAuthoredQueryResult()
         {
             var mapData = CreateMapData();
             mapData.obstacles.Add(CreateCenterObstacle());
             var pathFinder = new BattleMapPathFinder(mapData);
-            var paths = new List<GridPos>();
-
-            var found = pathFinder.TryFindWaypointsFromArbitraryPositions(
-                new GridPos(-20, 0),
-                new GridPos(20, 0),
-                paths);
-
-            return found &&
-                   paths.Count > 2 &&
-                   paths[0] == new GridPos(20, 0) &&
-                   paths[paths.Count - 1] == new GridPos(-20, 0);
-        }
-
-        private static bool TestExistingFindWaypointsResultIsPreserved()
-        {
-            var mapData = CreateMapData();
-            mapData.obstacles.Add(CreateCenterObstacle());
-            var pathFinder = new BattleMapPathFinder(mapData);
-            var before = new List<GridPos>();
-            var after = new List<GridPos>();
-
-            if (!pathFinder.TryFindWaypoints(new GridPos(-6, 0), new GridPos(6, 0), before))
-                return false;
-
+            var authoredPathBefore = new List<GridPos>();
             var arbitraryPath = new List<GridPos>();
-            pathFinder.TryFindWaypointsFromArbitraryPositions(
-                new GridPos(-20, 0),
-                new GridPos(20, 0),
-                arbitraryPath);
+            var authoredPathAfter = new List<GridPos>();
 
-            if (!pathFinder.TryFindWaypoints(new GridPos(-6, 0), new GridPos(6, 0), after))
-                return false;
-
-            if (before.Count != after.Count)
-                return false;
-
-            for (var i = 0; i < before.Count; i++)
+            if (!pathFinder.TryFindWaypoints(
+                    new GridPos(-6, 0),
+                    new GridPos(6, 0),
+                    authoredPathBefore))
             {
-                if (before[i] != after[i])
+                return false;
+            }
+
+            if (!pathFinder.TryFindWaypointsFromArbitraryPositions(
+                    new GridPos(-20, 0),
+                    new GridPos(20, 0),
+                    arbitraryPath))
+            {
+                return false;
+            }
+
+            if (!pathFinder.TryFindWaypoints(
+                    new GridPos(-6, 0),
+                    new GridPos(6, 0),
+                    authoredPathAfter))
+            {
+                return false;
+            }
+
+            if (arbitraryPath.Count <= 2 ||
+                arbitraryPath[0] != new GridPos(20, 0) ||
+                arbitraryPath[arbitraryPath.Count - 1] != new GridPos(-20, 0) ||
+                authoredPathBefore.Count != authoredPathAfter.Count)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < authoredPathBefore.Count; i++)
+            {
+                if (authoredPathBefore[i] != authoredPathAfter[i])
                     return false;
             }
 
@@ -85,12 +88,5 @@ namespace Script.CommonLib.Tests
             return !found && result.Count == 0;
         }
 
-        private static bool Verify(bool result, string testName)
-        {
-            if (!result)
-                LogHelper.Error($"[{nameof(BattleMapPathFinderTest)}] {testName} failed.");
-
-            return result;
-        }
     }
 }
