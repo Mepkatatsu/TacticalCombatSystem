@@ -2,12 +2,20 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using Script.CommonLib.Map;
+using static Script.CommonLib.Tests.TacticalPositioningTestData;
 
 namespace Script.CommonLib.Tests
 {
-    public partial class InitialTacticalFormationPlannerTest
+    public sealed class InitialTacticalPositioningRuntimeTest : ITest
     {
-        private static bool TestTest001RuntimeSimulationCompletesPlannedMovement()
+        public bool Test()
+        {
+            return Verify(
+                TestRuntimeSimulationCompletesPlannedMovement(),
+                nameof(TestRuntimeSimulationCompletesPlannedMovement));
+        }
+
+        private static bool TestRuntimeSimulationCompletesPlannedMovement()
         {
             var json = File.ReadAllText("Assets/Data/MapData/TEST-001-NORMAL_Data.json");
             var mapData = JsonConvert.DeserializeObject<BattleMapData>(json);
@@ -75,6 +83,14 @@ namespace Script.CommonLib.Tests
             }
 
             return true;
+        }
+
+        private static bool Verify(bool result, string testName)
+        {
+            if (!result)
+                LogHelper.Error($"[{nameof(InitialTacticalPositioningRuntimeTest)}] {testName} failed.");
+
+            return result;
         }
     }
 }

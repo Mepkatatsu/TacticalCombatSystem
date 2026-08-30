@@ -1,12 +1,30 @@
 using System.Collections.Generic;
-using System.IO;
-using Newtonsoft.Json;
 using Script.CommonLib.Map;
+using static Script.CommonLib.Tests.TacticalPositioningTestData;
 
 namespace Script.CommonLib.Tests
 {
-    public partial class InitialTacticalFormationPlannerTest
+    public sealed class TacticalMovementStateTest : ITest
     {
+        public bool Test()
+        {
+            var success = true;
+
+            success &= Verify(TestPlannedEntityMovesEvenWhenEnemyIsInRange(), nameof(TestPlannedEntityMovesEvenWhenEnemyIsInRange));
+            success &= Verify(TestTacticalMovementReachesDestinationAfterCurrentTargetDeathAndDamageTaken(), nameof(TestTacticalMovementReachesDestinationAfterCurrentTargetDeathAndDamageTaken));
+            success &= Verify(TestUnplannedEntityKeepsAttackPriority(), nameof(TestUnplannedEntityKeepsAttackPriority));
+            success &= Verify(TestImmobilePlannedEntityReleasesMovementPriority(), nameof(TestImmobilePlannedEntityReleasesMovementPriority));
+            success &= Verify(TestSubStepTacticalMovementReleasesMovementPriority(), nameof(TestSubStepTacticalMovementReleasesMovementPriority));
+            success &= Verify(TestExhaustedTacticalPathReleasesMovementPriority(), nameof(TestExhaustedTacticalPathReleasesMovementPriority));
+            success &= Verify(TestFailedMovementPathStopsAndIsNotRetried(), nameof(TestFailedMovementPathStopsAndIsNotRetried));
+            success &= Verify(TestEntityResumesAuthoredDestinationAfterExecutedAttack(), nameof(TestEntityResumesAuthoredDestinationAfterExecutedAttack));
+            success &= Verify(TestEntityRequestsSmoothingWhenResumingAuthoredDestination(), nameof(TestEntityRequestsSmoothingWhenResumingAuthoredDestination));
+            success &= Verify(TestEntityResumesWhenTargetLeavesBeforeExecutingAttack(), nameof(TestEntityResumesWhenTargetLeavesBeforeExecutingAttack));
+            success &= Verify(TestFailedAuthoredDestinationResumeIsAttemptedOnce(), nameof(TestFailedAuthoredDestinationResumeIsAttemptedOnce));
+            success &= Verify(TestEntityRequestsSmoothingForTacticalDestinationAfterMovement(), nameof(TestEntityRequestsSmoothingForTacticalDestinationAfterMovement));
+            return success;
+        }
+
         private static bool TestPlannedEntityMovesEvenWhenEnemyIsInRange()
         {
             var simulator = CreateSimulator();
@@ -317,6 +335,26 @@ namespace Script.CommonLib.Tests
                    attacker.GetDestinationForTest() == new GridPos(0, 0).ToFixedPos();
         }
 
+        private static bool TestEntityRequestsSmoothingForTacticalDestinationAfterMovement()
+        {
+            var context = new ResumePathTestContext(true);
+            var entity = new Entity(
+                1,
+                context,
+                CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000));
+            context.AddEntity(entity);
+            entity.SetPos(new GridPos(-5, 0));
+            entity.SetDestination(new GridPos(5, 0).ToFixedPos());
+            context.Update(entity, 50);
+            context.Update(entity, 50);
+
+            var currentGridPosition = entity.GetPos().ToGridPos();
+            var tacticalPath = new List<GridPos> { new(5, 5), currentGridPosition };
+            entity.SetTacticalDestination(new GridPos(5, 5).ToFixedPos(), tacticalPath);
+
+            return context.PathSmoothingCallCount == 1;
+        }
+
         private static bool HasEntityPrioritizingMovementInAttackRange(
             List<Entity> entities,
             TeamFlag teamFlag)
@@ -332,6 +370,168 @@ namespace Script.CommonLib.Tests
             }
 
             return false;
+        }
+
+        private static bool Verify(bool result, string testName)
+        {
+            if (!result)
+                LogHelper.Error($"[{nameof(TacticalMovementStateTest)}] {testName} failed.");
+
+            return result;
+        }
+
+        private sealed class AttackRecordingEventHandler : IBattleMapEventHandler
+        {
+            private readonly List<uint> _attackerIds = new();
+
+            public bool HasAttackFrom(uint attackerId) => _attackerIds.Contains(attackerId);
+
+            public void OnEntityAdded(uint entityId, Entity entity) { }
+            public void OnEntityPositionChanged(uint entityId, FixedPos pos) { }
+            public void OnEntityDirectionChanged(uint entityId, FixedDir dir) { }
+            public void OnEntityStartMove(uint entityId) { }
+            public void OnEntityStopMove(uint entityId) { }
+            public void OnEntityStartAttack(uint attackerId, uint targetId) => _attackerIds.Add(attackerId);
+            public void OnEntityGetDamage(uint entityId, uint damage) { }
+            public void OnEntityRetired(uint entityId) { }
+            public void OnProjectileAdded(ulong projectileId, Projectile projectile) { }
+            public void OnProjectilePositionChanged(ulong projectileId, FixedPos pos) { }
+            public void OnProjectileDirectionChanged(ulong projectileId, FixedDir dir) { }
+            public void OnProjectileTriggered(ulong projectileId) { }
+            public void OnBattleEnd(TeamFlag winner) { }
+            public void OnBattleMapUpdated(ushort deltaMs) { }
+        }
+
+        private sealed class ResumePathTestContext : IBattleMapContext
+        {
+            private readonly bool _shouldFindResumePath;
+            private readonly bool _shouldFindPath;
+            private readonly List<Entity> _entities = new();
+            private readonly BattleMapPathSmoother _pathSmoother;
+
+            public ResumePathTestContext(bool shouldFindResumePath, bool shouldFindPath = true)
+            {
+                _shouldFindResumePath = shouldFindResumePath;
+                _shouldFindPath = shouldFindPath;
+                var mapData = CreateMapData();
+                _pathSmoother = new BattleMapPathSmoother(mapData, new BattleMapPathFinder(mapData));
+            }
+
+            public int AttackRequestCount { get; private set; }
+            public int PathRequestCount { get; private set; }
+            public int ResumePathRequestCount { get; private set; }
+            public int PathSmoothingCallCount { get; private set; }
+            public uint ElapsedMs { get; private set; }
+
+            public void AddEntity(Entity entity)
+            {
+                _entities.Add(entity);
+            }
+
+            public void Update(Entity entity, ushort deltaMs)
+            {
+                ElapsedMs += deltaMs;
+                entity.Update(deltaMs);
+            }
+
+            public IEntityContext TryGetNearestEnemy(uint entityId, long maxDistance)
+            {
+                var entity = GetEntity(entityId);
+                Entity nearest = null;
+                var nearestDistance = long.MaxValue;
+
+                for (var i = 0; i < _entities.Count; i++)
+                {
+                    var otherEntity = _entities[i];
+                    if (otherEntity.Id == entityId ||
+                        !otherEntity.IsAlive() ||
+                        otherEntity.GetTeamFlag() == entity.GetTeamFlag())
+                    {
+                        continue;
+                    }
+
+                    var distance = entity.GetPos().GetDistance(otherEntity.GetPos());
+                    if (distance <= maxDistance && distance < nearestDistance)
+                    {
+                        nearest = otherEntity;
+                        nearestDistance = distance;
+                    }
+                }
+
+                return nearest;
+            }
+
+            public bool HasAliveEnemy(uint entityId)
+            {
+                var entity = GetEntity(entityId);
+                for (var i = 0; i < _entities.Count; i++)
+                {
+                    if (_entities[i].Id != entityId &&
+                        _entities[i].IsAlive() &&
+                        _entities[i].GetTeamFlag() != entity.GetTeamFlag())
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+            {
+                ++PathRequestCount;
+                if (!_shouldFindPath)
+                    return false;
+
+                resultWaypoints.Add(goal);
+                resultWaypoints.Add(start);
+                return true;
+            }
+
+            public bool TryFindWaypointsFromArbitraryPositions(
+                GridPos start,
+                GridPos goal,
+                List<GridPos> resultWaypoints)
+            {
+                ++ResumePathRequestCount;
+                if (!_shouldFindResumePath)
+                    return false;
+
+                resultWaypoints.Add(goal);
+                resultWaypoints.Add(start);
+                return true;
+            }
+
+            public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
+            {
+                ++PathSmoothingCallCount;
+                _pathSmoother.SmoothPathTransition(start, incomingDirection, waypoints);
+            }
+
+            public void RequestAttack(uint attackerId, uint targetEntityId)
+            {
+                ++AttackRequestCount;
+            }
+
+            public void OnEntityPositionChanged(uint entityId, FixedPos pos) { }
+            public void OnEntityDirectionChanged(uint entityId, FixedDir dir) { }
+            public void OnEntityGetDamage(uint entityId, uint damage) { }
+            public void OnProjectilePositionChanged(ulong projectileId, FixedPos pos) { }
+            public void OnProjectileDirectionChanged(ulong projectileId, FixedDir dir) { }
+            public void OnProjectileTriggered(ulong projectileId) { }
+            public void OnEntityStartMove(uint entityId) { }
+            public void OnEntityStopMove(uint entityId) { }
+
+            private Entity GetEntity(uint entityId)
+            {
+                for (var i = 0; i < _entities.Count; i++)
+                {
+                    if (_entities[i].Id == entityId)
+                        return _entities[i];
+                }
+
+                return null;
+            }
         }
     }
 }

@@ -1,12 +1,25 @@
 using System.Collections.Generic;
-using System.IO;
-using Newtonsoft.Json;
 using Script.CommonLib.Map;
+using static Script.CommonLib.Tests.TacticalPositioningTestData;
 
 namespace Script.CommonLib.Tests
 {
-    public partial class InitialTacticalFormationPlannerTest
+    public sealed class InitialTacticalPositioningFlowTest : ITest
     {
+        public bool Test()
+        {
+            var success = true;
+
+            success &= Verify(TestInitDoesNotApplyFormation(), nameof(TestInitDoesNotApplyFormation));
+            success &= Verify(TestEncounterDetectionMarginBoundary(), nameof(TestEncounterDetectionMarginBoundary));
+            success &= Verify(TestLongRangeBacklineDoesNotStartEncounterEarly(), nameof(TestLongRangeBacklineDoesNotStartEncounterEarly));
+            success &= Verify(TestFirstEncounterAppliesFormation(), nameof(TestFirstEncounterAppliesFormation));
+            success &= Verify(TestFormationIsNotReappliedAfterFirstEncounter(), nameof(TestFormationIsNotReappliedAfterFirstEncounter));
+            success &= Verify(TestUnequalRangePredictionMatchesFixedTickReference(), nameof(TestUnequalRangePredictionMatchesFixedTickReference));
+            success &= Verify(TestPredictionFailureKeepsAuthoredDestinations(), nameof(TestPredictionFailureKeepsAuthoredDestinations));
+            return success;
+        }
+
         private static bool TestInitDoesNotApplyFormation()
         {
             var simulator = CreateSimulator();
@@ -154,74 +167,12 @@ namespace Script.CommonLib.Tests
                    HasAuthoredDestinations(simulator.GetAliveEntities());
         }
 
-        private static bool TestPartialCandidateFailureKeepsWholeTeamDestinations()
+        private static bool Verify(bool result, string testName)
         {
-            var mapData = CreateMapData();
-            mapData.obstacles.Add(new ObstacleData
-            {
-                blockedPoints = new List<GridPos> { new(-6, 4) },
-                waypoints = new List<GridPos>(),
-            });
-            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
-            simulator.Init();
-            var entities = GetEntities(simulator.GetAliveEntities());
-            var blueEntities = new List<Entity> { entities[0], entities[1], entities[2] };
-            var redEntities = new List<Entity> { entities[3], entities[4], entities[5] };
-            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
+            if (!result)
+                LogHelper.Error($"[{nameof(InitialTacticalPositioningFlowTest)}] {testName} failed.");
 
-            planner.TryApply(blueEntities, redEntities);
-
-            return blueEntities[1].GetDestinationForTest().X == 20000 &&
-                   blueEntities[2].GetDestinationForTest().X == 20000;
-        }
-
-        private static bool TestFourEntityCandidateFailureKeepsWholeTeamDestinations()
-        {
-            var mapData = CreateFourEntityTeamMapData();
-            mapData.minGridPos = new GridPos(-30, -4);
-            mapData.maxGridPos = new GridPos(30, 4);
-            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
-            simulator.Init();
-            var entities = GetEntities(simulator.GetAliveEntities());
-            var blueEntities = new List<Entity> { entities[0], entities[1], entities[2], entities[3] };
-            var redEntities = new List<Entity> { entities[4], entities[5], entities[6], entities[7] };
-            var authoredDestinations = GetDestinationsById(simulator.GetAliveEntities());
-            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
-
-            planner.TryApply(blueEntities, redEntities);
-
-            return HaveSameDestinations(
-                authoredDestinations,
-                GetDestinationsById(simulator.GetAliveEntities()));
-        }
-
-        private static bool TestPlacementOrderIsDeterministicWhenInputOrderChanges()
-        {
-            var firstMapData = CreateMapData();
-            var secondMapData = CreateMapData();
-            var firstSimulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, firstMapData);
-            var secondSimulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, secondMapData);
-            firstSimulator.Init();
-            secondSimulator.Init();
-
-            var firstEntities = GetEntities(firstSimulator.GetAliveEntities());
-            var secondEntities = GetEntities(secondSimulator.GetAliveEntities());
-            var firstPlanner = new InitialTacticalFormationPlanner(firstMapData, new BattleMapPathFinder(firstMapData));
-            var secondPlanner = new InitialTacticalFormationPlanner(secondMapData, new BattleMapPathFinder(secondMapData));
-
-            if (!firstPlanner.TryApply(
-                    new List<Entity> { firstEntities[0], firstEntities[1], firstEntities[2] },
-                    new List<Entity> { firstEntities[3], firstEntities[4], firstEntities[5] }) ||
-                !secondPlanner.TryApply(
-                    new List<Entity> { secondEntities[2], secondEntities[0], secondEntities[1] },
-                    new List<Entity> { secondEntities[5], secondEntities[3], secondEntities[4] }))
-            {
-                return false;
-            }
-
-            return HaveSameDestinations(
-                GetDestinationsById(firstSimulator.GetAliveEntities()),
-                GetDestinationsById(secondSimulator.GetAliveEntities()));
+            return result;
         }
     }
 }

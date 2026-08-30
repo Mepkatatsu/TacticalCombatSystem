@@ -1,28 +1,21 @@
 using System.Collections.Generic;
-using System.IO;
-using Newtonsoft.Json;
 using Script.CommonLib.Map;
+using static Script.CommonLib.Tests.TacticalPositioningTestData;
 
 namespace Script.CommonLib.Tests
 {
-    public partial class InitialTacticalFormationPlannerTest
+    public sealed class BattleMapPathSmootherTest : ITest
     {
-        private static bool TestArbitraryGoalUsesAuthoredWaypointDetour()
+        public bool Test()
         {
-            var mapData = CreateMapData();
-            mapData.obstacles.Add(CreateCenterObstacle());
-            var pathFinder = new BattleMapPathFinder(mapData);
-            var paths = new List<GridPos>();
+            var success = true;
 
-            var found = pathFinder.TryFindWaypointsFromArbitraryPositions(
-                new GridPos(-20, 0),
-                new GridPos(20, 0),
-                paths);
-
-            return found &&
-                   paths.Count > 2 &&
-                   paths[0] == new GridPos(20, 0) &&
-                   paths[paths.Count - 1] == new GridPos(-20, 0);
+            success &= Verify(TestSmoothPathTransitionSplitsCornerDeterministically(), nameof(TestSmoothPathTransitionSplitsCornerDeterministically));
+            success &= Verify(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked(), nameof(TestSmoothPathTransitionKeepsOriginalPathWhenBlendIsBlocked));
+            success &= Verify(TestSmoothPathTransitionKeepsUTurns(), nameof(TestSmoothPathTransitionKeepsUTurns));
+            success &= Verify(TestSmoothPathTransitionReducesInternalCorner(), nameof(TestSmoothPathTransitionReducesInternalCorner));
+            success &= Verify(TestIntegerAngleOrderingBoundaries(), nameof(TestIntegerAngleOrderingBoundaries));
+            return success;
         }
 
         private static bool TestSmoothPathTransitionSplitsCornerDeterministically()
@@ -138,97 +131,6 @@ namespace Script.CommonLib.Tests
                    !BattleMapPathSmoother.IsAngleLessThan(forward, deeperObtuse, forward, obtuse);
         }
 
-        private static bool TestEntityRequestsSmoothingForTacticalDestinationAfterMovement()
-        {
-            var context = new ResumePathTestContext(true);
-            var entity = new Entity(
-                1,
-                context,
-                CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000));
-            context.AddEntity(entity);
-            entity.SetPos(new GridPos(-5, 0));
-            entity.SetDestination(new GridPos(5, 0).ToFixedPos());
-            context.Update(entity, 50);
-            context.Update(entity, 50);
-
-            var currentGridPosition = entity.GetPos().ToGridPos();
-            var tacticalPath = new List<GridPos> { new(5, 5), currentGridPosition };
-            entity.SetTacticalDestination(new GridPos(5, 5).ToFixedPos(), tacticalPath);
-
-            return context.PathSmoothingCallCount == 1;
-        }
-
-        private static bool TestExistingFindWaypointsResultIsPreserved()
-        {
-            var mapData = CreateMapData();
-            mapData.obstacles.Add(CreateCenterObstacle());
-            var pathFinder = new BattleMapPathFinder(mapData);
-            var before = new List<GridPos>();
-            var after = new List<GridPos>();
-
-            if (!pathFinder.TryFindWaypoints(new GridPos(-6, 0), new GridPos(6, 0), before))
-                return false;
-
-            var arbitraryPath = new List<GridPos>();
-            pathFinder.TryFindWaypointsFromArbitraryPositions(
-                new GridPos(-20, 0),
-                new GridPos(20, 0),
-                arbitraryPath);
-
-            if (!pathFinder.TryFindWaypoints(new GridPos(-6, 0), new GridPos(6, 0), after))
-                return false;
-
-            if (before.Count != after.Count)
-                return false;
-
-            for (var i = 0; i < before.Count; i++)
-            {
-                if (before[i] != after[i])
-                    return false;
-            }
-
-            return true;
-        }
-
-        private static bool TestFailedPathReturnsEmptyResult()
-        {
-            var mapData = CreateMapData();
-            var blockedPoints = new List<GridPos>();
-            for (var y = mapData.minGridPos.y; y <= mapData.maxGridPos.y; y++)
-                blockedPoints.Add(new GridPos(0, y));
-
-            mapData.obstacles.Add(new ObstacleData
-            {
-                blockedPoints = blockedPoints,
-                waypoints = new List<GridPos>(),
-            });
-
-            var pathFinder = new BattleMapPathFinder(mapData);
-            var result = new List<GridPos> { new(999, 999) };
-            var found = pathFinder.TryFindWaypoints(new GridPos(-6, 0), new GridPos(6, 0), result);
-            return !found && result.Count == 0;
-        }
-
-        private static ObstacleData CreateCenterObstacle()
-        {
-            return new ObstacleData
-            {
-                blockedPoints = new List<GridPos>
-                {
-                    new(0, -1),
-                    new(0, 0),
-                    new(0, 1),
-                },
-                waypoints = new List<GridPos>
-                {
-                    new(-6, -3),
-                    new(6, -3),
-                    new(-6, 3),
-                    new(6, 3),
-                },
-            };
-        }
-
         private static bool HaveSamePath(List<GridPos> first, List<GridPos> second)
         {
             if (first.Count != second.Count)
@@ -280,6 +182,14 @@ namespace Script.CommonLib.Tests
             }
 
             return true;
+        }
+
+        private static bool Verify(bool result, string testName)
+        {
+            if (!result)
+                LogHelper.Error($"[{nameof(BattleMapPathSmootherTest)}] {testName} failed.");
+
+            return result;
         }
     }
 }
