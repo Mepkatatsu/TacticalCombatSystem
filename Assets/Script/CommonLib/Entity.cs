@@ -135,7 +135,7 @@ namespace Script.CommonLib
                 return;
 
             var paths = new List<GridPos>();
-            if (!_battleMapContext.TryFindWaypoints(
+            if (!_battleMapContext.TryFindWaypointsFromArbitraryPositions(
                     GetPos().ToGridPos(),
                     _moveState.GetAuthoredDestination().ToGridPos(),
                     paths))
@@ -210,6 +210,8 @@ namespace Script.CommonLib
             return _moveState.HasArrived();
         }
 
+        public bool HasPathSearchFailed => _moveState.HasPathSearchFailed;
+
         public bool ShouldPrioritizeMovement => _moveState.ShouldPrioritizeMovement;
 
         public void SetPos(GridPos gridPos)
@@ -266,9 +268,9 @@ namespace Script.CommonLib
             _battleMapContext.OnEntityStopMove(Id);
         }
 
-        public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+        public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
         {
-            _battleMapContext.FindWaypoints(start, goal, resultWaypoints);
+            return _battleMapContext.TryFindWaypoints(start, goal, resultWaypoints);
         }
 
         public uint GetBattleMapElapsedMs()
@@ -279,7 +281,6 @@ namespace Script.CommonLib
         public void RequestAttack()
         {
             _battleMapContext.RequestAttack(Id, _mainTarget.Id);
-            _moveState.MarkTacticalDestinationAttackExecuted();
         }
     }
 }

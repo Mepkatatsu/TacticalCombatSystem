@@ -11,8 +11,6 @@ namespace Script.CommonLib.Map
     
         public GridPos minGridPos;
         public GridPos maxGridPos;
-        public bool useInitialTacticalPositioning;
-
         public List<BattlePositionData> battlePositions;
         public List<ObstacleData> obstacles = new();
         public List<EntityData> entities = new();

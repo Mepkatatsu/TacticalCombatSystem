@@ -205,7 +205,11 @@ namespace Script.EditorLib
             var startGridPos = _waypoints[_startPointIndex];
             var endGridPos = _waypoints[_endPointIndex];
             
-            _battleMapPathFinder.FindWaypoints(startGridPos, endGridPos, _visitedWaypointList);
+            if (!_battleMapPathFinder.TryFindWaypoints(startGridPos, endGridPos, _visitedWaypointList))
+            {
+                LogHelper.Error("BattleMapEditor: 시작점에서 도착점으로 이동하는 경로를 찾을 수 없습니다.");
+                return;
+            }
             
             for (var i = 0; i < _visitedWaypointList.Count; i++)
             {

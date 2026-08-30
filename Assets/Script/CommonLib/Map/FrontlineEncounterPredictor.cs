@@ -30,7 +30,6 @@ namespace Script.CommonLib.Map
                 battlePositions = _battleMapData.battlePositions,
                 obstacles = _battleMapData.obstacles,
                 entities = new List<EntityData>(),
-                useInitialTacticalPositioning = false,
             };
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, predictionMapData);
             var pathFinder = new BattleMapPathFinder(predictionMapData);
@@ -74,7 +73,7 @@ namespace Script.CommonLib.Map
             var destination = source.GetDestinationForTest();
             var paths = new List<GridPos>();
 
-            if (!pathFinder.TryFindWaypoints(
+            if (!pathFinder.TryFindWaypointsFromArbitraryPositions(
                     prediction.GetPos().ToGridPos(),
                     destination.ToGridPos(),
                     paths))

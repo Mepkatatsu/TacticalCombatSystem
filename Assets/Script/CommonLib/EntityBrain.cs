@@ -24,7 +24,9 @@ namespace Script.CommonLib
             if (_entityContext.IsMainTargetInRange())
                 return EntityStateType.Attack;
 
-            return _entityContext.HasArrived() ? EntityStateType.Idle : EntityStateType.Move;
+            return _entityContext.HasArrived() || _entityContext.HasPathSearchFailed
+                ? EntityStateType.Idle
+                : EntityStateType.Move;
         }
     }
 }

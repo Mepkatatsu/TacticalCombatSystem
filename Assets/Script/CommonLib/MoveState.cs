@@ -16,8 +16,8 @@ namespace Script.CommonLib
         private FixedPos _authoredDestination;
         private bool _hasAuthoredDestination;
         private bool _hasActiveTacticalDestination;
-        private bool _hasExecutedAttackAtTacticalDestination;
         private bool _hasAttemptedAuthoredDestinationResume;
+        private bool _hasPathSearchFailed;
         private bool _shouldPrioritizeMovement;
         private FixedDir _lastMoveDirection;
         private bool _hasLastMoveDirection;
@@ -37,14 +37,15 @@ namespace Script.CommonLib
         }
 
         public bool ShouldPrioritizeMovement => _shouldPrioritizeMovement && !HasArrived();
+        public bool HasPathSearchFailed => _hasPathSearchFailed;
 
         public void SetDestination(FixedPos destination)
         {
             _destination = destination;
             _hasAuthoredDestination = false;
             _hasActiveTacticalDestination = false;
-            _hasExecutedAttackAtTacticalDestination = false;
             _hasAttemptedAuthoredDestinationResume = false;
+            _hasPathSearchFailed = false;
             _shouldPrioritizeMovement = false;
         }
 
@@ -53,7 +54,6 @@ namespace Script.CommonLib
             _authoredDestination = _destination;
             _hasAuthoredDestination = true;
             _hasActiveTacticalDestination = true;
-            _hasExecutedAttackAtTacticalDestination = false;
             _hasAttemptedAuthoredDestinationResume = false;
             SetDestinationWithPath(destination, paths, true);
         }
@@ -70,6 +70,7 @@ namespace Script.CommonLib
         {
             _destination = destination;
             _shouldPrioritizeMovement = shouldPrioritizeMovement;
+            _hasPathSearchFailed = false;
             _paths.Clear();
             _paths.AddRange(paths);
         }
@@ -89,17 +90,10 @@ namespace Script.CommonLib
             return _hasLastMoveDirection;
         }
 
-        internal void MarkTacticalDestinationAttackExecuted()
-        {
-            if (_hasActiveTacticalDestination)
-                _hasExecutedAttackAtTacticalDestination = true;
-        }
-
         internal bool TryBeginAuthoredDestinationResume()
         {
             if (!_hasAuthoredDestination ||
                 !IsWaitingAtTacticalDestination ||
-                !_hasExecutedAttackAtTacticalDestination ||
                 _hasAttemptedAuthoredDestinationResume ||
                 _destination == _authoredDestination)
             {
@@ -115,8 +109,8 @@ namespace Script.CommonLib
             _destination = _authoredDestination;
             _hasAuthoredDestination = false;
             _hasActiveTacticalDestination = false;
-            _hasExecutedAttackAtTacticalDestination = false;
             _hasAttemptedAuthoredDestinationResume = false;
+            _hasPathSearchFailed = false;
             _shouldPrioritizeMovement = false;
             _paths.Clear();
             _paths.AddRange(paths);
@@ -154,10 +148,15 @@ namespace Script.CommonLib
                 if (_shouldPrioritizeMovement)
                 {
                     _shouldPrioritizeMovement = false;
+                    // 다음 tick에 Brain이 공격과 일반 이동 중 적절한 상태를 다시 선택하도록 한다.
                     return;
                 }
 
-                FindPath();
+                if (_hasPathSearchFailed || !TryFindPath())
+                {
+                    _hasPathSearchFailed = true;
+                    return;
+                }
             }
 
             if (_paths.IsEmpty())
@@ -177,7 +176,7 @@ namespace Script.CommonLib
             _entityContext.OnStopMove();
         }
 
-        private void FindPath()
+        private bool TryFindPath()
         {
             _paths.Clear();
 
@@ -185,7 +184,7 @@ namespace Script.CommonLib
             var startPos = _pos.ToGridPos();
             var endPos = _destination.ToGridPos();
         
-            _entityContext.FindWaypoints(startPos, endPos, _paths);
+            return _entityContext.TryFindWaypoints(startPos, endPos, _paths);
         }
 
         public void SetPos(FixedPos pos)

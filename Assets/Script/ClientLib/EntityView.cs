@@ -27,7 +27,7 @@ namespace Script.ClientLib
         private uint _comboMs;
         private byte _nextAttack = 0;
         private Quaternion _targetRotation;
-        private bool _hasTargetRotation;
+        private bool _isRotationInitialized;
 
         public void OnUpdate(ushort deltaMs)
         {
@@ -40,7 +40,7 @@ namespace Script.ClientLib
                 _comboMs -= deltaMs;
             }
 
-            if (_hasTargetRotation)
+            if (_isRotationInitialized)
             {
                 transform.rotation = Quaternion.RotateTowards(
                     transform.rotation,
@@ -54,6 +54,7 @@ namespace Script.ClientLib
             Hp = hp;
             MaxHp = maxHp;
             TeamFlag = teamFlag;
+            _isRotationInitialized = false;
         }
         
         public void GetDamage(uint damage)
@@ -80,11 +81,12 @@ namespace Script.ClientLib
                 return;
             
             _targetRotation = Quaternion.LookRotation(dir);
-            if (_hasTargetRotation)
+            if (_isRotationInitialized)
                 return;
 
+            // 첫 방향은 prefab의 임의 회전에서 보간하지 않고 즉시 맞춘다.
             transform.rotation = _targetRotation;
-            _hasTargetRotation = true;
+            _isRotationInitialized = true;
         }
 
         public void OnStartMoving()

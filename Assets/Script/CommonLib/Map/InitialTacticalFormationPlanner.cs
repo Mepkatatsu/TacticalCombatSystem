@@ -31,6 +31,10 @@ namespace Script.CommonLib.Map
 
         public bool TryApply(List<Entity> blueEntities, List<Entity> redEntities)
         {
+            // 양 팀이 전열 한 명뿐이면 재배치할 대상이 없으며, 전열 교전 예측도 재귀할 필요가 없다.
+            if (blueEntities.Count <= 1 && redEntities.Count <= 1)
+                return false;
+
             var blueFrontline = GetFrontlineEntity(blueEntities);
             var redFrontline = GetFrontlineEntity(redEntities);
 
@@ -206,15 +210,18 @@ namespace Script.CommonLib.Map
             if (candidate.GetDistance(enemyFrontlinePosition) > safeAttackRange)
                 return false;
 
-            var candidatePaths = new List<GridPos>();
-            if (!_battleMapPathFinder.TryFindWaypoints(entity.GetPos().ToGridPos(), gridPosition, candidatePaths))
-                return false;
-
             for (var i = 0; i < reservedPositions.Count; i++)
             {
                 if (candidate.GetDistance(reservedPositions[i]) < MinimumAllySpacing)
                     return false;
             }
+
+            var candidatePaths = new List<GridPos>();
+            if (!_battleMapPathFinder.TryFindWaypointsFromArbitraryPositions(
+                    entity.GetPos().ToGridPos(),
+                    gridPosition,
+                    candidatePaths))
+                return false;
 
             paths = candidatePaths;
             return true;
@@ -230,41 +237,31 @@ namespace Script.CommonLib.Map
             List<FixedPos> reservedPositions,
             List<PlannedDestination> plannedDestinations)
         {
-            var attackRangeError = Math.Abs(safeAttackRange - candidate.GetDistance(enemyFrontlinePosition));
+            var enemyDistance = candidate.GetDistance(enemyFrontlinePosition);
+            var attackRangeError = Math.Abs(safeAttackRange - enemyDistance);
             var nearestAllyDistance = GetNearestDistance(candidate, reservedPositions);
             var allySpacingError = Math.Abs(PreferredAllySpacing - nearestAllyDistance);
             var moveDistance = currentPosition.GetDistance(candidate);
-            var centerZ = (_battleMapData.minGridPos.y + _battleMapData.maxGridPos.y) * PositionConverter.FixedPosMultiplier / 2L;
+            var centerGridZ = _battleMapData.minGridPos.y + _battleMapData.maxGridPos.y;
+            var centerZ = centerGridZ * PositionConverter.FixedPosMultiplier / 2L;
             var centerDistance = Math.Abs(candidate.Z - centerZ);
 
             var frontlineDelta = enemyFrontlinePosition - frontlinePosition;
             var frontlineDistance = frontlinePosition.GetDistance(enemyFrontlinePosition);
             var candidateDelta = candidate - frontlinePosition;
-            var forwardProjection = (candidateDelta.X * frontlineDelta.X + candidateDelta.Z * frontlineDelta.Z) /
-                                    Math.Max(1, frontlineDistance);
+            var forwardDot = candidateDelta.X * frontlineDelta.X + candidateDelta.Z * frontlineDelta.Z;
+            var forwardProjection = forwardDot / Math.Max(1, frontlineDistance);
             var excessiveAdvance = Math.Max(0, forwardProjection);
-            var currentLateralProjection = GetLateralProjection(
-                currentPosition,
-                frontlinePosition,
-                frontlineDelta,
-                frontlineDistance);
-            var candidateLateralProjection = GetLateralProjection(
-                candidate,
-                frontlinePosition,
-                frontlineDelta,
-                frontlineDistance);
+            var currentLateralProjection = GetLateralProjection(currentPosition, frontlinePosition, frontlineDelta, frontlineDistance);
+            var candidateLateralProjection = GetLateralProjection(candidate, frontlinePosition, frontlineDelta, frontlineDistance);
             var lateralCrossingPenalty = currentLateralProjection != 0 &&
                                          candidateLateralProjection != 0 &&
                                          Math.Sign(currentLateralProjection) != Math.Sign(candidateLateralProjection)
                 ? LateralCrossingScorePenalty
                 : 0;
-            var relativeOrderPenalty = GetRelativeLateralOrderInversionCount(
-                                           entity,
-                                           candidate,
-                                           frontlinePosition,
-                                           enemyFrontlinePosition,
-                                           plannedDestinations) *
-                                       RelativeLateralOrderScorePenalty;
+            var orderInversionCount = GetRelativeLateralOrderInversionCount(
+                entity, candidate, frontlinePosition, enemyFrontlinePosition, plannedDestinations);
+            var relativeOrderPenalty = orderInversionCount * RelativeLateralOrderScorePenalty;
 
             return -attackRangeError * 100
                    - allySpacingError * 20

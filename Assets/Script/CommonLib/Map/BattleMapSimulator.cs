@@ -9,11 +9,18 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler = battleMapEventHandler;
             _battleMapData = battleMapData;
             _battleMapPathFinder = new BattleMapPathFinder(battleMapData);
+            _battleMapPathSmoother = new BattleMapPathSmoother(battleMapData, _battleMapPathFinder);
+            var initialFormationTeamCapacity = battleMapData.entities.Count > 0
+                ? battleMapData.entities.Count
+                : 1;
+            _blueInitialFormationEntities = new List<Entity>(initialFormationTeamCapacity);
+            _redInitialFormationEntities = new List<Entity>(initialFormationTeamCapacity);
         }
         
         private readonly IBattleMapEventHandler _battleMapEventHandler;
         private readonly BattleMapData _battleMapData;
         private readonly BattleMapPathFinder _battleMapPathFinder;
+        private readonly BattleMapPathSmoother _battleMapPathSmoother;
         
         private readonly Dictionary<uint, Entity> _entities = new();            // TODO: PoolObject
         private readonly Dictionary<ulong, Projectile> _projectiles = new();    // TODO: PoolObject
@@ -23,6 +30,8 @@ namespace Script.CommonLib.Map
         private readonly List<uint> _removeEntityIds = new();
         private readonly List<ulong> _removeProjectileIds = new();
         private readonly HashSet<uint> _retiringEntityIds = new();
+        private readonly List<Entity> _blueInitialFormationEntities;
+        private readonly List<Entity> _redInitialFormationEntities;
         
         private uint _entityIdKey;
         private ulong _projectileIdKey;
@@ -46,11 +55,11 @@ namespace Script.CommonLib.Map
 
         private void TryApplyInitialTacticalPositioningOnEncounter()
         {
-            if (!_battleMapData.useInitialTacticalPositioning || _initialTacticalPositioningAttempted)
+            if (_initialTacticalPositioningAttempted)
                 return;
 
-            var blueEntities = new List<Entity>();
-            var redEntities = new List<Entity>();
+            _blueInitialFormationEntities.Clear();
+            _redInitialFormationEntities.Clear();
 
             for (var i = 0; i < _entityIds.Count; i++)
             {
@@ -58,17 +67,17 @@ namespace Script.CommonLib.Map
                     continue;
 
                 if (entity.GetTeamFlag() == TeamFlag.Blue)
-                    blueEntities.Add(entity);
+                    _blueInitialFormationEntities.Add(entity);
                 else if (entity.GetTeamFlag() == TeamFlag.Red)
-                    redEntities.Add(entity);
+                    _redInitialFormationEntities.Add(entity);
             }
 
-            if (!InitialEncounterDetector.HasEncounter(blueEntities, redEntities))
+            if (!InitialEncounterDetector.HasEncounter(_blueInitialFormationEntities, _redInitialFormationEntities))
                 return;
 
             _initialTacticalPositioningAttempted = true;
             var planner = new InitialTacticalFormationPlanner(_battleMapData, _battleMapPathFinder);
-            planner.TryApply(blueEntities, redEntities);
+            planner.TryApply(_blueInitialFormationEntities, _redInitialFormationEntities);
         }
 
         public void Update(ushort deltaMs)
@@ -354,19 +363,22 @@ namespace Script.CommonLib.Map
             return false;
         }
 
-        public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
-        {
-            _battleMapPathFinder.FindWaypoints(start, goal, resultWaypoints);
-        }
-
         public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
         {
             return _battleMapPathFinder.TryFindWaypoints(start, goal, resultWaypoints);
         }
 
+        public bool TryFindWaypointsFromArbitraryPositions(
+            GridPos start,
+            GridPos goal,
+            List<GridPos> resultWaypoints)
+        {
+            return _battleMapPathFinder.TryFindWaypointsFromArbitraryPositions(start, goal, resultWaypoints);
+        }
+
         public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
         {
-            _battleMapPathFinder.SmoothPathTransition(start, incomingDirection, waypoints);
+            _battleMapPathSmoother.SmoothPathTransition(start, incomingDirection, waypoints);
         }
         
         public List<IEntityContext> GetAliveEntities()

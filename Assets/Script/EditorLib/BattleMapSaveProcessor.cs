@@ -41,7 +41,6 @@ namespace Script.EditorLib
             {
                 minGridPos = battleMap.GetMinGridPos(),
                 maxGridPos = battleMap.GetMaxGridPos(),
-                useInitialTacticalPositioning = battleMap.useInitialTacticalPositioning,
                 battlePositions = SaveBattlePositions(battleMap),
                 obstacles = SaveObstacles(battleMap),
                 entities = SaveEntities(battleMap),
@@ -89,9 +88,10 @@ namespace Script.EditorLib
                     return false;
                 }
 
-                battleMapSimulator.FindWaypoints(startPosition.gridPos, endPosition.gridPos, waypointList);
-
-                if (waypointList.Count == 0)
+                if (!battleMapSimulator.TryFindWaypoints(
+                        startPosition.gridPos,
+                        endPosition.gridPos,
+                        waypointList))
                 {
                     LogHelper.Error($"BattleMapData: StartPosition에서 EndPosition으로 이동하는 경로를 찾을 수 없습니다. (index: {startPosition.index})");
                     return false;
