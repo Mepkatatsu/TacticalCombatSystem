@@ -12,18 +12,13 @@ namespace Script.CommonLib.Map
         private readonly BattleMapData _battleMapData;
         private readonly BattleMapPathFinder _battleMapPathFinder;
 
-        public BattleMapPathSmoother(
-            BattleMapData battleMapData,
-            BattleMapPathFinder battleMapPathFinder)
+        public BattleMapPathSmoother(BattleMapData battleMapData, BattleMapPathFinder battleMapPathFinder)
         {
             _battleMapData = battleMapData;
             _battleMapPathFinder = battleMapPathFinder;
         }
 
-        public void SmoothPathTransition(
-            FixedPos start,
-            FixedDir incomingDirection,
-            List<GridPos> waypoints)
+        public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
         {
             var startGridPosition = start.ToGridPos();
             while (waypoints.Count > 0 && waypoints[waypoints.Count - 1] == startGridPosition)
@@ -33,10 +28,7 @@ namespace Script.CommonLib.Map
             SmoothInitialPathTransition(start, incomingDirection, waypoints);
         }
 
-        private void SmoothInitialPathTransition(
-            FixedPos start,
-            FixedDir incomingDirection,
-            List<GridPos> waypoints)
+        private void SmoothInitialPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
         {
             if (waypoints.Count == 0)
                 return;
@@ -75,18 +67,13 @@ namespace Script.CommonLib.Map
             var secondBlendLength = MathHelper.IntSqrt(secondBlendX * secondBlendX + secondBlendZ * secondBlendZ);
             var twoStageMaximumDistance = Math.Min(TransitionDistance, outgoingDistance / 3);
 
-            for (var distance = twoStageMaximumDistance;
-                 distance >= PositionConverter.FixedPosMultiplier;
+            for (var distance = twoStageMaximumDistance; distance >= PositionConverter.FixedPosMultiplier;
                  distance -= PositionConverter.FixedPosMultiplier)
             {
-                var firstPosition = new FixedPos(
-                    start.X + firstBlendX * distance / firstBlendLength,
-                    start.Y,
+                var firstPosition = new FixedPos(start.X + firstBlendX * distance / firstBlendLength, start.Y,
                     start.Z + firstBlendZ * distance / firstBlendLength);
-                var secondPosition = new FixedPos(
-                    firstPosition.X + secondBlendX * distance / secondBlendLength,
-                    start.Y,
-                    firstPosition.Z + secondBlendZ * distance / secondBlendLength);
+                var secondPosition = new FixedPos(firstPosition.X + secondBlendX * distance / secondBlendLength,
+                    start.Y, firstPosition.Z + secondBlendZ * distance / secondBlendLength);
                 var firstGridPosition = firstPosition.ToGridPos();
                 var secondGridPosition = secondPosition.ToGridPos();
                 if (!IsTransitionPositionValid(startGridPosition, firstGridPosition, nextGridPosition) ||
@@ -97,12 +84,8 @@ namespace Script.CommonLib.Map
                     continue;
                 }
 
-                if (!HasImprovedMaximumTurn(
-                        start,
-                        incomingDelta,
-                        nextPosition,
-                        firstGridPosition.ToFixedPos(),
-                        secondGridPosition.ToFixedPos()))
+                if (!HasImprovedMaximumTurn(start, incomingDelta, nextPosition,
+                        firstGridPosition.ToFixedPos(), secondGridPosition.ToFixedPos()))
                 {
                     continue;
                 }
@@ -147,12 +130,8 @@ namespace Script.CommonLib.Map
             waypoints.AddRange(smoothedPath);
         }
 
-        private bool TryCreateCornerTransition(
-            GridPos previous,
-            GridPos corner,
-            GridPos next,
-            out GridPos entry,
-            out GridPos exit)
+        private bool TryCreateCornerTransition(GridPos previous, GridPos corner, GridPos next,
+            out GridPos entry, out GridPos exit)
         {
             entry = default;
             exit = default;
@@ -184,30 +163,19 @@ namespace Script.CommonLib.Map
             if (dot <= -(long)DirectionScale * DirectionScale / 2)
                 return false;
 
-            var maximumDistance = Math.Min(
-                TransitionDistance,
-                Math.Min(incomingDistance, outgoingDistance) / 3);
+            var maximumDistance = Math.Min(TransitionDistance, Math.Min(incomingDistance, outgoingDistance) / 3);
 
-            for (var distance = maximumDistance;
-                 distance >= PositionConverter.FixedPosMultiplier;
+            for (var distance = maximumDistance; distance >= PositionConverter.FixedPosMultiplier;
                  distance -= PositionConverter.FixedPosMultiplier)
             {
-                var entryPosition = new FixedPos(
-                    cornerPosition.X - incoming.X * distance / incomingDistance,
-                    cornerPosition.Y,
-                    cornerPosition.Z - incoming.Z * distance / incomingDistance);
-                var exitPosition = new FixedPos(
-                    cornerPosition.X + outgoing.X * distance / outgoingDistance,
-                    cornerPosition.Y,
-                    cornerPosition.Z + outgoing.Z * distance / outgoingDistance);
+                var entryPosition = new FixedPos(cornerPosition.X - incoming.X * distance / incomingDistance,
+                    cornerPosition.Y, cornerPosition.Z - incoming.Z * distance / incomingDistance);
+                var exitPosition = new FixedPos(cornerPosition.X + outgoing.X * distance / outgoingDistance,
+                    cornerPosition.Y, cornerPosition.Z + outgoing.Z * distance / outgoingDistance);
                 var candidateEntry = entryPosition.ToGridPos();
                 var candidateExit = exitPosition.ToGridPos();
-                if (candidateEntry == previous ||
-                    candidateEntry == corner ||
-                    candidateEntry == next ||
-                    candidateExit == previous ||
-                    candidateExit == corner ||
-                    candidateExit == next ||
+                if (candidateEntry == previous || candidateEntry == corner || candidateEntry == next ||
+                    candidateExit == previous || candidateExit == corner || candidateExit == next ||
                     candidateEntry == candidateExit)
                 {
                     continue;
@@ -232,22 +200,15 @@ namespace Script.CommonLib.Map
             return false;
         }
 
-        private static bool HasImprovedMaximumTurn(
-            FixedPos start,
-            FixedPos incomingDirection,
-            FixedPos originalNext,
-            FixedPos firstTransition,
-            FixedPos secondTransition)
+        private static bool HasImprovedMaximumTurn(FixedPos start, FixedPos incomingDirection, FixedPos originalNext,
+            FixedPos firstTransition, FixedPos secondTransition)
         {
             var originalOutgoing = originalNext - start;
             var firstSegment = firstTransition - start;
             var secondSegment = secondTransition - firstTransition;
             var finalSegment = originalNext - secondTransition;
-            if (IsZero(incomingDirection) ||
-                IsZero(originalOutgoing) ||
-                IsZero(firstSegment) ||
-                IsZero(secondSegment) ||
-                IsZero(finalSegment))
+            if (IsZero(incomingDirection) || IsZero(originalOutgoing) || IsZero(firstSegment) ||
+                IsZero(secondSegment) || IsZero(finalSegment))
             {
                 return false;
             }
@@ -270,10 +231,7 @@ namespace Script.CommonLib.Map
         }
 
         internal static bool IsAngleLessThan(
-            FixedPos firstLeft,
-            FixedPos firstRight,
-            FixedPos secondLeft,
-            FixedPos secondRight)
+            FixedPos firstLeft, FixedPos firstRight, FixedPos secondLeft, FixedPos secondRight)
         {
             var firstDot = GetDot(firstLeft, firstRight);
             var secondDot = GetDot(secondLeft, secondRight);
@@ -290,9 +248,7 @@ namespace Script.CommonLib.Map
             var firstComparison = firstSquaredCosineNumerator * secondLengthProduct;
             var secondComparison = secondSquaredCosineNumerator * firstLengthProduct;
 
-            return firstDot.Sign > 0
-                ? firstComparison > secondComparison
-                : firstComparison < secondComparison;
+            return firstDot.Sign > 0 ? firstComparison > secondComparison : firstComparison < secondComparison;
         }
 
         private static BigInteger GetDot(FixedPos first, FixedPos second) =>
@@ -305,12 +261,9 @@ namespace Script.CommonLib.Map
 
         private bool IsTransitionPositionValid(GridPos start, GridPos transition, GridPos next)
         {
-            return transition != start &&
-                   transition != next &&
-                   transition.x >= _battleMapData.minGridPos.x &&
-                   transition.x <= _battleMapData.maxGridPos.x &&
-                   transition.y >= _battleMapData.minGridPos.y &&
-                   transition.y <= _battleMapData.maxGridPos.y &&
+            return transition != start && transition != next &&
+                   transition.x >= _battleMapData.minGridPos.x && transition.x <= _battleMapData.maxGridPos.x &&
+                   transition.y >= _battleMapData.minGridPos.y && transition.y <= _battleMapData.maxGridPos.y &&
                    _battleMapPathFinder.IsStraightPathReachable(start, transition);
         }
     }
