@@ -25,7 +25,7 @@ namespace Script.CommonLib.Tests
         private static bool TestTacticalMovementPriorityContract()
         {
             return TestPlannedEntityReachesTacticalDestinationThroughCombatChanges() &&
-                   TestMovingEntitySmoothsTacticalPath();
+                   TestCurrentPositionIsRemovedFromTacticalPath();
         }
 
         private static bool TestPlannedEntityReachesTacticalDestinationThroughCombatChanges()
@@ -80,7 +80,7 @@ namespace Script.CommonLib.Tests
                    blueRanged.GetPos() == destination;
         }
 
-        private static bool TestMovingEntitySmoothsTacticalPath()
+        private static bool TestCurrentPositionIsRemovedFromTacticalPath()
         {
             var context = new PathTestContext(shouldFindAuthoredPath: true);
             var entity = new Entity(
@@ -93,12 +93,16 @@ namespace Script.CommonLib.Tests
             context.Update(entity, 50);
             context.Update(entity, 50);
 
-            var currentPosition = entity.GetPos().ToGridPos();
+            var positionBeforeTacticalMove = entity.GetPos();
+            var tacticalDestination = new GridPos(5, 5);
             entity.SetTacticalDestination(
-                new GridPos(5, 5).ToFixedPos(),
-                new List<GridPos> { new(5, 5), currentPosition });
+                tacticalDestination.ToFixedPos(),
+                new List<GridPos> { tacticalDestination, positionBeforeTacticalMove.ToGridPos() });
+            context.Update(entity, 50);
 
-            return context.PathSmoothingCallCount == 1;
+            var positionAfterTacticalMove = entity.GetPos();
+            return positionAfterTacticalMove.X > positionBeforeTacticalMove.X &&
+                   positionAfterTacticalMove.Z > positionBeforeTacticalMove.Z;
         }
 
         private static bool TestAuthoredDestinationResumeContract()
@@ -138,7 +142,6 @@ namespace Script.CommonLib.Tests
             }
 
             return context.AuthoredPathRequestCount == 1 &&
-                   context.PathSmoothingCallCount == 1 &&
                    scenario.Attacker.GetDestinationForTest() == scenario.AuthoredDestination &&
                    scenario.Attacker.GetPos() != tacticalPosition;
         }
@@ -295,7 +298,6 @@ namespace Script.CommonLib.Tests
             public int AttackRequestCount { get; private set; }
             public int GeneralPathRequestCount { get; private set; }
             public int AuthoredPathRequestCount { get; private set; }
-            public int PathSmoothingCallCount { get; private set; }
             public uint ElapsedMs { get; private set; }
 
             public void AddEntity(Entity entity)
@@ -360,11 +362,6 @@ namespace Script.CommonLib.Tests
                 resultWaypoints.Add(goal);
                 resultWaypoints.Add(start);
                 return true;
-            }
-
-            public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
-            {
-                ++PathSmoothingCallCount;
             }
 
             public void RequestAttack(uint attackerId, uint targetEntityId)

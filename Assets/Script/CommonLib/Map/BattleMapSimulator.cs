@@ -9,7 +9,6 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler = battleMapEventHandler;
             _battleMapData = battleMapData;
             _battleMapPathFinder = new BattleMapPathFinder(battleMapData);
-            _battleMapPathSmoother = new BattleMapPathSmoother(battleMapData, _battleMapPathFinder);
             var initialFormationTeamCapacity = battleMapData.entities.Count > 0
                 ? battleMapData.entities.Count
                 : 1;
@@ -20,7 +19,6 @@ namespace Script.CommonLib.Map
         private readonly IBattleMapEventHandler _battleMapEventHandler;
         private readonly BattleMapData _battleMapData;
         private readonly BattleMapPathFinder _battleMapPathFinder;
-        private readonly BattleMapPathSmoother _battleMapPathSmoother;
         
         private readonly Dictionary<uint, Entity> _entities = new();            // TODO: PoolObject
         private readonly Dictionary<ulong, Projectile> _projectiles = new();    // TODO: PoolObject
@@ -376,11 +374,6 @@ namespace Script.CommonLib.Map
             return _battleMapPathFinder.TryFindWaypointsFromArbitraryPositions(start, goal, resultWaypoints);
         }
 
-        public void SmoothPathTransition(FixedPos start, FixedDir incomingDirection, List<GridPos> waypoints)
-        {
-            _battleMapPathSmoother.SmoothPathTransition(start, incomingDirection, waypoints);
-        }
-        
         public List<IEntityContext> GetAliveEntities()
         {
             var aliveEntities = new List<IEntityContext>();

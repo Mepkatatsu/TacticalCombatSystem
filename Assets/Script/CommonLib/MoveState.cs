@@ -19,8 +19,6 @@ namespace Script.CommonLib
         private bool _hasAttemptedAuthoredDestinationResume;
         private bool _hasPathSearchFailed;
         private bool _shouldPrioritizeMovement;
-        private FixedDir _lastMoveDirection;
-        private bool _hasLastMoveDirection;
         private readonly List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
 
         private ushort _moveSpeed;
@@ -83,12 +81,6 @@ namespace Script.CommonLib
             HasArrived();
 
         internal FixedPos GetAuthoredDestination() => _authoredDestination;
-
-        internal bool TryGetLastMoveDirection(out FixedDir direction)
-        {
-            direction = _lastMoveDirection;
-            return _hasLastMoveDirection;
-        }
 
         internal bool TryBeginAuthoredDestinationResume()
         {
@@ -226,8 +218,6 @@ namespace Script.CommonLib
             }
         
             _entityContext.SetPos(nextPos);
-            _lastMoveDirection = new FixedDir(pos, nextPos);
-            _hasLastMoveDirection = pos != nextPos;
             _entityContext.SetDir(new FixedDir(pos, nextPos));
         }
     }
