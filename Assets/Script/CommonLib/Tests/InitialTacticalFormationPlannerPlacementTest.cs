@@ -4,7 +4,7 @@ using static Script.CommonLib.Tests.TacticalPositioningTestData;
 
 namespace Script.CommonLib.Tests
 {
-    public sealed class InitialTacticalFormationPlannerTest : ITest
+    public sealed class InitialTacticalFormationPlannerPlacementTest : ITest
     {
         public bool Test()
         {
@@ -327,7 +327,7 @@ namespace Script.CommonLib.Tests
         private static bool Verify(bool result, string testName)
         {
             if (!result)
-                LogHelper.Error($"[{nameof(InitialTacticalFormationPlannerTest)}] {testName} failed.");
+                LogHelper.Error($"[{nameof(InitialTacticalFormationPlannerPlacementTest)}] {testName} failed.");
 
             return result;
         }
