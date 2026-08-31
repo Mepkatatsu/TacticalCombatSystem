@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Script.CommonLib.Map;
-using static Script.CommonLib.Tests.TacticalPositioningTestData;
+using static Script.CommonLib.Tests.TestResultVerifier;
+using static Script.CommonLib.Tests.TacticalPositioningTestHelper;
 
 namespace Script.CommonLib.Tests
 {
@@ -10,14 +11,11 @@ namespace Script.CommonLib.Tests
         {
             var success = true;
 
-            success &= Verify<TacticalMovementStateTest>(
-                TestTacticalMovementPriorityContract(),
+            success &= Verify<TacticalMovementStateTest>(TestTacticalMovementPriorityContract(),
                 nameof(TestTacticalMovementPriorityContract));
-            success &= Verify<TacticalMovementStateTest>(
-                TestAuthoredDestinationResumeContract(),
+            success &= Verify<TacticalMovementStateTest>(TestAuthoredDestinationResumeContract(),
                 nameof(TestAuthoredDestinationResumeContract));
-            success &= Verify<TacticalMovementStateTest>(
-                TestPathFailureIsNotRetried(),
+            success &= Verify<TacticalMovementStateTest>(TestPathFailureIsNotRetried(),
                 nameof(TestPathFailureIsNotRetried));
             return success;
         }
@@ -83,10 +81,7 @@ namespace Script.CommonLib.Tests
         private static bool TestCurrentPositionIsRemovedFromTacticalPath()
         {
             var context = new PathTestContext(shouldFindAuthoredPath: true);
-            var entity = new Entity(
-                1,
-                context,
-                CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000));
+            var entity = new Entity(1, context, CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000));
             context.AddEntity(entity);
             entity.SetPos(new GridPos(-5, 0));
             entity.SetDestination(new GridPos(5, 0).ToFixedPos());
@@ -149,26 +144,17 @@ namespace Script.CommonLib.Tests
         private static bool TestTargetDepartureBeforeAttackResumesAuthoredDestination()
         {
             var context = new PathTestContext(shouldFindAuthoredPath: true);
-            var scenario = CreateTacticalScenario(
-                context,
-                new GridPos(1, 0),
-                ushort.MaxValue);
+            var scenario = CreateTacticalScenario(context, new GridPos(1, 0), ushort.MaxValue);
 
             for (var i = 0; i < 20 && scenario.Attacker.ShouldPrioritizeMovement; i++)
                 context.Update(scenario.Attacker, 50);
 
-            if (scenario.Attacker.GetPos() != scenario.TacticalDestination ||
-                context.AttackRequestCount != 0)
-            {
+            if (scenario.Attacker.GetPos() != scenario.TacticalDestination || context.AttackRequestCount != 0)
                 return false;
-            }
 
             scenario.Enemy.SetPos(new GridPos(8, 0));
-            for (var i = 0; i < 20 &&
-                                scenario.Attacker.GetDestinationForTest() != scenario.AuthoredDestination; i++)
-            {
+            for (var i = 0; i < 20 && scenario.Attacker.GetDestinationForTest() != scenario.AuthoredDestination; i++)
                 context.Update(scenario.Attacker, 50);
-            }
 
             return context.AttackRequestCount == 0 &&
                    context.AuthoredPathRequestCount == 1 &&
@@ -181,9 +167,7 @@ namespace Script.CommonLib.Tests
                    TestAuthoredDestinationResumeFailureIsAttemptedOnce();
         }
 
-        private static bool HasEntityPrioritizingMovementInAttackRange(
-            List<Entity> entities,
-            TeamFlag teamFlag)
+        private static bool HasEntityPrioritizingMovementInAttackRange(List<Entity> entities, TeamFlag teamFlag)
         {
             for (var i = 0; i < entities.Count; i++)
             {
@@ -201,13 +185,8 @@ namespace Script.CommonLib.Tests
 
         private static bool TestGeneralDestinationPathFailureIsAttemptedOnce()
         {
-            var context = new PathTestContext(
-                shouldFindAuthoredPath: true,
-                shouldFindGeneralPath: false);
-            var entity = new Entity(
-                1,
-                context,
-                CreateEntityData(TeamFlag.Blue, "BlueStart1", "BlueEnd1", 12000));
+            var context = new PathTestContext(shouldFindAuthoredPath: true, shouldFindGeneralPath: false);
+            var entity = new Entity(1, context, CreateEntityData(TeamFlag.Blue, "BlueStart1", "BlueEnd1", 12000));
             context.AddEntity(entity);
             var start = new GridPos(-6, 0).ToFixedPos();
             entity.SetPos(start);
@@ -251,22 +230,13 @@ namespace Script.CommonLib.Tests
                    scenario.Attacker.GetPos() == tacticalPosition;
         }
 
-        private static (
-            Entity Attacker,
-            Entity Enemy,
-            FixedPos AuthoredDestination,
-            FixedPos TacticalDestination) CreateTacticalScenario(
-            PathTestContext context,
-            GridPos enemyPosition,
-            ushort attackDelayMs)
+        private static (Entity Attacker, Entity Enemy, FixedPos AuthoredDestination, FixedPos TacticalDestination)
+            CreateTacticalScenario(PathTestContext context, GridPos enemyPosition, ushort attackDelayMs)
         {
             var attackerData = CreateEntityData(TeamFlag.Blue, string.Empty, string.Empty, 2000);
             attackerData.attackDelayMs = attackDelayMs;
             var attacker = new Entity(1, context, attackerData);
-            var enemy = new Entity(
-                2,
-                context,
-                CreateEntityData(TeamFlag.Red, string.Empty, string.Empty, 2000));
+            var enemy = new Entity(2, context, CreateEntityData(TeamFlag.Red, string.Empty, string.Empty, 2000));
             context.AddEntity(attacker);
             context.AddEntity(enemy);
 
@@ -274,9 +244,7 @@ namespace Script.CommonLib.Tests
             var tacticalDestination = new GridPos(0, 0).ToFixedPos();
             attacker.SetPos(new GridPos(-1, 0));
             attacker.SetDestination(authoredDestination);
-            attacker.SetTacticalDestination(
-                tacticalDestination,
-                new List<GridPos> { tacticalDestination.ToGridPos() });
+            attacker.SetTacticalDestination(tacticalDestination, new List<GridPos> { tacticalDestination.ToGridPos() });
             enemy.SetPos(enemyPosition);
             enemy.SetDestination(enemy.GetPos());
             return (attacker, enemy, authoredDestination, tacticalDestination);
@@ -324,9 +292,7 @@ namespace Script.CommonLib.Tests
                     return null;
                 }
 
-                return entity.GetPos().GetDistance(enemy.GetPos()) <= maxDistance
-                    ? enemy
-                    : null;
+                return entity.GetPos().GetDistance(enemy.GetPos()) <= maxDistance ? enemy : null;
             }
 
             public bool HasAliveEnemy(uint entityId)
@@ -350,10 +316,7 @@ namespace Script.CommonLib.Tests
                 return true;
             }
 
-            public bool TryFindWaypointsFromArbitraryPositions(
-                GridPos start,
-                GridPos goal,
-                List<GridPos> resultWaypoints)
+            public bool TryFindWaypointsFromArbitraryPositions(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
             {
                 ++AuthoredPathRequestCount;
                 if (!_shouldFindAuthoredPath)

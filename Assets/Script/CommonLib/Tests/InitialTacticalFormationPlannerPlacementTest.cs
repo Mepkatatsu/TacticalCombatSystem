@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Script.CommonLib.Map;
-using static Script.CommonLib.Tests.TacticalPositioningTestData;
+using static Script.CommonLib.Tests.TestResultVerifier;
+using static Script.CommonLib.Tests.TacticalPositioningTestHelper;
 
 namespace Script.CommonLib.Tests
 {
@@ -10,11 +11,9 @@ namespace Script.CommonLib.Tests
         {
             var success = true;
 
-            success &= Verify<InitialTacticalFormationPlannerPlacementTest>(
-                TestDiagonalPlacementCreatesValidFormation(),
+            success &= Verify<InitialTacticalFormationPlannerPlacementTest>(TestDiagonalPlacementCreatesValidFormation(),
                 nameof(TestDiagonalPlacementCreatesValidFormation));
-            success &= Verify<InitialTacticalFormationPlannerPlacementTest>(
-                TestCandidateFailureKeepsWholeTeamDestinations(),
+            success &= Verify<InitialTacticalFormationPlannerPlacementTest>(TestCandidateFailureKeepsWholeTeamDestinations(),
                 nameof(TestCandidateFailureKeepsWholeTeamDestinations));
             success &= Verify<InitialTacticalFormationPlannerPlacementTest>(
                 TestPlacementOrderIsDeterministicWhenInputOrderChanges(),
@@ -41,41 +40,23 @@ namespace Script.CommonLib.Tests
             var authoredDestinations = GetDestinationsById(simulator.GetAliveEntities());
             var predictor = new FrontlineEncounterPredictor(mapData);
             if (!predictor.TryPredict(
-                    blueFrontline,
-                    redFrontline,
-                    out var blueFrontlinePosition,
-                    out var redFrontlinePosition))
-            {
+                    blueFrontline, redFrontline, out var blueFrontlinePosition, out var redFrontlinePosition))
                 return false;
-            }
 
             var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
             if (!planner.TryApply(blueEntities, redEntities))
                 return false;
 
             var formationPositions = new HashSet<FixedPos>();
-            if (!formationPositions.Add(blueFrontlinePosition) ||
-                !formationPositions.Add(redFrontlinePosition))
-            {
+            if (!formationPositions.Add(blueFrontlinePosition) || !formationPositions.Add(redFrontlinePosition))
                 return false;
-            }
 
             return HasValidTeamFormation(
-                       blueEntities,
-                       blueFrontline,
-                       blueFrontlinePosition,
-                       redFrontlinePosition,
-                       starts,
-                       authoredDestinations,
-                       formationPositions) &&
+                       blueEntities, blueFrontline, blueFrontlinePosition, redFrontlinePosition,
+                       starts, authoredDestinations, formationPositions) &&
                    HasValidTeamFormation(
-                       redEntities,
-                       redFrontline,
-                       redFrontlinePosition,
-                       blueFrontlinePosition,
-                       starts,
-                       authoredDestinations,
-                       formationPositions) &&
+                       redEntities, redFrontline, redFrontlinePosition, blueFrontlinePosition,
+                       starts, authoredDestinations, formationPositions) &&
                    blueFrontline.GetDestinationForTest() == authoredDestinations[blueFrontline.Id] &&
                    redFrontline.GetDestinationForTest() == authoredDestinations[redFrontline.Id] &&
                    !blueFrontline.ShouldPrioritizeMovement &&
@@ -97,9 +78,7 @@ namespace Script.CommonLib.Tests
 
             planner.TryApply(blueEntities, redEntities);
 
-            return HaveSameDestinations(
-                authoredDestinations,
-                GetDestinationsById(simulator.GetAliveEntities()));
+            return HaveSameDestinations(authoredDestinations, GetDestinationsById(simulator.GetAliveEntities()));
         }
 
         private static bool TestPlacementOrderIsDeterministicWhenInputOrderChanges()
@@ -126,9 +105,13 @@ namespace Script.CommonLib.Tests
                 return false;
             }
 
-            return HaveSameDestinations(
-                GetDestinationsById(firstSimulator.GetAliveEntities()),
+            return HaveSameDestinations(GetDestinationsById(firstSimulator.GetAliveEntities()),
                 GetDestinationsById(secondSimulator.GetAliveEntities()));
+        }
+
+        private static BattleMapData CreateFourEntityTeamMapData()
+        {
+            return CreateMapData(new[] { 0, -6, 6, 10 }, 10, 25, 20);
         }
 
         private static void SetDiagonalStartPositions(BattleMapData mapData)
@@ -153,12 +136,9 @@ namespace Script.CommonLib.Tests
         }
 
         private static bool HasValidTeamFormation(
-            List<Entity> entities,
-            Entity frontline,
-            FixedPos frontlinePosition,
-            FixedPos opposingFrontlinePosition,
-            Dictionary<uint, FixedPos> starts,
-            Dictionary<uint, FixedPos> authoredDestinations,
+            List<Entity> entities, Entity frontline,
+            FixedPos frontlinePosition, FixedPos opposingFrontlinePosition,
+            Dictionary<uint, FixedPos> starts, Dictionary<uint, FixedPos> authoredDestinations,
             HashSet<FixedPos> formationPositions)
         {
             var startProjections = new List<long>();
@@ -170,10 +150,8 @@ namespace Script.CommonLib.Tests
                     continue;
 
                 var destination = entity.GetDestinationForTest();
-                var startProjection = GetLateralProjection(
-                    starts[entity.Id], frontlinePosition, opposingFrontlinePosition);
-                var destinationProjection = GetLateralProjection(
-                    destination, frontlinePosition, opposingFrontlinePosition);
+                var startProjection = GetLateralProjection(starts[entity.Id], frontlinePosition, opposingFrontlinePosition);
+                var destinationProjection = GetLateralProjection(destination, frontlinePosition, opposingFrontlinePosition);
                 if (destination == authoredDestinations[entity.Id] ||
                     destination.GetDistance(opposingFrontlinePosition) > entity.AttackRange ||
                     startProjection == 0 ||
@@ -204,15 +182,11 @@ namespace Script.CommonLib.Tests
             return true;
         }
 
-        private static long GetLateralProjection(
-            FixedPos position,
-            FixedPos frontline,
-            FixedPos opposingFrontline)
+        private static long GetLateralProjection(FixedPos position, FixedPos frontline, FixedPos opposingFrontline)
         {
             var axis = opposingFrontline - frontline;
             var delta = position - frontline;
             return -delta.X * axis.Z + delta.Z * axis.X;
         }
-
     }
 }

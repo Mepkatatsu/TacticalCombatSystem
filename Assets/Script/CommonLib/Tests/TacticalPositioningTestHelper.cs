@@ -3,16 +3,8 @@ using Script.CommonLib.Map;
 
 namespace Script.CommonLib.Tests
 {
-    internal static class TacticalPositioningTestData
+    internal static class TacticalPositioningTestHelper
     {
-        internal static bool Verify<TTest>(bool result, string testName)
-        {
-            if (!result)
-                LogHelper.Error($"[{typeof(TTest).Name}] {testName} failed.");
-
-            return result;
-        }
-
         internal static Dictionary<uint, FixedPos> GetDestinationsById(IReadOnlyList<IEntityContext> entityContexts)
         {
             var result = new Dictionary<uint, FixedPos>();
@@ -26,9 +18,7 @@ namespace Script.CommonLib.Tests
             return result;
         }
 
-        internal static bool HaveSameDestinations(
-            Dictionary<uint, FixedPos> first,
-            Dictionary<uint, FixedPos> second)
+        internal static bool HaveSameDestinations(Dictionary<uint, FixedPos> first, Dictionary<uint, FixedPos> second)
         {
             if (first.Count != second.Count)
                 return false;
@@ -56,9 +46,7 @@ namespace Script.CommonLib.Tests
 
         internal static BattleMapSimulator CreateSimulator()
         {
-            return new BattleMapSimulator(
-                NullBattleMapEventHandler.Instance,
-                CreateMapData());
+            return new BattleMapSimulator(NullBattleMapEventHandler.Instance, CreateMapData());
         }
 
         internal static bool AdvanceUntilFormationAttempted(BattleMapSimulator simulator)
@@ -71,21 +59,13 @@ namespace Script.CommonLib.Tests
             return simulator.WasInitialTacticalPositioningAttemptedForTest;
         }
 
-        internal static BattleMapData CreateFourEntityTeamMapData()
-        {
-            return CreateMapData(new[] { 0, -6, 6, 10 }, 10, 25, 20);
-        }
-
         internal static BattleMapData CreateMapData()
         {
             return CreateMapData(new[] { 0, -4, 4 }, 6, 20, 15);
         }
 
-        private static BattleMapData CreateMapData(
-            int[] lateralPositions,
-            int startX,
-            int destinationX,
-            int mapHalfHeight)
+        internal static BattleMapData CreateMapData(
+            int[] lateralPositions, int startX, int destinationX, int mapHalfHeight)
         {
             var battlePositions = new List<BattlePositionData>();
             AddBattlePositions(battlePositions, "BlueStart", -startX, lateralPositions);
@@ -107,54 +87,22 @@ namespace Script.CommonLib.Tests
         }
 
         private static void AddBattlePositions(
-            List<BattlePositionData> battlePositions,
-            string namePrefix,
-            int x,
-            int[] lateralPositions)
+            List<BattlePositionData> battlePositions, string namePrefix, int x, int[] lateralPositions)
         {
             for (var i = 0; i < lateralPositions.Length; i++)
             {
-                battlePositions.Add(CreateBattlePosition(
-                    $"{namePrefix}{i + 1}",
-                    x,
-                    lateralPositions[i]));
+                battlePositions.Add(CreateBattlePosition($"{namePrefix}{i + 1}", x, lateralPositions[i]));
             }
         }
 
-        private static void AddTeamEntities(
-            List<EntityData> entities,
-            TeamFlag teamFlag,
-            int entityCount)
+        private static void AddTeamEntities(List<EntityData> entities, TeamFlag teamFlag, int entityCount)
         {
             var teamName = teamFlag == TeamFlag.Blue ? "Blue" : "Red";
             for (var i = 0; i < entityCount; i++)
             {
-                entities.Add(CreateEntityData(
-                    teamFlag,
-                    $"{teamName}Start{i + 1}",
-                    $"{teamName}End{i + 1}",
+                entities.Add(CreateEntityData(teamFlag, $"{teamName}Start{i + 1}", $"{teamName}End{i + 1}",
                     i == 0 ? (ushort)5000 : (ushort)12000));
             }
-        }
-
-        internal static ObstacleData CreateCenterObstacle()
-        {
-            return new ObstacleData
-            {
-                blockedPoints = new List<GridPos>
-                {
-                    new(0, -1),
-                    new(0, 0),
-                    new(0, 1),
-                },
-                waypoints = new List<GridPos>
-                {
-                    new(-6, -3),
-                    new(6, -3),
-                    new(-6, 3),
-                    new(6, 3),
-                },
-            };
         }
 
         private static BattlePositionData CreateBattlePosition(string name, int x, int y)
@@ -168,10 +116,7 @@ namespace Script.CommonLib.Tests
         }
 
         internal static EntityData CreateEntityData(
-            TeamFlag teamFlag,
-            string startPositionName,
-            string endPositionName,
-            ushort attackRange)
+            TeamFlag teamFlag, string startPositionName, string endPositionName, ushort attackRange)
         {
             return new EntityData
             {
@@ -186,6 +131,5 @@ namespace Script.CommonLib.Tests
                 moveSpeed = 5000,
             };
         }
-
     }
 }

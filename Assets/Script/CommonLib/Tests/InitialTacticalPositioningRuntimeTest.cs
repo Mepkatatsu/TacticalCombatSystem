@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using Script.CommonLib.Map;
-using static Script.CommonLib.Tests.TacticalPositioningTestData;
+using static Script.CommonLib.Tests.TestResultVerifier;
+using static Script.CommonLib.Tests.TacticalPositioningTestHelper;
 
 namespace Script.CommonLib.Tests
 {
@@ -17,8 +18,7 @@ namespace Script.CommonLib.Tests
 
         private static bool TestRuntimeLifecycleAppliesOnceAndCompletesPlannedMovement()
         {
-            return TestRuntimeSimulationCompletesPlannedMovement() &&
-                   TestFormationIsNotReappliedAfterFirstEncounter();
+            return TestRuntimeSimulationCompletesPlannedMovement() && TestFormationIsNotReappliedAfterFirstEncounter();
         }
 
         private static bool TestRuntimeSimulationCompletesPlannedMovement()
@@ -117,6 +117,5 @@ namespace Script.CommonLib.Tests
 
             return plannedEntity.GetDestinationForTest() == overrideDestination;
         }
-
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Script.CommonLib.Map;
-using static Script.CommonLib.Tests.TacticalPositioningTestData;
+using static Script.CommonLib.Tests.TestResultVerifier;
+using static Script.CommonLib.Tests.TacticalPositioningTestHelper;
 
 namespace Script.CommonLib.Tests
 {
@@ -10,14 +11,11 @@ namespace Script.CommonLib.Tests
         {
             var success = true;
 
-            success &= Verify<InitialTacticalPositioningFlowTest>(
-                TestLongRangeBacklineDoesNotStartEncounterEarly(),
+            success &= Verify<InitialTacticalPositioningFlowTest>(TestLongRangeBacklineDoesNotStartEncounterEarly(),
                 nameof(TestLongRangeBacklineDoesNotStartEncounterEarly));
-            success &= Verify<InitialTacticalPositioningFlowTest>(
-                TestUnequalRangePredictionReachesMutualAttackRange(),
+            success &= Verify<InitialTacticalPositioningFlowTest>(TestUnequalRangePredictionReachesMutualAttackRange(),
                 nameof(TestUnequalRangePredictionReachesMutualAttackRange));
-            success &= Verify<InitialTacticalPositioningFlowTest>(
-                TestPredictionFailureKeepsAuthoredDestinations(),
+            success &= Verify<InitialTacticalPositioningFlowTest>(TestPredictionFailureKeepsAuthoredDestinations(),
                 nameof(TestPredictionFailureKeepsAuthoredDestinations));
             return success;
         }
@@ -62,18 +60,12 @@ namespace Script.CommonLib.Tests
             var predictor = new FrontlineEncounterPredictor(mapData);
 
             if (!predictor.TryPredict(
-                    entities[0],
-                    entities[1],
-                    out var bluePosition,
-                    out var redPosition))
-            {
+                    entities[0], entities[1], out var bluePosition, out var redPosition))
                 return false;
-            }
 
             var blueMoveDistance = blueStart.GetDistance(bluePosition);
             var redMoveDistance = redStart.GetDistance(redPosition);
-            return blueMoveDistance < redMoveDistance &&
-                   bluePosition.GetDistance(redPosition) <= entities[1].AttackRange;
+            return blueMoveDistance < redMoveDistance && bluePosition.GetDistance(redPosition) <= entities[1].AttackRange;
         }
 
         private static bool TestPredictionFailureKeepsAuthoredDestinations()
@@ -93,10 +85,7 @@ namespace Script.CommonLib.Tests
             simulator.Update(50);
 
             return simulator.WasInitialTacticalPositioningAttemptedForTest &&
-                   HaveSameDestinations(
-                       authoredDestinations,
-                       GetDestinationsById(simulator.GetAliveEntities()));
+                   HaveSameDestinations(authoredDestinations, GetDestinationsById(simulator.GetAliveEntities()));
         }
-
     }
 }
