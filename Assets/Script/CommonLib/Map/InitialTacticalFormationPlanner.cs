@@ -8,13 +8,13 @@ namespace Script.CommonLib.Map
         private const int SafeAttackRangePercent = 90;
         private const int MinimumAllySpacing = 5500;
         private const int PreferredAllySpacing = 6000;
-        private const int LateralCandidateStep = 4500;
+        private const int SideOffsetStep = 4500;
         private const int MoveDistanceScoreWeight = 15;
-        private const int LateralCrossingScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 2;
-        private const int RelativeLateralOrderScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 8;
+        private const int SideCrossingScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 2;
+        private const int RelativeSideOrderScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 8;
 
         private static readonly int[] CandidateRangePercents = { 90, 85, 80 };
-        private static readonly int[] LateralCandidateIndices = { 0, 1, -1, 2, -2, 3, -3 };
+        private static readonly int[] SideOffsetIndices = { 0, 1, -1, 2, -2, 3, -3 };
 
         private readonly BattleMapData _battleMapData;
         private readonly BattleMapPathFinder _battleMapPathFinder;
@@ -143,20 +143,20 @@ namespace Script.CommonLib.Map
             {
                 var candidateRange = entity.AttackRange * CandidateRangePercents[rangeIndex] / 100;
 
-                for (var lateralIndex = 0; lateralIndex < LateralCandidateIndices.Length; lateralIndex++)
+                for (var sideOffsetIndex = 0; sideOffsetIndex < SideOffsetIndices.Length; sideOffsetIndex++)
                 {
-                    var lateralDistance = LateralCandidateIndices[lateralIndex] * LateralCandidateStep;
-                    if (Math.Abs(lateralDistance) >= candidateRange)
+                    var sideOffset = SideOffsetIndices[sideOffsetIndex] * SideOffsetStep;
+                    if (Math.Abs(sideOffset) >= candidateRange)
                         continue;
 
                     var forwardDistance = MathHelper.IntSqrt(
-                        (long)candidateRange * candidateRange - (long)lateralDistance * lateralDistance);
+                        (long)candidateRange * candidateRange - (long)sideOffset * sideOffset);
                     var candidate = CreateCandidatePosition(
                         enemyFrontlinePosition,
                         frontlineDelta,
                         frontlineDistance,
                         forwardDistance,
-                        lateralDistance).ToGridPos().ToFixedPos();
+                        sideOffset).ToGridPos().ToFixedPos();
 
                     if (!IsValidCandidate(
                             entity,
@@ -217,10 +217,7 @@ namespace Script.CommonLib.Map
             }
 
             var candidatePaths = new List<GridPos>();
-            if (!_battleMapPathFinder.TryFindWaypointsFromArbitraryPositions(
-                    entity.GetPos().ToGridPos(),
-                    gridPosition,
-                    candidatePaths))
+            if (!_battleMapPathFinder.TryFindWaypointsBetweenAnyPositions(entity.GetPos().ToGridPos(), gridPosition, candidatePaths))
                 return false;
 
             paths = candidatePaths;
@@ -252,27 +249,27 @@ namespace Script.CommonLib.Map
             var forwardDot = candidateDelta.X * frontlineDelta.X + candidateDelta.Z * frontlineDelta.Z;
             var forwardProjection = forwardDot / Math.Max(1, frontlineDistance);
             var excessiveAdvance = Math.Max(0, forwardProjection);
-            var currentLateralProjection = GetLateralProjection(currentPosition, frontlinePosition, frontlineDelta, frontlineDistance);
-            var candidateLateralProjection = GetLateralProjection(candidate, frontlinePosition, frontlineDelta, frontlineDistance);
-            var lateralCrossingPenalty = currentLateralProjection != 0 &&
-                                         candidateLateralProjection != 0 &&
-                                         Math.Sign(currentLateralProjection) != Math.Sign(candidateLateralProjection)
-                ? LateralCrossingScorePenalty
+            var currentSideOffset = GetSignedSideOffset(currentPosition, frontlinePosition, frontlineDelta, frontlineDistance);
+            var candidateSideOffset = GetSignedSideOffset(candidate, frontlinePosition, frontlineDelta, frontlineDistance);
+            var sideCrossingPenalty = currentSideOffset != 0 &&
+                                      candidateSideOffset != 0 &&
+                                      Math.Sign(currentSideOffset) != Math.Sign(candidateSideOffset)
+                ? SideCrossingScorePenalty
                 : 0;
-            var orderInversionCount = GetRelativeLateralOrderInversionCount(
+            var orderInversionCount = GetRelativeSideOrderInversionCount(
                 entity, candidate, frontlinePosition, enemyFrontlinePosition, plannedDestinations);
-            var relativeOrderPenalty = orderInversionCount * RelativeLateralOrderScorePenalty;
+            var relativeSideOrderPenalty = orderInversionCount * RelativeSideOrderScorePenalty;
 
             return -attackRangeError * 100
                    - allySpacingError * 20
                    - excessiveAdvance * 200
                    - moveDistance * MoveDistanceScoreWeight
                    - centerDistance * 10
-                   - lateralCrossingPenalty
-                   - relativeOrderPenalty;
+                   - sideCrossingPenalty
+                   - relativeSideOrderPenalty;
         }
 
-        private static int GetRelativeLateralOrderInversionCount(
+        private static int GetRelativeSideOrderInversionCount(
             Entity entity,
             FixedPos candidate,
             FixedPos frontlinePosition,
@@ -284,21 +281,21 @@ namespace Script.CommonLib.Map
             if (frontlineDistance == 0)
                 return plannedDestinations.Count;
 
-            var currentProjection = GetLateralProjection(
+            var currentSideOffset = GetSignedSideOffset(
                 entity.GetPos(), frontlinePosition, frontlineDelta, frontlineDistance);
-            var candidateProjection = GetLateralProjection(
+            var candidateSideOffset = GetSignedSideOffset(
                 candidate, frontlinePosition, frontlineDelta, frontlineDistance);
             var inversionCount = 0;
 
             for (var i = 0; i < plannedDestinations.Count; i++)
             {
                 var other = plannedDestinations[i];
-                var otherCurrentProjection = GetLateralProjection(
+                var otherCurrentSideOffset = GetSignedSideOffset(
                     other.Entity.GetPos(), frontlinePosition, frontlineDelta, frontlineDistance);
-                var otherCandidateProjection = GetLateralProjection(
+                var otherCandidateSideOffset = GetSignedSideOffset(
                     other.Destination, frontlinePosition, frontlineDelta, frontlineDistance);
-                var currentOrder = currentProjection.CompareTo(otherCurrentProjection);
-                var candidateOrder = candidateProjection.CompareTo(otherCandidateProjection);
+                var currentOrder = currentSideOffset.CompareTo(otherCurrentSideOffset);
+                var candidateOrder = candidateSideOffset.CompareTo(otherCandidateSideOffset);
                 if (currentOrder != 0 && candidateOrder != 0 && Math.Sign(currentOrder) != Math.Sign(candidateOrder))
                     inversionCount++;
             }
@@ -306,7 +303,7 @@ namespace Script.CommonLib.Map
             return inversionCount;
         }
 
-        private static long GetLateralProjection(
+        private static long GetSignedSideOffset(
             FixedPos position,
             FixedPos frontlinePosition,
             FixedPos frontlineDelta,
@@ -322,17 +319,17 @@ namespace Script.CommonLib.Map
             FixedPos frontlineDelta,
             long frontlineDistance,
             long forwardDistance,
-            long lateralDistance)
+            long sideOffset)
         {
             var forwardX = frontlineDelta.X * forwardDistance / frontlineDistance;
             var forwardZ = frontlineDelta.Z * forwardDistance / frontlineDistance;
-            var lateralX = -frontlineDelta.Z * lateralDistance / frontlineDistance;
-            var lateralZ = frontlineDelta.X * lateralDistance / frontlineDistance;
+            var sideOffsetX = -frontlineDelta.Z * sideOffset / frontlineDistance;
+            var sideOffsetZ = frontlineDelta.X * sideOffset / frontlineDistance;
 
             return new FixedPos(
-                enemyFrontlinePosition.X - forwardX + lateralX,
+                enemyFrontlinePosition.X - forwardX + sideOffsetX,
                 enemyFrontlinePosition.Y,
-                enemyFrontlinePosition.Z - forwardZ + lateralZ);
+                enemyFrontlinePosition.Z - forwardZ + sideOffsetZ);
         }
 
         private static long GetNearestDistance(FixedPos position, List<FixedPos> otherPositions)
@@ -387,12 +384,12 @@ namespace Script.CommonLib.Map
             var frontlineDelta = enemyFrontlinePosition - frontlinePosition;
             var frontlineDistance = frontlinePosition.GetDistance(enemyFrontlinePosition);
             frontlineDistance = Math.Max(1, frontlineDistance);
-            var firstProjection = Math.Abs(GetLateralProjection(
+            var firstSideOffset = Math.Abs(GetSignedSideOffset(
                 first.GetPos(), frontlinePosition, frontlineDelta, frontlineDistance));
-            var secondProjection = Math.Abs(GetLateralProjection(
+            var secondSideOffset = Math.Abs(GetSignedSideOffset(
                 second.GetPos(), frontlinePosition, frontlineDelta, frontlineDistance));
-            var lateralComparison = firstProjection.CompareTo(secondProjection);
-            return lateralComparison != 0 ? lateralComparison : first.Id.CompareTo(second.Id);
+            var sideOffsetComparison = firstSideOffset.CompareTo(secondSideOffset);
+            return sideOffsetComparison != 0 ? sideOffsetComparison : first.Id.CompareTo(second.Id);
         }
 
         private static bool IsPositionBefore(FixedPos first, FixedPos second)

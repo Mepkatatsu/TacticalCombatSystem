@@ -73,10 +73,7 @@ namespace Script.CommonLib.Map
             var destination = source.GetDestinationForTest();
             var paths = new List<GridPos>();
 
-            if (!pathFinder.TryFindWaypointsFromArbitraryPositions(
-                    prediction.GetPos().ToGridPos(),
-                    destination.ToGridPos(),
-                    paths))
+            if (!pathFinder.TryFindWaypointsBetweenAnyPositions(prediction.GetPos().ToGridPos(), destination.ToGridPos(), paths))
             {
                 return false;
             }

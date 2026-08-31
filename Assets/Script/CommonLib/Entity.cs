@@ -135,7 +135,7 @@ namespace Script.CommonLib
                 return;
 
             var paths = new List<GridPos>();
-            if (!_battleMapContext.TryFindWaypointsFromArbitraryPositions(
+            if (!_battleMapContext.TryFindWaypointsBetweenAnyPositions(
                     GetPos().ToGridPos(),
                     _moveState.GetAuthoredDestination().ToGridPos(),
                     paths))

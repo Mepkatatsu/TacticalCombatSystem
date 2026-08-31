@@ -88,10 +88,7 @@ namespace Script.EditorLib
                     return false;
                 }
 
-                if (!battleMapSimulator.TryFindWaypoints(
-                        startPosition.gridPos,
-                        endPosition.gridPos,
-                        waypointList))
+                if (!battleMapSimulator.TryFindWaypoints(startPosition.gridPos, endPosition.gridPos, waypointList))
                 {
                     LogHelper.Error($"BattleMapData: StartPosition에서 EndPosition으로 이동하는 경로를 찾을 수 없습니다. (index: {startPosition.index})");
                     return false;

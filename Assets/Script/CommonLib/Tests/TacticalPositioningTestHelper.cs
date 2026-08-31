@@ -60,17 +60,17 @@ namespace Script.CommonLib.Tests
         }
 
         internal static BattleMapData CreateMapData(
-            int[] lateralPositions, int startX, int destinationX, int mapHalfHeight)
+            int[] lanePositions, int startX, int destinationX, int mapHalfHeight)
         {
             var battlePositions = new List<BattlePositionData>();
-            AddBattlePositions(battlePositions, "BlueStart", -startX, lateralPositions);
-            AddBattlePositions(battlePositions, "RedStart", startX, lateralPositions);
-            AddBattlePositions(battlePositions, "BlueEnd", destinationX, lateralPositions);
-            AddBattlePositions(battlePositions, "RedEnd", -destinationX, lateralPositions);
+            AddBattlePositions(battlePositions, "BlueStart", -startX, lanePositions);
+            AddBattlePositions(battlePositions, "RedStart", startX, lanePositions);
+            AddBattlePositions(battlePositions, "BlueEnd", destinationX, lanePositions);
+            AddBattlePositions(battlePositions, "RedEnd", -destinationX, lanePositions);
 
             var entities = new List<EntityData>();
-            AddTeamEntities(entities, TeamFlag.Blue, lateralPositions.Length);
-            AddTeamEntities(entities, TeamFlag.Red, lateralPositions.Length);
+            AddTeamEntities(entities, TeamFlag.Blue, lanePositions.Length);
+            AddTeamEntities(entities, TeamFlag.Red, lanePositions.Length);
             return new BattleMapData
             {
                 minGridPos = new GridPos(-30, -mapHalfHeight),
@@ -82,11 +82,11 @@ namespace Script.CommonLib.Tests
         }
 
         private static void AddBattlePositions(
-            List<BattlePositionData> battlePositions, string namePrefix, int x, int[] lateralPositions)
+            List<BattlePositionData> battlePositions, string namePrefix, int x, int[] lanePositions)
         {
-            for (var i = 0; i < lateralPositions.Length; i++)
+            for (var i = 0; i < lanePositions.Length; i++)
             {
-                battlePositions.Add(CreateBattlePosition($"{namePrefix}{i + 1}", x, lateralPositions[i]));
+                battlePositions.Add(CreateBattlePosition($"{namePrefix}{i + 1}", x, lanePositions[i]));
             }
         }
 

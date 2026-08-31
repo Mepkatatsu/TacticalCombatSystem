@@ -9,9 +9,7 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler = battleMapEventHandler;
             _battleMapData = battleMapData;
             _battleMapPathFinder = new BattleMapPathFinder(battleMapData);
-            var initialFormationTeamCapacity = battleMapData.entities.Count > 0
-                ? battleMapData.entities.Count
-                : 1;
+            var initialFormationTeamCapacity = battleMapData.entities.Count > 0 ? battleMapData.entities.Count : 1;
             _blueInitialFormationEntities = new List<Entity>(initialFormationTeamCapacity);
             _redInitialFormationEntities = new List<Entity>(initialFormationTeamCapacity);
         }
@@ -366,12 +364,9 @@ namespace Script.CommonLib.Map
             return _battleMapPathFinder.TryFindWaypoints(start, goal, resultWaypoints);
         }
 
-        public bool TryFindWaypointsFromArbitraryPositions(
-            GridPos start,
-            GridPos goal,
-            List<GridPos> resultWaypoints)
+        public bool TryFindWaypointsBetweenAnyPositions(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
         {
-            return _battleMapPathFinder.TryFindWaypointsFromArbitraryPositions(start, goal, resultWaypoints);
+            return _battleMapPathFinder.TryFindWaypointsBetweenAnyPositions(start, goal, resultWaypoints);
         }
 
         public List<IEntityContext> GetAliveEntities()

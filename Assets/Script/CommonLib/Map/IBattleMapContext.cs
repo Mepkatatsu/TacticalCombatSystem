@@ -10,10 +10,7 @@ namespace Script.CommonLib.Map
         public IEntityContext TryGetNearestEnemy(uint entityId, long maxDistance);
         public bool HasAliveEnemy(uint entityId);
         public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
-        public bool TryFindWaypointsFromArbitraryPositions(
-            GridPos start,
-            GridPos goal,
-            List<GridPos> resultWaypoints);
+        public bool TryFindWaypointsBetweenAnyPositions(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
         public uint ElapsedMs { get; }
         public void RequestAttack(uint attackerId, uint targetEntityId);
         

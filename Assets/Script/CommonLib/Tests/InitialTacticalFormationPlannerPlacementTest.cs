@@ -116,8 +116,8 @@ namespace Script.CommonLib.Tests
             Dictionary<uint, FixedPos> starts, Dictionary<uint, FixedPos> authoredDestinations,
             HashSet<FixedPos> formationPositions)
         {
-            var startProjections = new List<long>();
-            var destinationProjections = new List<long>();
+            var startSideValues = new List<long>();
+            var destinationSideValues = new List<long>();
             for (var i = 0; i < entities.Count; i++)
             {
                 var entity = entities[i];
@@ -125,29 +125,29 @@ namespace Script.CommonLib.Tests
                     continue;
 
                 var destination = entity.GetDestinationForTest();
-                var startProjection = GetLateralProjection(starts[entity.Id], frontlinePosition, opposingFrontlinePosition);
-                var destinationProjection = GetLateralProjection(destination, frontlinePosition, opposingFrontlinePosition);
+                var startSideValue = GetBattleLineSideValue(starts[entity.Id], frontlinePosition, opposingFrontlinePosition);
+                var destinationSideValue = GetBattleLineSideValue(destination, frontlinePosition, opposingFrontlinePosition);
                 if (destination == authoredDestinations[entity.Id] ||
                     destination.GetDistance(opposingFrontlinePosition) > entity.AttackRange ||
-                    startProjection == 0 ||
-                    destinationProjection == 0 ||
-                    (startProjection > 0) != (destinationProjection > 0) ||
+                    startSideValue == 0 ||
+                    destinationSideValue == 0 ||
+                    (startSideValue > 0) != (destinationSideValue > 0) ||
                     !formationPositions.Add(destination))
                 {
                     return false;
                 }
 
-                startProjections.Add(startProjection);
-                destinationProjections.Add(destinationProjection);
+                startSideValues.Add(startSideValue);
+                destinationSideValues.Add(destinationSideValue);
             }
 
-            for (var i = 0; i < startProjections.Count; i++)
+            for (var i = 0; i < startSideValues.Count; i++)
             {
-                for (var j = i + 1; j < startProjections.Count; j++)
+                for (var j = i + 1; j < startSideValues.Count; j++)
                 {
-                    if (destinationProjections[i] == destinationProjections[j] ||
-                        (startProjections[i] < startProjections[j]) !=
-                        (destinationProjections[i] < destinationProjections[j]))
+                    if (destinationSideValues[i] == destinationSideValues[j] ||
+                        (startSideValues[i] < startSideValues[j]) !=
+                        (destinationSideValues[i] < destinationSideValues[j]))
                     {
                         return false;
                     }
@@ -157,11 +157,11 @@ namespace Script.CommonLib.Tests
             return true;
         }
 
-        private static long GetLateralProjection(FixedPos position, FixedPos frontline, FixedPos opposingFrontline)
+        private static long GetBattleLineSideValue(FixedPos position, FixedPos frontline, FixedPos opposingFrontline)
         {
-            var axis = opposingFrontline - frontline;
-            var delta = position - frontline;
-            return -delta.X * axis.Z + delta.Z * axis.X;
+            var battleLine = opposingFrontline - frontline;
+            var relativePosition = position - frontline;
+            return -relativePosition.X * battleLine.Z + relativePosition.Z * battleLine.X;
         }
     }
 }

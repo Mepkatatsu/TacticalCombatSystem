@@ -10,35 +10,34 @@ namespace Script.CommonLib.Tests
         {
             var success = true;
 
-            success &= Verify<BattleMapPathFinderTest>(TestArbitraryGoalDetourPreservesAuthoredQueryResult(),
-                nameof(TestArbitraryGoalDetourPreservesAuthoredQueryResult));
-            success &= Verify<BattleMapPathFinderTest>(TestFailedPathReturnsEmptyResult(),
-                nameof(TestFailedPathReturnsEmptyResult));
+            success &= Verify<BattleMapPathFinderTest>(TestAnyPositionPathSearchDoesNotChangeAuthoredPath(),
+                nameof(TestAnyPositionPathSearchDoesNotChangeAuthoredPath));
+            success &= Verify<BattleMapPathFinderTest>(TestFailedPathSearchClearsResult(),
+                nameof(TestFailedPathSearchClearsResult));
             return success;
         }
 
-        private static bool TestArbitraryGoalDetourPreservesAuthoredQueryResult()
+        private static bool TestAnyPositionPathSearchDoesNotChangeAuthoredPath()
         {
             var mapData = CreatePathfindingMapData();
             mapData.obstacles.Add(CreateCenterObstacle());
             var pathFinder = new BattleMapPathFinder(mapData);
             var authoredPathBefore = new List<GridPos>();
-            var arbitraryPath = new List<GridPos>();
+            var anyPositionPath = new List<GridPos>();
             var authoredPathAfter = new List<GridPos>();
 
             if (!pathFinder.TryFindWaypoints(new GridPos(-6, 0), new GridPos(6, 0), authoredPathBefore))
                 return false;
 
-            if (!pathFinder.TryFindWaypointsFromArbitraryPositions(
-                    new GridPos(-20, 0), new GridPos(20, 0), arbitraryPath))
+            if (!pathFinder.TryFindWaypointsBetweenAnyPositions(new GridPos(-20, 0), new GridPos(20, 0), anyPositionPath))
                 return false;
 
             if (!pathFinder.TryFindWaypoints(new GridPos(-6, 0), new GridPos(6, 0), authoredPathAfter))
                 return false;
 
-            if (arbitraryPath.Count <= 2 ||
-                arbitraryPath[0] != new GridPos(20, 0) ||
-                arbitraryPath[arbitraryPath.Count - 1] != new GridPos(-20, 0) ||
+            if (anyPositionPath.Count <= 2 ||
+                anyPositionPath[0] != new GridPos(20, 0) ||
+                anyPositionPath[anyPositionPath.Count - 1] != new GridPos(-20, 0) ||
                 authoredPathBefore.Count != authoredPathAfter.Count)
             {
                 return false;
@@ -53,7 +52,7 @@ namespace Script.CommonLib.Tests
             return true;
         }
 
-        private static bool TestFailedPathReturnsEmptyResult()
+        private static bool TestFailedPathSearchClearsResult()
         {
             var mapData = CreatePathfindingMapData();
             var blockedPoints = new List<GridPos>();

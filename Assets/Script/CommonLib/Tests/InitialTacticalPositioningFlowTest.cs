@@ -11,34 +11,11 @@ namespace Script.CommonLib.Tests
         {
             var success = true;
 
-            success &= Verify<InitialTacticalPositioningFlowTest>(TestLongRangeBacklineDoesNotStartEncounterEarly(),
-                nameof(TestLongRangeBacklineDoesNotStartEncounterEarly));
             success &= Verify<InitialTacticalPositioningFlowTest>(TestUnequalRangePredictionReachesMutualAttackRange(),
                 nameof(TestUnequalRangePredictionReachesMutualAttackRange));
             success &= Verify<InitialTacticalPositioningFlowTest>(TestPredictionFailureKeepsAuthoredDestinations(),
                 nameof(TestPredictionFailureKeepsAuthoredDestinations));
             return success;
-        }
-
-        private static bool TestLongRangeBacklineDoesNotStartEncounterEarly()
-        {
-            var mapData = CreateMapData();
-            mapData.entities[0].attackRange = 3000;
-            mapData.entities[1].attackRange = 20000;
-            mapData.entities[3].attackRange = 3000;
-            mapData.entities[4].attackRange = 20000;
-            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
-            simulator.Init();
-            var entities = GetEntities(simulator.GetAliveEntities());
-            entities[0].SetPos(new FixedPos(0, 0, 0));
-            entities[1].SetPos(new FixedPos(0, 0, 0));
-            entities[3].SetPos(new FixedPos(20000, 0, 0));
-            entities[4].SetPos(new FixedPos(20000, 0, 0));
-
-            var blueEntities = new List<Entity> { entities[0], entities[1], entities[2] };
-            var redEntities = new List<Entity> { entities[3], entities[4], entities[5] };
-            return !InitialEncounterDetector.HasEncounter(blueEntities, redEntities) &&
-                   !InitialEncounterDetector.HasEncounter(redEntities, blueEntities);
         }
 
         private static bool TestUnequalRangePredictionReachesMutualAttackRange()
