@@ -78,6 +78,7 @@ TacticalCombatSystem은 Unity Client가 전투를 실행하고 Server가 같은 
 - 인접 코드의 멤버 순서, 접근 제한자, guard clause, 빈 줄 패턴을 우선한다.
 - 메서드 선언·호출과 간단한 식은 한 줄로 무리 없이 읽을 수 있으면 불필요하게 여러 줄로 나누지 않는다. 한 줄이 지나치게 길거나 논리 구조를 드러낼 필요가 있을 때만 줄바꿈한다.
 - type·public member는 PascalCase, private field는 `_camelCase`, 지역 변수·매개변수와 직렬화 public field는 camelCase를 사용한다.
+- 변수와 메서드 이름은 쉬운 단어를 사용하고, 대상과 역할을 코드만 읽어도 직관적으로 이해할 수 있게 짓는다. 생소한 전문 용어나 불필요하게 추상적인 표현은 피한다.
 - Dictionary 조회는 `TryGetValue`, 계약상 새 key 등록은 `Add`, 의도적인 갱신은 indexer를 사용한다.
 - 단일 문장 guard clause는 중괄호 없이 다음 줄에 쓰고, 여러 문장은 중괄호로 묶는다.
 - `Update` 경로에 매 frame `Find`, `GetComponent`, LINQ, 정렬, 새 collection 생성을 추가하지 않는다.

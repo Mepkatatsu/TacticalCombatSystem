@@ -11,7 +11,6 @@ namespace Script.CommonLib.Map
         private readonly BresenhamSuperCoverNodeVisitor _visitor = new();
         private readonly Dictionary<GridPos, List<GridPos>> _authoredNeighborGridPosDic = new();
         private readonly Dictionary<GridPos, List<GridPos>> _queryNeighborGridPosDic = new();
-        private readonly List<GridPos> _authoredWaypointPositions = new();
         private readonly SortedSet<PathNode> _openSet = new(new PathNodeComparer());
         private readonly HashSet<PathNode> _closedSet = new();
         private readonly Dictionary<GridPos, PathNode> _nodeMap = new();
@@ -139,33 +138,19 @@ namespace Script.CommonLib.Map
         private void RefreshAuthoredNeighborNodes()
         {
             _authoredNeighborGridPosDic.Clear();
-            _authoredWaypointPositions.Clear();
 
             for (var i = 0; i < Waypoints.Count; i++)
             {
-                var waypoint = Waypoints[i];
-                if (_authoredNeighborGridPosDic.ContainsKey(waypoint))
-                    continue;
+                var startNode = Waypoints[i];
 
-                _authoredNeighborGridPosDic.Add(waypoint, new List<GridPos>());
-                _authoredWaypointPositions.Add(waypoint);
-            }
-
-            _authoredWaypointPositions.Sort(CompareGridPos);
-
-            for (var i = 0; i < _authoredWaypointPositions.Count; i++)
-            {
-                var startNode = _authoredWaypointPositions[i];
-                var neighbors = _authoredNeighborGridPosDic[startNode];
-
-                for (var j = 0; j < _authoredWaypointPositions.Count; j++)
+                for (var j = 0; j < Waypoints.Count; j++)
                 {
                     if (i == j)
                         continue;
 
-                    var endNode = _authoredWaypointPositions[j];
+                    var endNode = Waypoints[j];
                     if (IsStraightPathReachable(startNode, endNode))
-                        neighbors.Add(endNode);
+                        AddAuthoredNeighborNode(startNode, endNode);
                 }
             }
         }
@@ -173,31 +158,27 @@ namespace Script.CommonLib.Map
         private void RefreshQueryNeighborNodes(GridPos start, GridPos goal)
         {
             _queryNeighborGridPosDic.Clear();
-            var goalIsAuthored = _authoredNeighborGridPosDic.ContainsKey(goal);
 
-            for (var i = 0; i < _authoredWaypointPositions.Count; i++)
+            for (var i = 0; i < Waypoints.Count; i++)
             {
-                var current = _authoredWaypointPositions[i];
+                var current = Waypoints[i];
                 var neighbors = GetOrCreateQueryNeighbors(current);
 
                 if (_authoredNeighborGridPosDic.TryGetValue(current, out var authoredNeighbors))
                     neighbors.AddRange(authoredNeighbors);
 
-                if (!goalIsAuthored && current != goal && IsStraightPathReachable(current, goal))
-                    neighbors.Add(goal);
+                if (current != goal && IsStraightPathReachable(current, goal))
+                    AddUnique(neighbors, goal);
 
                 neighbors.Sort(CompareGridPos);
             }
 
-            if (_authoredNeighborGridPosDic.ContainsKey(start))
-                return;
-
             var startNeighbors = GetOrCreateQueryNeighbors(start);
-            for (var i = 0; i < _authoredWaypointPositions.Count; i++)
+            for (var i = 0; i < Waypoints.Count; i++)
             {
-                var waypoint = _authoredWaypointPositions[i];
+                var waypoint = Waypoints[i];
                 if (waypoint != start && IsStraightPathReachable(start, waypoint))
-                    startNeighbors.Add(waypoint);
+                    AddUnique(startNeighbors, waypoint);
             }
 
             startNeighbors.Sort(CompareGridPos);
@@ -213,6 +194,12 @@ namespace Script.CommonLib.Map
             return neighbors;
         }
 
+        private static void AddUnique(List<GridPos> neighbors, GridPos neighbor)
+        {
+            if (!neighbors.Contains(neighbor))
+                neighbors.Add(neighbor);
+        }
+
         private static long GetHeuristicCost(GridPos first, GridPos second)
         {
             return Mathf.Abs(first.x - second.x) + Mathf.Abs(first.y - second.y);
@@ -222,6 +209,17 @@ namespace Script.CommonLib.Map
         {
             var xComparison = first.x.CompareTo(second.x);
             return xComparison != 0 ? xComparison : first.y.CompareTo(second.y);
+        }
+
+        private void AddAuthoredNeighborNode(GridPos key, GridPos value)
+        {
+            if (!_authoredNeighborGridPosDic.TryGetValue(key, out var list))
+            {
+                list = new List<GridPos>();
+                _authoredNeighborGridPosDic.Add(key, list);
+            }
+
+            list.Add(value);
         }
 
         public void Refresh()

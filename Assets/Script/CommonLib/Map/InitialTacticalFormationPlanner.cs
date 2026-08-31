@@ -11,7 +11,7 @@ namespace Script.CommonLib.Map
         private const int SideOffsetStep = 4500;
         private const int MoveDistanceScoreWeight = 15;
         private const int SideCrossingScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 2;
-        private const int RelativeSideOrderScorePenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 8;
+        private const int AllyOrderSwapPenalty = PreferredAllySpacing * MoveDistanceScoreWeight * 8;
 
         private static readonly int[] CandidateRangePercents = { 90, 85, 80 };
         private static readonly int[] SideOffsetIndices = { 0, 1, -1, 2, -2, 3, -3 };
@@ -256,9 +256,9 @@ namespace Script.CommonLib.Map
                                       Math.Sign(currentSideOffset) != Math.Sign(candidateSideOffset)
                 ? SideCrossingScorePenalty
                 : 0;
-            var orderInversionCount = GetRelativeSideOrderInversionCount(
+            var allyOrderSwapCount = GetAllyOrderSwapCount(
                 entity, candidate, frontlinePosition, enemyFrontlinePosition, plannedDestinations);
-            var relativeSideOrderPenalty = orderInversionCount * RelativeSideOrderScorePenalty;
+            var allyOrderSwapPenalty = allyOrderSwapCount * AllyOrderSwapPenalty;
 
             return -attackRangeError * 100
                    - allySpacingError * 20
@@ -266,10 +266,10 @@ namespace Script.CommonLib.Map
                    - moveDistance * MoveDistanceScoreWeight
                    - centerDistance * 10
                    - sideCrossingPenalty
-                   - relativeSideOrderPenalty;
+                   - allyOrderSwapPenalty;
         }
 
-        private static int GetRelativeSideOrderInversionCount(
+        private static int GetAllyOrderSwapCount(
             Entity entity,
             FixedPos candidate,
             FixedPos frontlinePosition,
@@ -285,7 +285,7 @@ namespace Script.CommonLib.Map
                 entity.GetPos(), frontlinePosition, frontlineDelta, frontlineDistance);
             var candidateSideOffset = GetSignedSideOffset(
                 candidate, frontlinePosition, frontlineDelta, frontlineDistance);
-            var inversionCount = 0;
+            var swapCount = 0;
 
             for (var i = 0; i < plannedDestinations.Count; i++)
             {
@@ -297,10 +297,10 @@ namespace Script.CommonLib.Map
                 var currentOrder = currentSideOffset.CompareTo(otherCurrentSideOffset);
                 var candidateOrder = candidateSideOffset.CompareTo(otherCandidateSideOffset);
                 if (currentOrder != 0 && candidateOrder != 0 && Math.Sign(currentOrder) != Math.Sign(candidateOrder))
-                    inversionCount++;
+                    swapCount++;
             }
 
-            return inversionCount;
+            return swapCount;
         }
 
         private static long GetSignedSideOffset(
