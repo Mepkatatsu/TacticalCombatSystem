@@ -256,7 +256,6 @@ namespace Script.CommonLib
         }
 
         internal FixedPos GetDestinationForTest() => _moveState.GetDestination();
-        internal uint? GetMainTargetIdForTest() => _mainTarget?.Id;
 
         public void OnStartMove()
         {

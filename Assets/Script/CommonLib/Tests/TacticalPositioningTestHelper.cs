@@ -44,11 +44,6 @@ namespace Script.CommonLib.Tests
             return entities;
         }
 
-        internal static BattleMapSimulator CreateSimulator()
-        {
-            return new BattleMapSimulator(NullBattleMapEventHandler.Instance, CreateMapData());
-        }
-
         internal static bool AdvanceUntilFormationAttempted(BattleMapSimulator simulator)
         {
             for (var i = 0; i < 2000 && !simulator.WasInitialTacticalPositioningAttemptedForTest; i++)

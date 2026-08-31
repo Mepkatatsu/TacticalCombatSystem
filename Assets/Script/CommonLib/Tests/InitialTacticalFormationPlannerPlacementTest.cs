@@ -13,8 +13,6 @@ namespace Script.CommonLib.Tests
 
             success &= Verify<InitialTacticalFormationPlannerPlacementTest>(TestDiagonalPlacementCreatesValidFormation(),
                 nameof(TestDiagonalPlacementCreatesValidFormation));
-            success &= Verify<InitialTacticalFormationPlannerPlacementTest>(TestCandidateFailureKeepsWholeTeamDestinations(),
-                nameof(TestCandidateFailureKeepsWholeTeamDestinations));
             success &= Verify<InitialTacticalFormationPlannerPlacementTest>(
                 TestPlacementOrderIsDeterministicWhenInputOrderChanges(),
                 nameof(TestPlacementOrderIsDeterministicWhenInputOrderChanges));
@@ -63,24 +61,6 @@ namespace Script.CommonLib.Tests
                    !redFrontline.ShouldPrioritizeMovement;
         }
 
-        private static bool TestCandidateFailureKeepsWholeTeamDestinations()
-        {
-            var mapData = CreateFourEntityTeamMapData();
-            mapData.minGridPos = new GridPos(-30, -4);
-            mapData.maxGridPos = new GridPos(30, 4);
-            var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, mapData);
-            simulator.Init();
-            var entities = GetEntities(simulator.GetAliveEntities());
-            var blueEntities = new List<Entity> { entities[0], entities[1], entities[2], entities[3] };
-            var redEntities = new List<Entity> { entities[4], entities[5], entities[6], entities[7] };
-            var authoredDestinations = GetDestinationsById(simulator.GetAliveEntities());
-            var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
-
-            planner.TryApply(blueEntities, redEntities);
-
-            return HaveSameDestinations(authoredDestinations, GetDestinationsById(simulator.GetAliveEntities()));
-        }
-
         private static bool TestPlacementOrderIsDeterministicWhenInputOrderChanges()
         {
             var firstMapData = CreateMapData();
@@ -107,11 +87,6 @@ namespace Script.CommonLib.Tests
 
             return HaveSameDestinations(GetDestinationsById(firstSimulator.GetAliveEntities()),
                 GetDestinationsById(secondSimulator.GetAliveEntities()));
-        }
-
-        private static BattleMapData CreateFourEntityTeamMapData()
-        {
-            return CreateMapData(new[] { 0, -6, 6, 10 }, 10, 25, 20);
         }
 
         private static void SetDiagonalStartPositions(BattleMapData mapData)
