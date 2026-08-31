@@ -1,7 +1,8 @@
 {
     "name": "EditorLib.Tests",
     "references": [
-        "GUID:bdb2ad8f57d43d74a98bf300bf2d5b74"
+        "GUID:bdb2ad8f57d43d74a98bf300bf2d5b74",
+        "GUID:b2b183bfdbc4dff49802c92a84e8958b"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

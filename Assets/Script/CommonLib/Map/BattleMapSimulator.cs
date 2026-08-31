@@ -9,6 +9,9 @@ namespace Script.CommonLib.Map
             _battleMapEventHandler = battleMapEventHandler;
             _battleMapData = battleMapData;
             _battleMapPathFinder = new BattleMapPathFinder(battleMapData);
+            var initialFormationTeamCapacity = battleMapData.entities.Count > 0 ? battleMapData.entities.Count : 1;
+            _blueInitialFormationEntities = new List<Entity>(initialFormationTeamCapacity);
+            _redInitialFormationEntities = new List<Entity>(initialFormationTeamCapacity);
         }
         
         private readonly IBattleMapEventHandler _battleMapEventHandler;
@@ -23,22 +26,54 @@ namespace Script.CommonLib.Map
         private readonly List<uint> _removeEntityIds = new();
         private readonly List<ulong> _removeProjectileIds = new();
         private readonly HashSet<uint> _retiringEntityIds = new();
+        private readonly List<Entity> _blueInitialFormationEntities;
+        private readonly List<Entity> _redInitialFormationEntities;
         
         private uint _entityIdKey;
         private ulong _projectileIdKey;
         
         private bool _battleEnded;
+        private bool _initialTacticalPositioningAttempted;
         
         public uint ElapsedMs { get; private set; }
 
         public void Init()
         {
             ElapsedMs = 0;
+            _initialTacticalPositioningAttempted = false;
             
             foreach (var entityData in _battleMapData.entities)
             {
                 AddEntity(entityData);
             }
+
+        }
+
+        private void TryApplyInitialTacticalPositioningOnEncounter()
+        {
+            if (_initialTacticalPositioningAttempted)
+                return;
+
+            _blueInitialFormationEntities.Clear();
+            _redInitialFormationEntities.Clear();
+
+            for (var i = 0; i < _entityIds.Count; i++)
+            {
+                if (!_entities.TryGetValue(_entityIds[i], out var entity) || !entity.IsAlive())
+                    continue;
+
+                if (entity.GetTeamFlag() == TeamFlag.Blue)
+                    _blueInitialFormationEntities.Add(entity);
+                else if (entity.GetTeamFlag() == TeamFlag.Red)
+                    _redInitialFormationEntities.Add(entity);
+            }
+
+            if (!InitialEncounterDetector.HasEncounter(_blueInitialFormationEntities, _redInitialFormationEntities))
+                return;
+
+            _initialTacticalPositioningAttempted = true;
+            var planner = new InitialTacticalFormationPlanner(_battleMapData, _battleMapPathFinder);
+            planner.TryApply(_blueInitialFormationEntities, _redInitialFormationEntities);
         }
 
         public void Update(ushort deltaMs)
@@ -70,6 +105,8 @@ namespace Script.CommonLib.Map
                 if (_projectiles.TryGetValue(projectileId, out var projectile))
                     projectile.Update(deltaMs);
             }
+
+            TryApplyInitialTacticalPositioningOnEncounter();
             
             for (var i = 0; i < _entityIds.Count; i++)
             {
@@ -227,6 +264,8 @@ namespace Script.CommonLib.Map
             return _projectileIds.Contains(projectileId);
         }
 
+        internal bool WasInitialTacticalPositioningAttemptedForTest => _initialTacticalPositioningAttempted;
+
         public void OnEntityStartMove(uint entityId)
         {
             _battleMapEventHandler.OnEntityStartMove(entityId);
@@ -299,11 +338,37 @@ namespace Script.CommonLib.Map
             return nearest;
         }
 
-        public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+        public bool HasAliveEnemy(uint entityId)
         {
-            _battleMapPathFinder.FindWaypoints(start, goal, resultWaypoints);
+            if (!_entities.TryGetValue(entityId, out var entity))
+                return false;
+
+            for (var i = 0; i < _entityIds.Count; i++)
+            {
+                if (!_entities.TryGetValue(_entityIds[i], out var otherEntity) ||
+                    otherEntity == entity ||
+                    !otherEntity.IsAlive() ||
+                    otherEntity.GetTeamFlag() == entity.GetTeamFlag())
+                {
+                    continue;
+                }
+
+                return true;
+            }
+
+            return false;
         }
-        
+
+        public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+        {
+            return _battleMapPathFinder.TryFindWaypoints(start, goal, resultWaypoints);
+        }
+
+        public bool TryFindWaypointsBetweenAnyPositions(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+        {
+            return _battleMapPathFinder.TryFindWaypointsBetweenAnyPositions(start, goal, resultWaypoints);
+        }
+
         public List<IEntityContext> GetAliveEntities()
         {
             var aliveEntities = new List<IEntityContext>();

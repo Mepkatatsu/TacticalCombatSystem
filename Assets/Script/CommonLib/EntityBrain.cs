@@ -18,10 +18,15 @@ namespace Script.CommonLib
             if (_entityContext.IsForceIdle)
                 return EntityStateType.Idle;
 
+            if (_entityContext.ShouldPrioritizeMovement)
+                return EntityStateType.Move;
+
             if (_entityContext.IsMainTargetInRange())
                 return EntityStateType.Attack;
 
-            return _entityContext.HasArrived() ? EntityStateType.Idle : EntityStateType.Move;
+            return _entityContext.HasArrived() || _entityContext.HasPathSearchFailed
+                ? EntityStateType.Idle
+                : EntityStateType.Move;
         }
     }
 }

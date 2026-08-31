@@ -8,7 +8,9 @@ namespace Script.CommonLib.Map
         public void OnEntityDirectionChanged(uint entityId, FixedDir dir);
         public void OnEntityGetDamage(uint entityId, uint damage);
         public IEntityContext TryGetNearestEnemy(uint entityId, long maxDistance);
-        public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
+        public bool HasAliveEnemy(uint entityId);
+        public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
+        public bool TryFindWaypointsBetweenAnyPositions(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
         public uint ElapsedMs { get; }
         public void RequestAttack(uint attackerId, uint targetEntityId);
         

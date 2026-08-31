@@ -11,7 +11,6 @@ namespace Script.CommonLib.Map
     
         public GridPos minGridPos;
         public GridPos maxGridPos;
-
         public List<BattlePositionData> battlePositions;
         public List<ObstacleData> obstacles = new();
         public List<EntityData> entities = new();
@@ -48,6 +47,8 @@ namespace Script.CommonLib.Map
             {
                 if (_waypoints.IsNotEmpty())
                     return _waypoints;
+
+                // TODO: 경로 탐색 그래프에 중복 좌표가 들어가지 않도록 Waypoints 생성 단계에서 중복을 제거한다.
             
                 for (var i = 0; i < battlePositions.Count; i++)
                 {

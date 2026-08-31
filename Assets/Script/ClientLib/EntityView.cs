@@ -5,6 +5,8 @@ namespace Script.ClientLib
 {
     public class EntityView : MonoBehaviour
     {
+        private const float RotationSpeedDegreesPerSecond = 720f;
+
         private static readonly int IsMoving = Animator.StringToHash("IsMoving");
         private static readonly int IsAttack = Animator.StringToHash("IsAttack");
         private static readonly int IsRetired = Animator.StringToHash("IsRetired");
@@ -24,6 +26,8 @@ namespace Script.ClientLib
         private ushort _attackDelayMs;
         private uint _comboMs;
         private byte _nextAttack = 0;
+        private Quaternion _targetRotation;
+        private bool _isRotationInitialized;
 
         public void OnUpdate(ushort deltaMs)
         {
@@ -35,6 +39,14 @@ namespace Script.ClientLib
             {
                 _comboMs -= deltaMs;
             }
+
+            if (_isRotationInitialized)
+            {
+                transform.rotation = Quaternion.RotateTowards(
+                    transform.rotation,
+                    _targetRotation,
+                    RotationSpeedDegreesPerSecond * deltaMs / 1000f);
+            }
         }
 
         public void Initialize(uint hp, uint maxHp, TeamFlag teamFlag)
@@ -42,6 +54,7 @@ namespace Script.ClientLib
             Hp = hp;
             MaxHp = maxHp;
             TeamFlag = teamFlag;
+            _isRotationInitialized = false;
         }
         
         public void GetDamage(uint damage)
@@ -67,7 +80,13 @@ namespace Script.ClientLib
             if (dir == Vector3.zero)
                 return;
             
-            transform.rotation = Quaternion.LookRotation(dir);
+            _targetRotation = Quaternion.LookRotation(dir);
+            if (_isRotationInitialized)
+                return;
+
+            // 첫 방향은 prefab의 임의 회전에서 보간하지 않고 즉시 맞춘다.
+            transform.rotation = _targetRotation;
+            _isRotationInitialized = true;
         }
 
         public void OnStartMoving()

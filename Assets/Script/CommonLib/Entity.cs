@@ -89,6 +89,8 @@ namespace Script.CommonLib
             {
                 _forceIdleLeftMs = 0;
             }
+
+            TryResumeAuthoredDestination();
             
             var nextStateType = _brain.ThinkNextStateType();
             var nextState = GetState(nextStateType);
@@ -118,6 +120,31 @@ namespace Script.CommonLib
             _lastStateMs = battleElapsedMs;
 
             nextState.Update(deltaMs);
+        }
+
+        private void TryResumeAuthoredDestination()
+        {
+            if (!IsAlive() || !_moveState.IsWaitingAtTacticalDestination)
+                return;
+
+            TryGetNearestEnemy();
+            if (IsMainTargetInRange())
+                return;
+
+            if (!_battleMapContext.HasAliveEnemy(Id) || !_moveState.TryBeginAuthoredDestinationResume())
+                return;
+
+            var paths = new List<GridPos>();
+            if (!_battleMapContext.TryFindWaypointsBetweenAnyPositions(
+                    GetPos().ToGridPos(),
+                    _moveState.GetAuthoredDestination().ToGridPos(),
+                    paths))
+            {
+                return;
+            }
+
+            RemoveCurrentPositionFromPath(paths);
+            _moveState.ResumeAuthoredDestination(paths);
         }
 
         private IState GetState(EntityStateType stateType)
@@ -182,6 +209,10 @@ namespace Script.CommonLib
             return _moveState.HasArrived();
         }
 
+        public bool HasPathSearchFailed => _moveState.HasPathSearchFailed;
+
+        public bool ShouldPrioritizeMovement => _moveState.ShouldPrioritizeMovement;
+
         public void SetPos(GridPos gridPos)
         {
             SetPos(gridPos.ToFixedPos());
@@ -206,6 +237,26 @@ namespace Script.CommonLib
             _moveState.SetDestination(pos);
         }
 
+        internal void SetTacticalDestination(FixedPos pos, List<GridPos> paths)
+        {
+            RemoveCurrentPositionFromPath(paths);
+            _moveState.SetTacticalDestination(pos, paths);
+        }
+
+        private void RemoveCurrentPositionFromPath(List<GridPos> paths)
+        {
+            var currentGridPosition = GetPos().ToGridPos();
+            while (paths.Count > 0 && paths[paths.Count - 1] == currentGridPosition)
+                paths.RemoveAt(paths.Count - 1);
+        }
+
+        internal void SetPredictionDestination(FixedPos pos, List<GridPos> paths)
+        {
+            _moveState.SetPredictionDestination(pos, paths);
+        }
+
+        internal FixedPos GetDestinationForTest() => _moveState.GetDestination();
+
         public void OnStartMove()
         {
             _battleMapContext.OnEntityStartMove(Id);
@@ -216,9 +267,9 @@ namespace Script.CommonLib
             _battleMapContext.OnEntityStopMove(Id);
         }
 
-        public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
+        public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints)
         {
-            _battleMapContext.FindWaypoints(start, goal, resultWaypoints);
+            return _battleMapContext.TryFindWaypoints(start, goal, resultWaypoints);
         }
 
         public uint GetBattleMapElapsedMs()

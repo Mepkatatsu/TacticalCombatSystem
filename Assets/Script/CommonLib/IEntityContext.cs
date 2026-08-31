@@ -11,8 +11,10 @@ namespace Script.CommonLib
         public ushort AttackDelayMs { get; }
         public bool IsAlive();
         public bool HasArrived();
+        public bool HasPathSearchFailed { get; }
         public bool HasMainTarget();
         public bool IsMainTargetInRange();
+        public bool ShouldPrioritizeMovement { get; }
         public void TryGetNearestEnemy();
         public FixedPos GetPos();
         public void SetPos(FixedPos pos);
@@ -20,7 +22,7 @@ namespace Script.CommonLib
         public void SetDir(FixedDir dir);
         public void OnStartMove();
         public void OnStopMove();
-        public void FindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
+        public bool TryFindWaypoints(GridPos start, GridPos goal, List<GridPos> resultWaypoints);
         public uint GetBattleMapElapsedMs();
         public void RequestAttack();
         public bool IsForceIdle { get; }

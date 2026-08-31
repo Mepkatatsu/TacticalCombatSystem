@@ -13,6 +13,12 @@ namespace Script.CommonLib
         private FixedPos _pos;
         private FixedDir _dir;
         private FixedPos _destination;
+        private FixedPos _authoredDestination;
+        private bool _hasAuthoredDestination;
+        private bool _hasActiveTacticalDestination;
+        private bool _hasAttemptedAuthoredDestinationResume;
+        private bool _hasPathSearchFailed;
+        private bool _shouldPrioritizeMovement;
         private readonly List<GridPos> _paths = new(); // TODO: List에서 다른 자료형으로 바꾸는 게 나을 수도... 현재는 에디터에서 List를 사용하고 있어서 변경사항이 많아질 것 같아 임시로 구현.
 
         private ushort _moveSpeed;
@@ -28,9 +34,78 @@ namespace Script.CommonLib
             return _pos == _destination;
         }
 
+        public bool ShouldPrioritizeMovement => _shouldPrioritizeMovement && !HasArrived();
+        public bool HasPathSearchFailed => _hasPathSearchFailed;
+
         public void SetDestination(FixedPos destination)
         {
             _destination = destination;
+            _hasAuthoredDestination = false;
+            _hasActiveTacticalDestination = false;
+            _hasAttemptedAuthoredDestinationResume = false;
+            _hasPathSearchFailed = false;
+            _shouldPrioritizeMovement = false;
+        }
+
+        internal void SetTacticalDestination(FixedPos destination, List<GridPos> paths)
+        {
+            _authoredDestination = _destination;
+            _hasAuthoredDestination = true;
+            _hasActiveTacticalDestination = true;
+            _hasAttemptedAuthoredDestinationResume = false;
+            SetDestinationWithPath(destination, paths, true);
+        }
+
+        internal void SetPredictionDestination(FixedPos destination, List<GridPos> paths)
+        {
+            SetDestinationWithPath(destination, paths, false);
+        }
+
+        private void SetDestinationWithPath(
+            FixedPos destination,
+            List<GridPos> paths,
+            bool shouldPrioritizeMovement)
+        {
+            _destination = destination;
+            _shouldPrioritizeMovement = shouldPrioritizeMovement;
+            _hasPathSearchFailed = false;
+            _paths.Clear();
+            _paths.AddRange(paths);
+        }
+
+        internal FixedPos GetDestination() => _destination;
+
+        internal bool IsWaitingAtTacticalDestination =>
+            _hasActiveTacticalDestination &&
+            !_shouldPrioritizeMovement &&
+            HasArrived();
+
+        internal FixedPos GetAuthoredDestination() => _authoredDestination;
+
+        internal bool TryBeginAuthoredDestinationResume()
+        {
+            if (!_hasAuthoredDestination ||
+                !IsWaitingAtTacticalDestination ||
+                _hasAttemptedAuthoredDestinationResume ||
+                _destination == _authoredDestination)
+            {
+                return false;
+            }
+
+            _hasAttemptedAuthoredDestinationResume = true;
+            return true;
+        }
+
+        internal void ResumeAuthoredDestination(List<GridPos> paths)
+        {
+            _destination = _authoredDestination;
+            _hasAuthoredDestination = false;
+            _hasActiveTacticalDestination = false;
+            _hasAttemptedAuthoredDestinationResume = false;
+            _hasPathSearchFailed = false;
+            _shouldPrioritizeMovement = false;
+            _paths.Clear();
+            _paths.AddRange(paths);
         }
 
         public void Enter()
@@ -43,12 +118,49 @@ namespace Script.CommonLib
             _entityContext.TryGetNearestEnemy();
 
             if (HasArrived())
+            {
+                _shouldPrioritizeMovement = false;
                 return;
+            }
+
+            if (_shouldPrioritizeMovement && _moveSpeed == 0)
+            {
+                _shouldPrioritizeMovement = false;
+                return;
+            }
+
+            if (_shouldPrioritizeMovement && (long)_moveSpeed * deltaMs / GlobalMoveSpeedDivisor == 0)
+            {
+                _shouldPrioritizeMovement = false;
+                return;
+            }
 
             if (_paths.IsEmpty())
-                FindPath();
+            {
+                if (_shouldPrioritizeMovement)
+                {
+                    _shouldPrioritizeMovement = false;
+                    // 다음 tick에 Brain이 공격과 일반 이동 중 적절한 상태를 다시 선택하도록 한다.
+                    return;
+                }
+
+                if (_hasPathSearchFailed || !TryFindPath())
+                {
+                    _hasPathSearchFailed = true;
+                    return;
+                }
+            }
+
+            if (_paths.IsEmpty())
+            {
+                _shouldPrioritizeMovement = false;
+                return;
+            }
             
             MovePath(_pos, deltaMs);
+
+            if (_shouldPrioritizeMovement && (HasArrived() || _paths.IsEmpty()))
+                _shouldPrioritizeMovement = false;
         }
 
         public void Exit()
@@ -56,7 +168,7 @@ namespace Script.CommonLib
             _entityContext.OnStopMove();
         }
 
-        private void FindPath()
+        private bool TryFindPath()
         {
             _paths.Clear();
 
@@ -64,7 +176,7 @@ namespace Script.CommonLib
             var startPos = _pos.ToGridPos();
             var endPos = _destination.ToGridPos();
         
-            _entityContext.FindWaypoints(startPos, endPos, _paths);
+            return _entityContext.TryFindWaypoints(startPos, endPos, _paths);
         }
 
         public void SetPos(FixedPos pos)
@@ -88,7 +200,7 @@ namespace Script.CommonLib
             var nextGridPos = _paths.Last();
             var nextPos = nextGridPos.ToFixedPos();
             
-            var moveDistance = _moveSpeed * deltaMs / GlobalMoveSpeedDivisor;
+            var moveDistance = (long)_moveSpeed * deltaMs / GlobalMoveSpeedDivisor;
             var maxMoveDistance = pos.GetDistance(nextPos);
 
             if (moveDistance >= maxMoveDistance)
