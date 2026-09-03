@@ -14,13 +14,13 @@ namespace MiniServerProject.Application.Stages
     public class BattleHistory
     {
         public bool IsVerified;
-        public long VerifyMs;
+        public double VerifyMs;
         public TeamFlag Winner;
         public uint BattleMs;
         public uint BattleFrames;
         public float AvgFps;
 
-        public BattleHistory(bool isVerified, long verifyMs, TeamFlag winner, uint battleMs, uint battleFrames)
+        public BattleHistory(bool isVerified, double verifyMs, TeamFlag winner, uint battleMs, uint battleFrames)
         {
             IsVerified = isVerified;
             VerifyMs = verifyMs;
@@ -34,7 +34,7 @@ namespace MiniServerProject.Application.Stages
 
         public override string ToString()
         {
-            return $"isVerified: {IsVerified}, verifyMs: {VerifyMs}ms, winner: {Winner}, battleMs: {BattleMs}, battleFrames: {BattleFrames}, avgFps: {AvgFps}";
+            return $"isVerified: {IsVerified}, verifyMs: {VerifyMs:F3}ms, winner: {Winner}, battleMs: {BattleMs}, battleFrames: {BattleFrames}, avgFps: {AvgFps}";
         }
     }
 }

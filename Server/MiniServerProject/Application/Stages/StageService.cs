@@ -333,7 +333,7 @@ namespace MiniServerProject.Application.Stages
             var isVerified = VerifyClientRequestData(aliveEntities, winner, serverSimulator);
             stopWatch.Stop();
 
-            var battleHistory = new BattleHistory(isVerified, stopWatch.ElapsedMilliseconds, serverSimulator.Winner, serverSimulator.TotalElapsedMs,
+            var battleHistory = new BattleHistory(isVerified, stopWatch.Elapsed.TotalMilliseconds, serverSimulator.Winner, serverSimulator.TotalElapsedMs,
                 serverSimulator.TotalElapsedFrames);
             
             LogBattleHistory(battleHistory);
@@ -354,7 +354,7 @@ namespace MiniServerProject.Application.Stages
 
             int totalBattleCount = BattleHistoryList.Count;
             int verifiedCount = 0;
-            long totalVerifyMs = 0;
+            double totalVerifyMs = 0;
             int blueTeamWinCount = 0;
             int redTeamWinCount = 0;
             long totalBattleMs = 0;
@@ -393,7 +393,7 @@ namespace MiniServerProject.Application.Stages
             
             var verifiedRate = Math.Round((float)verifiedCount / totalBattleCount * 100, 2);
             var totalBattleSec = Math.Round(totalBattleMs / 1000f, 2);
-            var avgVerifyMs = Math.Round((float)totalVerifyMs / totalBattleCount, 2);
+            var avgVerifyMs = Math.Round(totalVerifyMs / totalBattleCount, 3);
             var avgBattleMs = Math.Round((float)totalBattleMs / totalBattleCount, 2);
             var avgBattleSec = Math.Round(totalBattleSec / totalBattleCount, 2);
             var avgBattleFrames = Math.Round((float)totalBattleFrames / totalBattleCount, 2);
@@ -403,7 +403,7 @@ namespace MiniServerProject.Application.Stages
             _stringBuilder.AppendLine($"==========TOTAL==========");
             _stringBuilder.AppendLine($"Total Battle Count: {totalBattleCount}");
             _stringBuilder.AppendLine($"Total Verified Count: {verifiedCount}/{totalBattleCount}({verifiedRate}%)");
-            _stringBuilder.AppendLine($"Total Verify Ms: {totalVerifyMs}ms, AVG Verify Ms: {avgVerifyMs}ms");
+            _stringBuilder.AppendLine($"Total Verify Ms: {totalVerifyMs:F3}ms, AVG Verify Ms: {avgVerifyMs:F3}ms");
             _stringBuilder.AppendLine($"BlueTeam Wins: {blueTeamWinCount}, RedTeam Wins: {redTeamWinCount}, Draw: {totalBattleCount - blueTeamWinCount - redTeamWinCount}");
             _stringBuilder.AppendLine($"Total Battle Ms: {totalBattleMs}({totalBattleSec}s), AVG Battle Ms: {avgBattleMs}({avgBattleSec}s)");
             _stringBuilder.AppendLine($"Total Battle Frames: {totalBattleFrames}, AVG Battle Frames: {avgBattleFrames}");
