@@ -17,11 +17,11 @@ namespace Script.CommonLib.Map
         public bool TryPredict(
             Entity blueFrontline,
             Entity redFrontline,
-            out FixedPos blueFrontlinePosition,
-            out FixedPos redFrontlinePosition)
+            out FixedPos blueEncounterPosition,
+            out FixedPos redEncounterPosition)
         {
-            blueFrontlinePosition = default;
-            redFrontlinePosition = default;
+            blueEncounterPosition = default;
+            redEncounterPosition = default;
 
             var predictionMapData = new BattleMapData
             {
@@ -33,16 +33,16 @@ namespace Script.CommonLib.Map
             };
             var simulator = new BattleMapSimulator(NullBattleMapEventHandler.Instance, predictionMapData);
             var pathFinder = new BattleMapPathFinder(predictionMapData);
-            var bluePrediction = CreatePredictionEntity(1, simulator, blueFrontline);
-            var redPrediction = CreatePredictionEntity(2, simulator, redFrontline);
+            var blueSimulatedFrontline = CreatePredictionEntity(1, simulator, blueFrontline);
+            var redSimulatedFrontline = CreatePredictionEntity(2, simulator, redFrontline);
 
-            simulator.OnEntityAdded(bluePrediction.Id, bluePrediction);
-            simulator.OnEntityAdded(redPrediction.Id, redPrediction);
-            bluePrediction.SetPos(blueFrontline.GetPos());
-            redPrediction.SetPos(redFrontline.GetPos());
+            simulator.OnEntityAdded(blueSimulatedFrontline.Id, blueSimulatedFrontline);
+            simulator.OnEntityAdded(redSimulatedFrontline.Id, redSimulatedFrontline);
+            blueSimulatedFrontline.SetPos(blueFrontline.GetPos());
+            redSimulatedFrontline.SetPos(redFrontline.GetPos());
 
-            if (!TrySetPredictionPath(bluePrediction, blueFrontline, pathFinder) ||
-                !TrySetPredictionPath(redPrediction, redFrontline, pathFinder))
+            if (!TrySetSimulationPath(blueSimulatedFrontline, blueFrontline, pathFinder) ||
+                !TrySetSimulationPath(redSimulatedFrontline, redFrontline, pathFinder))
             {
                 return false;
             }
@@ -51,34 +51,35 @@ namespace Script.CommonLib.Map
             {
                 simulator.Update(PredictionDeltaMs);
 
-                if (bluePrediction.IsMainTargetInRange() && redPrediction.IsMainTargetInRange())
+                if (blueSimulatedFrontline.CanAttackMainTarget() && redSimulatedFrontline.CanAttackMainTarget())
                 {
-                    blueFrontlinePosition = bluePrediction.GetPos();
-                    redFrontlinePosition = redPrediction.GetPos();
+                    blueEncounterPosition = blueSimulatedFrontline.GetPos();
+                    redEncounterPosition = redSimulatedFrontline.GetPos();
                     return true;
                 }
 
-                if (bluePrediction.HasArrived() && redPrediction.HasArrived())
+                if (blueSimulatedFrontline.HasArrived() && redSimulatedFrontline.HasArrived())
                     return false;
             }
 
             return false;
         }
 
-        private static bool TrySetPredictionPath(
-            Entity prediction,
-            Entity source,
+        private static bool TrySetSimulationPath(
+            Entity simulatedFrontline,
+            Entity sourceFrontline,
             BattleMapPathFinder pathFinder)
         {
-            var destination = source.GetDestinationForTest();
+            var destination = sourceFrontline.GetDestinationForTest();
             var paths = new List<GridPos>();
 
-            if (!pathFinder.TryFindWaypointsBetweenAnyPositions(prediction.GetPos().ToGridPos(), destination.ToGridPos(), paths))
+            if (!pathFinder.TryFindWaypointsBetweenAnyPositions(
+                    simulatedFrontline.GetPos().ToGridPos(), destination.ToGridPos(), paths))
             {
                 return false;
             }
 
-            prediction.SetPredictionDestination(destination, paths);
+            simulatedFrontline.SetPredictionDestination(destination, paths);
             return true;
         }
 

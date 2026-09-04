@@ -37,12 +37,13 @@ namespace Script.CommonLib.Tests
             var predictor = new FrontlineEncounterPredictor(mapData);
 
             if (!predictor.TryPredict(
-                    entities[0], entities[1], out var bluePosition, out var redPosition))
+                    entities[0], entities[1], out var blueEncounterPosition, out var redEncounterPosition))
                 return false;
 
-            var blueMoveDistance = blueStart.GetDistance(bluePosition);
-            var redMoveDistance = redStart.GetDistance(redPosition);
-            return blueMoveDistance < redMoveDistance && bluePosition.GetDistance(redPosition) <= entities[1].AttackRange;
+            var blueMoveDistance = blueStart.GetDistance(blueEncounterPosition);
+            var redMoveDistance = redStart.GetDistance(redEncounterPosition);
+            return blueMoveDistance < redMoveDistance &&
+                   blueEncounterPosition.GetDistance(redEncounterPosition) <= entities[1].AttackRange;
         }
 
         private static bool TestPredictionFailureKeepsAuthoredDestinations()

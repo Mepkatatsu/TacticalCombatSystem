@@ -38,7 +38,7 @@ namespace Script.CommonLib.Tests
             var authoredDestinations = GetDestinationsById(simulator.GetAliveEntities());
             var predictor = new FrontlineEncounterPredictor(mapData);
             if (!predictor.TryPredict(
-                    blueFrontline, redFrontline, out var blueFrontlinePosition, out var redFrontlinePosition))
+                    blueFrontline, redFrontline, out var blueEncounterPosition, out var redEncounterPosition))
                 return false;
 
             var planner = new InitialTacticalFormationPlanner(mapData, new BattleMapPathFinder(mapData));
@@ -46,14 +46,14 @@ namespace Script.CommonLib.Tests
                 return false;
 
             var formationPositions = new HashSet<FixedPos>();
-            if (!formationPositions.Add(blueFrontlinePosition) || !formationPositions.Add(redFrontlinePosition))
+            if (!formationPositions.Add(blueEncounterPosition) || !formationPositions.Add(redEncounterPosition))
                 return false;
 
             return HasValidTeamFormation(
-                       blueEntities, blueFrontline, blueFrontlinePosition, redFrontlinePosition,
+                       blueEntities, blueFrontline, blueEncounterPosition, redEncounterPosition,
                        starts, authoredDestinations, formationPositions) &&
                    HasValidTeamFormation(
-                       redEntities, redFrontline, redFrontlinePosition, blueFrontlinePosition,
+                       redEntities, redFrontline, redEncounterPosition, blueEncounterPosition,
                        starts, authoredDestinations, formationPositions) &&
                    blueFrontline.GetDestinationForTest() == authoredDestinations[blueFrontline.Id] &&
                    redFrontline.GetDestinationForTest() == authoredDestinations[redFrontline.Id] &&

@@ -21,7 +21,7 @@ namespace Script.CommonLib
             if (_entityContext.ShouldPrioritizeMovement)
                 return EntityStateType.Move;
 
-            if (_entityContext.IsMainTargetInRange())
+            if (_entityContext.CanAttackMainTarget())
                 return EntityStateType.Attack;
 
             return _entityContext.HasArrived() || _entityContext.HasPathSearchFailed

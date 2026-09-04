@@ -128,7 +128,7 @@ namespace Script.CommonLib
                 return;
 
             TryGetNearestEnemy();
-            if (IsMainTargetInRange())
+            if (CanAttackMainTarget())
                 return;
 
             if (!_battleMapContext.HasAliveEnemy(Id) || !_moveState.TryBeginAuthoredDestinationResume())
@@ -166,7 +166,7 @@ namespace Script.CommonLib
         
         public bool HasMainTarget() => _mainTarget != null && _mainTarget.IsAlive();
 
-        public bool IsMainTargetInRange()
+        public bool CanAttackMainTarget()
         {
             if (!HasMainTarget())
                 return false;

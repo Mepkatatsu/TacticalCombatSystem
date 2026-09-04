@@ -44,8 +44,8 @@ namespace Script.CommonLib.Map
             if (!_frontlineEncounterPredictor.TryPredict(
                     blueFrontline,
                     redFrontline,
-                    out var blueFrontlinePosition,
-                    out var redFrontlinePosition))
+                    out var blueEncounterPosition,
+                    out var redEncounterPosition))
             {
                 return false;
             }
@@ -53,13 +53,13 @@ namespace Script.CommonLib.Map
             var blueApplied = TryPlanAndApplyTeam(
                 blueEntities,
                 blueFrontline,
-                blueFrontlinePosition,
-                redFrontlinePosition);
+                blueEncounterPosition,
+                redEncounterPosition);
             var redApplied = TryPlanAndApplyTeam(
                 redEntities,
                 redFrontline,
-                redFrontlinePosition,
-                blueFrontlinePosition);
+                redEncounterPosition,
+                blueEncounterPosition);
             return blueApplied || redApplied;
         }
 
