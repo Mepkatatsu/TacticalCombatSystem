@@ -46,7 +46,7 @@ namespace Script.CommonLib
         private IdleState _idleState;
         private MoveState _moveState;
         private AttackState _attackState;
-        private DieState _dieState;
+        private RetireState _retireState;
 
         private uint _lastStateMs;
         private uint _forceIdleLeftMs;
@@ -76,7 +76,7 @@ namespace Script.CommonLib
             _idleState = new IdleState(this);
             _moveState = new MoveState(this, _moveSpeed);
             _attackState = new AttackState(this);
-            _dieState = new DieState(this);
+            _retireState = new RetireState(this);
         }
 
         public void Update(ushort deltaMs)
@@ -157,8 +157,8 @@ namespace Script.CommonLib
                     return _moveState;
                 case EntityStateType.Attack:
                     return _attackState;
-                case EntityStateType.Die:
-                    return _dieState;
+                case EntityStateType.Retire:
+                    return _retireState;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(stateType), stateType, null);
             }

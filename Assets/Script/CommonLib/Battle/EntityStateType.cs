@@ -5,6 +5,6 @@ namespace Script.CommonLib.Battle
         Idle,
         Move,
         Attack,
-        Die,
+        Retire,
     }
 }

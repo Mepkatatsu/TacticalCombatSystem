@@ -1,10 +1,10 @@
 namespace Script.CommonLib.Battle
 {
-    public class DieState : IState
+    public class RetireState : IState
     {
         private IEntityContext _entityContext;
 
-        public DieState(IEntityContext entityContext)
+        public RetireState(IEntityContext entityContext)
         {
             _entityContext = entityContext;
         }

@@ -13,7 +13,7 @@ namespace Script.CommonLib
         public EntityStateType ThinkNextStateType()
         {
             if (!_entityContext.IsAlive())
-                return EntityStateType.Die;
+                return EntityStateType.Retire;
             
             if (_entityContext.IsForceIdle)
                 return EntityStateType.Idle;
