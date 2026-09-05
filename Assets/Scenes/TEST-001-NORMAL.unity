@@ -2088,10 +2088,10 @@ MonoBehaviour:
     startPositionName: EndPosition2
     endPositionName: StartPosition2
     projectileName: Crystal_Blue
-    maxHp: 1000
+    maxHp: 18000
     attackDamage: 50
     basisAttackDelayMs: 1000
-    attackDelayMs: 1500
+    attackDelayMs: 666
     attackRange: 14000
     moveSpeed: 4000
 --- !u!1 &710962602
@@ -3520,7 +3520,7 @@ MonoBehaviour:
     startPositionName: EndPosition4
     endPositionName: StartPosition4
     projectileName: Crystal_Red
-    maxHp: 300
+    maxHp: 5400
     attackDamage: 100
     basisAttackDelayMs: 1000
     attackDelayMs: 666
@@ -3634,7 +3634,7 @@ MonoBehaviour:
     startPositionName: StartPosition3
     endPositionName: EndPosition3
     projectileName: DefaultProjectile
-    maxHp: 1900
+    maxHp: 34200
     attackDamage: 20
     basisAttackDelayMs: 1000
     attackDelayMs: 1200
@@ -4046,8 +4046,8 @@ MonoBehaviour:
     startPositionName: StartPosition1
     endPositionName: EndPosition1
     projectileName: SlashEffect_39FFCC
-    maxHp: 10000
-    attackDamage: 50
+    maxHp: 18925
+    attackDamage: 30
     basisAttackDelayMs: 400
     attackDelayMs: 300
     attackRange: 14000
@@ -4160,7 +4160,7 @@ MonoBehaviour:
     startPositionName: StartPosition2
     endPositionName: EndPosition2
     projectileName: Crystal_Blue
-    maxHp: 1000
+    maxHp: 18000
     attackDamage: 50
     basisAttackDelayMs: 1000
     attackDelayMs: 666
@@ -4502,7 +4502,7 @@ MonoBehaviour:
     startPositionName: EndPosition1
     endPositionName: StartPosition1
     projectileName: SlashEffect_39FFCC
-    maxHp: 1000
+    maxHp: 18000
     attackDamage: 30
     basisAttackDelayMs: 400
     attackDelayMs: 300
@@ -5738,7 +5738,7 @@ MonoBehaviour:
     startPositionName: EndPosition3
     endPositionName: StartPosition3
     projectileName: DefaultProjectile
-    maxHp: 2000
+    maxHp: 36000
     attackDamage: 20
     basisAttackDelayMs: 1000
     attackDelayMs: 1200
@@ -6571,7 +6571,7 @@ MonoBehaviour:
     startPositionName: StartPosition4
     endPositionName: EndPosition4
     projectileName: Crystal_Red
-    maxHp: 300
+    maxHp: 5400
     attackDamage: 100
     basisAttackDelayMs: 1000
     attackDelayMs: 666
