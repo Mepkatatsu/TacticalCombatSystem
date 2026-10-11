@@ -428,8 +428,17 @@ namespace MiniServerProject.Application.Stages
                 return false;
             }
             
+            // 개수 비교만으로는 같은 ID를 반복해 다른 생존자를 누락시킬 수 있으므로 중복 ID를 거부한다.
+            var clientAliveIds = new HashSet<uint>();
+
             foreach ((uint id, uint hp) in aliveEntities)
             {
+                if (!clientAliveIds.Add(id))
+                {
+                    _logger.LogWarning("VerifyClientRequestData: Duplicate entity id.");
+                    return false;
+                }
+
                 if (!aliveEntitiesDictionary.TryGetValue(id, out var entity))
                 {
                     _logger.LogWarning("VerifyClientRequestData: Entity not found.");
