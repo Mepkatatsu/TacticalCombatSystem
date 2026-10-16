@@ -112,7 +112,7 @@
 **공개 저장소를 클론한 상태만으로는 클라이언트와 서버를 바로 실행할 수 없습니다.**
 
 - **클라이언트**: Unity Editor 실행을 기준으로 개발했습니다. 필수 유료 에셋(캐릭터 모델 등)은 라이선스상 공개 저장소에서 제외해 별도 준비가 필요합니다.
-- **서버**: Git에 포함되지 않은 Unity 생성 파일 `CommonLib.csproj`와 로컬 Unity 참조 경로가 필요합니다. DB와 Redis 설정은 [Server/README.md](Server/README.md)를 참고해 주세요.
+- **서버**: Unity 없이 `Server/CommonLib.Shared`로 공용 전투 로직을 함께 빌드합니다. 실행에는 DB와 Redis가 필요하며 설정은 [Server/README.md](Server/README.md)를 참고해 주세요.
 
 코드는 다음을 중심으로 봐주시면 됩니다.
 

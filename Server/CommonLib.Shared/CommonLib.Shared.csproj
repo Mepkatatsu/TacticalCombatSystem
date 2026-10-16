@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Unity가 생성하는 CommonLib.csproj 없이 Server가 같은 CommonLib source를 compile하기 위한 project -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>CommonLib</AssemblyName>
+    <RootNamespace>Script.CommonLib</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Assets\Script\CommonLib\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Unity package com.unity.nuget.newtonsoft-json 3.2.2에 포함된 Json.NET과 같은 version -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+  </ItemGroup>
+
+</Project>

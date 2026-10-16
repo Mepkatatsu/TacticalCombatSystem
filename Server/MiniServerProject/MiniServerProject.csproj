@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\CommonLib.csproj" />
+    <ProjectReference Include="..\CommonLib.Shared\CommonLib.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Script.CommonLib.Map.Path;
-using UnityEngine;
 
 namespace Script.CommonLib.Map
 {
@@ -202,7 +202,7 @@ namespace Script.CommonLib.Map
 
         private static long GetHeuristicCost(GridPos first, GridPos second)
         {
-            return Mathf.Abs(first.x - second.x) + Mathf.Abs(first.y - second.y);
+            return Math.Abs(first.x - second.x) + Math.Abs(first.y - second.y);
         }
 
         private static int CompareGridPos(GridPos first, GridPos second)

@@ -103,6 +103,7 @@ Unity Editor가 같은 project를 열고 있으면 batch test가 중단될 수 �
 
 ```powershell
 dotnet build .\CommonLib.csproj
+dotnet build .\Server\CommonLib.Shared\CommonLib.Shared.csproj
 dotnet build .\Server\MiniServerProject\MiniServerProject.csproj
 
 & 'C:\Program Files\Unity\Hub\Editor\2022.3.58f1\Editor\Unity.exe' `
